@@ -329,6 +329,7 @@ If returning early, return the return value of F."
 ;; let format alias simple-format until the more complete version is loaded
 
 (define format simple-format)
+(define exception-format simple-format)
 
 ;; this is scheme wrapping the C code so the final pred call is a tail call,
 ;; per SRFI-13 spec
@@ -1895,7 +1896,7 @@ non-locally, that exit determines the continuation."
   (set! print-exception
         (lambda (port frame key args)
           (define (default-printer)
-            (format port "Throw to key `~a' with args `~s'." key args))
+            (exception-format port "Throw to key `~a' with args `~s'." key args))
 
           (when frame
             (print-location frame port)
@@ -1913,7 +1914,9 @@ non-locally, that exit determines the continuation."
                     (printer port key args default-printer)
                     (default-printer))))
             (lambda (k . args)
-              (format port "Error while printing exception.")))
+              (exception-format
+               port "Error while printing exception `~a`: `~a' with args [~s]"
+               key k args)))
           (newline port)
           (force-output port))))
 
@@ -1928,7 +1931,7 @@ non-locally, that exit determines the continuation."
              ((subr msg args . rest)
               (if subr
                   (format port "In procedure ~a: " subr))
-              (apply format port msg (or args '())))
+              (apply exception-format port msg (or args '())))
              (_ (default-printer)))
            args))
 
@@ -1955,7 +1958,7 @@ non-locally, that exit determines the continuation."
   (define (keyword-error-printer port key args default-printer)
     (let ((message (cadr args))
           (faulty  (car (cadddr args)))) ; I won't do it again, I promise.
-      (format port "~a: ~s" message faulty)))
+      (exception-format port "~a: ~s" message faulty)))
 
   (define (getaddrinfo-error-printer port key args default-printer)
     (format port "In procedure getaddrinfo: ~a" (gai-strerror (car args))))
@@ -2172,11 +2175,11 @@ non-locally, that exit determines the continuation."
        (lambda (key . args)
          (for-each (lambda (s)
                      (if (not (string-null? s))
-                         (format (current-warning-port) ";;; ~a\n" s)))
+                         (exception-format (current-warning-port) ";;; ~a\n" s)))
                    (string-split
                     (call-with-output-string
                      (lambda (port)
-                       (format port template arg ...)
+                       (exception-format port template arg ...)
                        (print-exception port #f key args)))
                     #\newline))
          #f)))))
