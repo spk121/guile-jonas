@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2013-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2013-2021, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -578,6 +578,11 @@
            (compile-call #f proc args))
           (($ $callk kfun proc args)
            (compile-call kfun proc args))
+          (($ $calli args callee)
+           (match (intmap-ref cont k)
+             (($ $ktail)
+              (emit-moves (lookup-send-parallel-moves label allocation))
+              (compile-tail (1+ (length args)) emit-indirect-tail-call))))
           (_
            (match cont
              (($ $kargs names vars)
