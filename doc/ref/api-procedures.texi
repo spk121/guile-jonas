@@ -186,26 +186,6 @@ Users must not modify the returned value unless they think they're
 really clever.
 @end deffn
 
-@c FIXME
-
-@deffn {Scheme Procedure} program-bindings program
-@deffnx {Scheme Procedure} make-binding name boxed? index start end
-@deffnx {Scheme Procedure} binding:name binding
-@deffnx {Scheme Procedure} binding:boxed? binding
-@deffnx {Scheme Procedure} binding:index binding
-@deffnx {Scheme Procedure} binding:start binding
-@deffnx {Scheme Procedure} binding:end binding
-Bindings annotations for programs, along with their accessors.
-
-Bindings declare names and liveness extents for block-local variables.
-The best way to see what these are is to play around with them at a
-REPL. @xref{VM Concepts}, for more information.
-
-Note that bindings information is stored in a program as part of its
-metadata thunk, so including it in the generated object code does not
-impose a runtime performance penalty.
-@end deffn
-
 @deffn {Scheme Procedure} program-sources program
 @deffnx {Scheme Procedure} source:addr source
 @deffnx {Scheme Procedure} source:line source
