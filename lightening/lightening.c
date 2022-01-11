@@ -1328,7 +1328,7 @@ static void
 reset_literal_pool(jit_state_t *_jit, struct jit_literal_pool *pool)
 {
   pool->deadline = _jit->limit - _jit->start;
-  memset(pool->entries, 0, sizeof(pool->entries[0]) * pool->size);
+  memset(pool->entries, 0, sizeof(pool->entries[0]) * pool->capacity);
   pool->size = 0;
 }
 
