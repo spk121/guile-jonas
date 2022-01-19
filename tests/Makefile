@@ -14,7 +14,8 @@ TARGETS ?= native ia32 aarch64 armv7 riscv
 #     libc6-dev:amd64 gcc make \
 #     qemu binfmt-support qemu-user-static \
 #     gcc-i686-linux-gnu libc6-dev-i386-cross libc6:i386 \
-#     gcc-aarch64-linux-gnu libc6-dev-arm64-cross libc6:arm64
+#     gcc-aarch64-linux-gnu libc6-dev-arm64-cross libc6:arm64\
+#     gcc-riscv64-linux-gnu libc6-dev-riscv64-cross libc6:riscv64
 #
 CC = gcc
 CC_IA32 ?= guix environment --pure -s i686-linux --ad-hoc gcc-toolchain -- gcc
