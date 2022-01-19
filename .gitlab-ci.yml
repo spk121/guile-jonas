@@ -1,9 +1,10 @@
-image: debian:stable
+image: debian:unstable
 
 before_script:
   - dpkg --add-architecture i386
   - dpkg --add-architecture arm64
   - dpkg --add-architecture armhf
+  - dpkg --add-architecture riscv64
   - apt-get update -qq
   - apt-get install -y
       libc6-dev:amd64 gcc make
@@ -11,6 +12,7 @@ before_script:
       gcc-i686-linux-gnu libc6-dev-i386-cross libc6:i386
       gcc-aarch64-linux-gnu libc6-dev-arm64-cross libc6:arm64
       gcc-arm-linux-gnueabihf libc6-dev-armhf-cross libc6:armhf
+      gcc-riscv64-linux-gnu libc6-dev-riscv64-cross libc6:riscv64
 
 x86-64:
   stage: test
@@ -36,3 +38,8 @@ armhf-thumb:
   stage: test
   script:
     - make -C tests test-armv7 CC_ARMv7="arm-linux-gnueabihf-gcc -mthumb"
+
+riscv:
+  stage: test
+  script:
+    - make -C tests test-riscv CC_RISCV="riscv64-linux-gnu-gcc"
