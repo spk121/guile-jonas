@@ -1,0 +1,37 @@
+;;;; load-lang.test - test loading extension languages	-*- scheme -*-
+;;;;
+
+
+(define-module (test-suite test-load-lang)
+  #:use-module (test-suite lib)
+  #:declarative? #f)
+
+(define tmp-dir (getcwd))
+
+(define (data-file-name filename)
+  (in-vicinity tmp-dir filename))
+
+(with-test-prefix "load-lang"
+
+  (pass-if "using #lang"
+    (let ((src-file (data-file-name "load1js")))
+      (with-output-to-file src-file
+	(lambda ()
+	  (display "#lang ecmascript\n")
+	  (display "function js_1pl(b) { return 1 + b; }\n")))
+      (load src-file)
+      ;;(delete-file src-file)
+      (= (js_1pl 2) 3)))
+
+  #;(pass-if "using dot-js"
+    (let ((src-file (data-file-name "load2.js")))
+      (with-output-to-file src-file
+	(lambda ()
+	  (display "function js_2pl(b) { return 2 + b; }\n")))
+      (load src-file)
+      ;;(delete-file src-file)
+      (= (js_2pl 2) 4)))
+
+  )
+
+;; --- last line ---
