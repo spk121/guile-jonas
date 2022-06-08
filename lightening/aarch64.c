@@ -232,3 +232,9 @@ bless_function_pointer(void *ptr)
 {
   return ptr;
 }
+
+static jit_gpr_t
+get_callr_temp (jit_state_t * _jit)
+{
+  return _LR;
+}
