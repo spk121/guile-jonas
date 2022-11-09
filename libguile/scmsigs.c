@@ -306,23 +306,6 @@ scm_sigaction (SCM signum, SCM handler, SCM flags)
   return scm_sigaction_for_thread (signum, handler, flags, SCM_UNDEFINED);
 }
 
-#if __MINGW32__
-
-SCM_DEFINE (scm_sigaction_for_thread, "sigaction", 1, 3, 0,
-           (SCM signum, SCM handler, SCM flags, SCM thread),
-            "sigaction stub")
-#define FUNC_NAME s_scm_sigaction_for_thread
-{
-  (void) signum;
-  (void) handler;
-  (void) flags;
-  (void) thread;
-  return SCM_UNSPECIFIED;
-}
-#undef FUNC_NAME
-
-#else /* !__MINGW32__ */
-
 /* user interface for installation of signal handlers.  */
 SCM_DEFINE (scm_sigaction_for_thread, "sigaction", 1, 3, 0,
            (SCM signum, SCM handler, SCM flags, SCM thread),
@@ -362,10 +345,16 @@ SCM_DEFINE (scm_sigaction_for_thread, "sigaction", 1, 3, 0,
 #endif
   int query_only = 0;
   int save_handler = 0;
-      
+
   SCM old_handler;
 
   csig = scm_to_signed_integer (signum, 0, NSIG-1);
+
+#ifdef __MINGW32__
+  if (csig != SIGINT && csig != SIGILL && csig != SIGFPE && csig != SIGSEGV
+      && csig != SIGTERM && csig != SIGBREAK && csig != SIGABRT)
+    return scm_cons (scm_from_intptr_t ((intptr_t) SIG_IGN), scm_from_int (0));
+#endif
 
 #if defined(HAVE_SIGACTION)
   action.sa_flags = 0;
@@ -517,8 +506,6 @@ SCM_DEFINE (scm_sigaction_for_thread, "sigaction", 1, 3, 0,
 #endif
 }
 #undef FUNC_NAME
-
-#endif /* !__MINGW32__ */
 
 SCM_DEFINE (scm_restore_signals, "restore-signals", 0, 0, 0,
             (void),
