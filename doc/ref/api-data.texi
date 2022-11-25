@@ -543,8 +543,8 @@ by 100000000000000000.  In Guile's current incarnation, therefore, the
 numbers.
 
 
-Dividing by an exact zero leads to a error message, as one might expect.
-However, dividing by an inexact zero does not produce an error.
+Dividing by an exact zero leads to an error message, as one might
+expect.  However, dividing by an inexact zero does not produce an error.
 Instead, the result of the division is either plus or minus infinity,
 depending on the sign of the divided number and the sign of the zero
 divisor (some platforms support signed zeroes @samp{-0.0} and
