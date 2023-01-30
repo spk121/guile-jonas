@@ -269,6 +269,22 @@ get_temp_gpr(jit_state_t *_jit)
     case 1:
       return JIT_TMP1;
 #endif
+#ifdef JIT_TMP2
+    case 2:
+      return JIT_TMP2;
+#endif
+#ifdef JIT_TMP3
+    case 3:
+      return JIT_TMP3;
+#endif
+#ifdef JIT_TMP4
+    case 4:
+      return JIT_TMP4;
+#endif
+#ifdef JIT_TMP5
+    case 5:
+      return JIT_TMP5;
+#endif
     default:
       abort();
     }
@@ -558,6 +574,8 @@ jit_emit_addr(jit_state_t *j)
 # include "aarch64.c"
 #elif defined(__s390__) || defined(__s390x__)
 # include "s390.c"
+#elif defined(__riscv__) || defined(__riscv)
+# include "riscv.c"
 #endif
 
 #define JIT_IMPL_0(stem, ret) \
@@ -1156,6 +1174,9 @@ static const jit_gpr_t user_callee_save_gprs[] = {
 #ifdef JIT_V9
   , JIT_V9
 #endif
+#ifdef JIT_V10
+  , JIT_V10
+#endif
  };
 
 static const jit_fpr_t user_callee_save_fprs[] = {
@@ -1182,6 +1203,18 @@ static const jit_fpr_t user_callee_save_fprs[] = {
 #endif
 #ifdef JIT_VF7
   , JIT_VF7
+#endif
+#ifdef JIT_VF8
+  , JIT_VF8
+#endif
+#ifdef JIT_VF9
+  , JIT_VF9
+#endif
+#ifdef JIT_VF10
+  , JIT_VF10
+#endif
+#ifdef JIT_VF11
+  , JIT_VF11
 #endif
 };
 
