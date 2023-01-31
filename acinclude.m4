@@ -1,6 +1,6 @@
 dnl -*- Autoconf -*-
 
-dnl Copyright (C) 1997,1999-2002,2004,2006-2011,2013,2018-2019,2022
+dnl Copyright (C) 1997,1999-2002,2004,2006-2011,2013,2018-2019,2022-2023
 dnl   Free Software Foundation, Inc.
 dnl
 dnl This file is part of GUILE
@@ -539,6 +539,7 @@ AC_DEFUN([GUILE_ENABLE_JIT], [
     i?86|x86_64|amd64)    JIT_AVAILABLE=yes ;;
     *arm*)                JIT_AVAILABLE=yes ;;
     aarch64)              JIT_AVAILABLE=yes ;;
+    riscv64)              JIT_AVAILABLE=yes ;;
     *)                                      ;;
   esac
   AC_MSG_RESULT($JIT_AVAILABLE)
