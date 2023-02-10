@@ -422,6 +422,8 @@ by a label, respectively."
                                'pointer-ref/immediate
                                'tail-pointer-ref/immediate))
               (intmap-add representations var 'ptr))
+             (($ $primcall 'restore (repr) ())
+              (intmap-add representations var repr))
              (($ $code)
               (intmap-add representations var 'ptr))
              (_
@@ -433,6 +435,10 @@ by a label, respectively."
                       (intmap-add representations var
                                   (intmap-ref representations arg)))
                     representations args vars))
+             (($ $primcall 'restore reprs ())
+              (fold (lambda (var repr representations)
+                      (intmap-add representations var repr))
+                    representations vars reprs))
              (($ $callk)
               (fold1 (lambda (var representations)
                       (intmap-add representations var 'scm))
