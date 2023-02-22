@@ -1,6 +1,27 @@
 ;;;; load-lang.test - test loading extension languages	-*- scheme -*-
 ;;;;
 
+;; these always fail for some reason:
+;;
+;; $ ./check-guile load-lang.test
+;; ...
+;; ERROR: load-lang.test: load-lang: using #lang - arguments: 
+;;    ((read-error #f "/home/mwette/repo/sv/build/guile/load1js:1:3: 
+;;       Unknown # object: ~S" ("#l") #f))
+;; ...
+;; ERROR: load-lang.test: load-lang: using dot-js - arguments: 
+;;    ((unbound-variable #f "Unbound variable: ~S" (function) #f))
+;;
+;; but works this way
+;; $ meta/guile
+;; ...
+;; scheme@(guile-user)> (load "load1js")
+;; scheme@(guile-user)> (js_1pl 1)
+;; $1 = 2
+;; scheme@(guile-user)> (load "load2.js")
+;; ...
+;; scheme@(guile-user)> (js_2pl 2)
+;; $2 = 4
 
 (define-module (test-suite test-load-lang)
   #:use-module (test-suite lib)
@@ -23,7 +44,7 @@
       ;;(delete-file src-file)
       (= (js_1pl 2) 3)))
 
-  #;(pass-if "using dot-js"
+  (pass-if "using dot-js"
     (let ((src-file (data-file-name "load2.js")))
       (with-output-to-file src-file
 	(lambda ()
