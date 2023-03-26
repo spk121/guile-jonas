@@ -148,6 +148,7 @@ AC_SEARCH_LIBS([dlopen], [dl])
 AC_CHECK_PROG(have_makeinfo, makeinfo, yes, no)
 AM_CONDITIONAL(HAVE_MAKEINFO, test "$have_makeinfo" = yes)
 
+PKG_INSTALLDIR
 AM_PATH_LISPDIR
 
 AC_DEFINE_UNQUOTED([HOST_TYPE], ["$host"],

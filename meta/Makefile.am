@@ -37,7 +37,6 @@ install-exec-hook:
 	cd $(DESTDIR)$(bindir) && rm -f "$$guile_tools" &&	\
 	$(LN_S) "$$guild" "$$guile_tools"
 
-pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = guile-$(GUILE_EFFECTIVE_VERSION).pc
 
 ## FIXME: in the future there will be direct automake support for
