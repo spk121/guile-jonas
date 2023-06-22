@@ -122,8 +122,17 @@
   (rotate-loops #:rotate-loops?)
   (simplify #:simplify?))
 
+(define-optimizer optimize-hoot-backend-cps
+  (eliminate-dead-code #:eliminate-dead-code?)
+  (simplify #:simplify?))
+
 (define (cps-optimizations)
   (available-optimizations 'cps))
+
+;; For the moment, this is just here.
+(define (hoot-backend-cps-optimizations)
+  '((#:simplify? 1)
+    (#:eliminate-dead-code? 1)))
 
 (define (target-runtime)
   "Determine what kind of virtual machine we are targetting.  Usually this
@@ -144,7 +153,7 @@ but it can be @code{hoot} when targetting WebAssembly."
   (set! exp (convert-closures exp))
   (optimize-first-order-cps exp opts))
 
-(define (select-opts-for-optimization-level optimization-level opts all-opts)
+(define (select-optimizations optimization-level opts all-opts)
   (define (kw-arg-ref args kw default)
     (match (memq kw args)
       ((_ val . _) val)
@@ -165,14 +174,18 @@ but it can be @code{hoot} when targetting WebAssembly."
         (reify-primitives
          (lower-primcalls exp)))))
     ('hoot
-     (lambda (exp env)
-       (unify-returns
-        (tailify exp))))))
+     (let ((opts (select-optimizations optimization-level opts
+                                       (hoot-backend-cps-optimizations))))
+       (lambda (exp env)
+         (optimize-hoot-backend-cps
+          (unify-returns
+           (tailify exp))
+          opts))))))
 
 (define (make-cps-lowerer optimization-level opts)
   (define generic-opts
-    (select-opts-for-optimization-level optimization-level opts
-                                        (cps-optimizations)))
+    (select-optimizations optimization-level opts
+                          (cps-optimizations)))
   (define lower-cps/backend
     (make-backend-cps-lowerer optimization-level opts))
   (lambda (exp env)
