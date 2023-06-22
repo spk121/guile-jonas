@@ -45,8 +45,11 @@
   #:use-module (language cps split-rec)
   #:use-module (language cps switch)
   #:use-module (language cps type-fold)
+  #:use-module (language cps tailify)
+  #:use-module (language cps unify-returns)
   #:use-module (language cps verify)
   #:use-module (system base optimize)
+  #:use-module (system base target)
   #:export (optimize-higher-order-cps
             optimize-first-order-cps
             cps-optimizations
@@ -122,6 +125,15 @@
 (define (cps-optimizations)
   (available-optimizations 'cps))
 
+(define (target-runtime)
+  "Determine what kind of virtual machine we are targetting.  Usually this
+is @code{guile-vm} when generating bytecode for Guile's virtual machine,
+but it can be @code{hoot} when targetting WebAssembly."
+  (if (and (member (target-cpu) '("wasm32" "wasm64"))
+           (equal? (target-os) "hoot"))
+      'hoot
+      'guile-vm))
+
 (define (lower-cps/generic exp opts)
   ;; FIXME: For now the closure conversion pass relies on $rec instances
   ;; being separated into SCCs.  We should fix this to not be the case,
@@ -146,10 +158,16 @@
               (lp all-opts))))))
 
 (define (make-backend-cps-lowerer optimization-level opts)
-  (lambda (exp env)
-    (add-loop-instrumentation
-     (reify-primitives
-      (lower-primcalls exp)))))
+  (match (target-runtime)
+    ('guile-vm
+     (lambda (exp env)
+       (add-loop-instrumentation
+        (reify-primitives
+         (lower-primcalls exp)))))
+    ('hoot
+     (lambda (exp env)
+       (unify-returns
+        (tailify exp))))))
 
 (define (make-cps-lowerer optimization-level opts)
   (define generic-opts

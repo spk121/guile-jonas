@@ -120,6 +120,7 @@ SOURCES =					\
   language/cps/type-fold.scm			\
   language/cps/types.scm			\
   language/cps/utils.scm			\
+  language/cps/unify-returns.scm		\
   language/cps/verify.scm			\
   language/cps/with-cps.scm			\
 						\
