@@ -212,7 +212,7 @@ be rewritten to continue to the tail's ktail."
                               ($continue local-ktail src
                                 ($calli args ret))))
                 (build-term ($continue kcall src
-                              ($primcall 'restore '(ptr) ())))))
+                              ($primcall 'restore '(code) ())))))
              ((or ($ $call) ($ $callk) ($ $calli))
               ;; Otherwise the original term was a tail call.
               (with-cps cps
@@ -238,7 +238,7 @@ be rewritten to continue to the tail's ktail."
                     (letk kcont ($kargs ('cont) (cont)
                                   ($continue kexp src
                                     ($primcall 'save
-                                               (append reprs (list 'ptr))
+                                               (append reprs (list 'code))
                                                ,(append vars (list cont))))))
                     (build-term ($continue kcont src
                                   ($code (intmap-ref entries k))))))))
@@ -691,7 +691,7 @@ to tail-call the saved continuation."
                        ($continue k src ($calli args ret))))
          (setk label ($kargs names vars
                        ($continue kcall src
-                         ($primcall 'restore '(ptr) ()))))))
+                         ($primcall 'restore '(code) ()))))))
       (_ cps)))
   (intset-fold rewrite-return-to-pop-and-calli body cps))
 
