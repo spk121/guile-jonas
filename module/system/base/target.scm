@@ -26,6 +26,8 @@
 
             target-cpu target-vendor target-os
 
+            target-runtime
+
             target-endianness target-word-size
 
             target-max-size-t
@@ -158,6 +160,15 @@
 (define (target-vendor)
   "Return the vendor name of the target platform."
   (triplet-vendor (target-type)))
+
+(define (target-runtime)
+  "Determine what kind of virtual machine we are targetting.  Usually this
+is @code{guile-vm} when generating bytecode for Guile's virtual machine,
+but it can be @code{hoot} when targetting WebAssembly."
+  (if (and (member (target-cpu) '("wasm32" "wasm64"))
+           (equal? (target-os) "hoot"))
+      'hoot
+      'guile-vm))
 
 (define (target-os)
   "Return the operating system name of the target platform."

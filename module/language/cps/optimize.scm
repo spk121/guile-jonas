@@ -30,11 +30,8 @@
   #:use-module (language cps devirtualize-integers)
   #:use-module (language cps elide-arity-checks)
   #:use-module (language cps licm)
-  #:use-module (language cps loop-instrumentation)
-  #:use-module (language cps lower-primcalls)
   #:use-module (language cps peel-loops)
   #:use-module (language cps prune-top-level-scopes)
-  #:use-module (language cps reify-primitives)
   #:use-module (language cps renumber)
   #:use-module (language cps rotate-loops)
   #:use-module (language cps return-types)
@@ -45,8 +42,6 @@
   #:use-module (language cps split-rec)
   #:use-module (language cps switch)
   #:use-module (language cps type-fold)
-  #:use-module (language cps tailify)
-  #:use-module (language cps unify-returns)
   #:use-module (language cps verify)
   #:use-module (system base optimize)
   #:use-module (system base target)
@@ -122,26 +117,13 @@
   (rotate-loops #:rotate-loops?)
   (simplify #:simplify?))
 
-(define-optimizer optimize-hoot-backend-cps
-  (eliminate-dead-code #:eliminate-dead-code?)
-  (simplify #:simplify?))
-
 (define (cps-optimizations)
   (available-optimizations 'cps))
 
-;; For the moment, this is just here.
-(define (hoot-backend-cps-optimizations)
-  '((#:simplify? 1)
-    (#:eliminate-dead-code? 1)))
-
-(define (target-runtime)
-  "Determine what kind of virtual machine we are targetting.  Usually this
-is @code{guile-vm} when generating bytecode for Guile's virtual machine,
-but it can be @code{hoot} when targetting WebAssembly."
-  (if (and (member (target-cpu) '("wasm32" "wasm64"))
-           (equal? (target-os) "hoot"))
-      'hoot
-      'guile-vm))
+(define (make-backend-cps-lowerer optimization-level opts)
+  (let* ((iface (resolve-interface `(language cps ,(target-runtime))))
+         (make-lowerer (module-ref iface 'make-lowerer)))
+    (make-lowerer optimization-level opts)))
 
 (define (lower-cps/generic exp opts)
   ;; FIXME: For now the closure conversion pass relies on $rec instances
@@ -166,26 +148,9 @@ but it can be @code{hoot} when targetting WebAssembly."
        (acons kw (kw-arg-ref opts kw (enabled-for-level? level))
               (lp all-opts))))))
 
-(define (make-backend-cps-lowerer optimization-level opts)
-  (match (target-runtime)
-    ('guile-vm
-     (lambda (exp env)
-       (add-loop-instrumentation
-        (reify-primitives
-         (lower-primcalls exp)))))
-    ('hoot
-     (let ((opts (select-optimizations optimization-level opts
-                                       (hoot-backend-cps-optimizations))))
-       (lambda (exp env)
-         (optimize-hoot-backend-cps
-          (unify-returns
-           (tailify exp))
-          opts))))))
-
 (define (make-cps-lowerer optimization-level opts)
   (define generic-opts
-    (select-optimizations optimization-level opts
-                          (cps-optimizations)))
+    (select-optimizations optimization-level opts (cps-optimizations)))
   (define lower-cps/backend
     (make-backend-cps-lowerer optimization-level opts))
   (lambda (exp env)

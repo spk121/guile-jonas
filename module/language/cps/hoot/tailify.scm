@@ -72,7 +72,7 @@
 ;;;
 ;;; Code:
 
-(define-module (language cps tailify)
+(define-module (language cps hoot tailify)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-11)
   #:use-module (ice-9 match)

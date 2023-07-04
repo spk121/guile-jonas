@@ -50,7 +50,7 @@
 ;;;
 ;;; Code:
 
-(define-module (language cps unify-returns)
+(define-module (language cps hoot unify-returns)
   #:use-module (ice-9 match)
   #:use-module (language cps)
   #:use-module (language cps intmap)
