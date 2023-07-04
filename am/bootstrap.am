@@ -125,6 +125,7 @@ SOURCES =					\
   language/cps/guile-vm/reify-primitives.scm	\
 						\
   language/cps/hoot.scm				\
+  language/cps/hoot/lower-primcalls.scm		\
   language/cps/hoot/tailify.scm			\
   language/cps/hoot/unify-returns.scm		\
 						\

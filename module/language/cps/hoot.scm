@@ -27,6 +27,7 @@
   #:use-module (language cps dce)
   #:use-module (language cps simplify)
   #:use-module (language cps verify)
+  #:use-module (language cps hoot lower-primcalls)
   #:use-module (language cps hoot tailify)
   #:use-module (language cps hoot unify-returns)
   #:export (make-lowerer
@@ -76,5 +77,5 @@
       (optimize-hoot-backend-cps
        (unify-returns
         (tailify
-         exp))
+         (lower-primcalls exp)))
        opts))))
