@@ -397,6 +397,7 @@ by a label, respectively."
              (($ $primcall (or 'scm->f64 'load-f64 's64->f64
                                'f32-ref 'f64-ref
                                'fadd 'fsub 'fmul 'fdiv 'fsqrt 'fabs
+                               'fadd/immediate
                                'ffloor 'fceiling
                                'fsin 'fcos 'ftan 'fasin 'facos 'fatan 'fatan2))
               (intmap-add representations var 'f64))
