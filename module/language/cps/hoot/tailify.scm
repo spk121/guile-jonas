@@ -279,7 +279,7 @@ be rewritten to continue to the tail's ktail."
                                         ((rename-var tag) handler)))))
              (letk kcode ($kargs () ()
                            ($continue kpush src ($code (intmap-ref entries kh)))))
-             (build-term ($continue kpush src
+             (build-term ($continue kcode src
                            ($primcall 'save reprs vars)))))))
       (($ $throw src op param args)
        (with-cps cps
@@ -524,6 +524,8 @@ body, as an intset."
        (match (intmap-ref cps k)
          (($ $ktail) splits)
          ((or ($ $kargs) ($ $kreceive)) (intmap-add splits k k))))
+      (($ $kargs names vars ($ $prompt k kh src escape? tag))
+       (intmap-add splits kh kh))
       (_
        splits)))
   ;; Then we build tails by propagating splits forward in the CFG,
