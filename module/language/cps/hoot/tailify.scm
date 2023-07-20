@@ -606,7 +606,7 @@ corresponding wind expression."
               (bodies (intmap-add bodies kh wind)))
          (values exits bodies)))
       (($ $kargs _ _ ($ $continue k _ ($ $primcall 'wind)))
-       (let ((bodies (intmap-add bodies k wind)))
+       (let ((bodies (intmap-add bodies k label)))
          (values exits bodies)))
       (($ $kargs _ _ ($ $continue k _ ($ $primcall 'unwind)))
        (let* ((exits (intmap-add exits label wind))
