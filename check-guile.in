@@ -8,6 +8,7 @@
 # ./check-guile numbers.test
 # ./check-guile -i /usr/local/bin/guile
 # ./check-guile -i /usr/local/bin/guile numbers.test
+# ./check-guile -i meta/gdb-uninstalled-guile numbers.test
 
 set -e
 
