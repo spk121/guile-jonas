@@ -32,9 +32,10 @@
 ;;;; fail or pass unexpectedly.
 ;;;;
 ;;;; Normally, guile-test scans the test directory, and executes all
-;;;; files whose names end in `.test'.  (It assumes they contain
-;;;; Scheme code.)  However, you can have it execute specific tests by
-;;;; listing their filenames on the command line.
+;;;; files whose names end in `.test' and don't begin with `.'.  (It
+;;;; assumes they contain Scheme code.)  However, you can have it
+;;;; execute specific tests by listing their filenames on the command
+;;;; line.
 ;;;;
 ;;;; The option `--test-suite' can be given to specify the test
 ;;;; directory.  If no such option is given, the test directory is
@@ -158,10 +159,10 @@
   (let ((root-len (+ 1 (string-length test-dir)))
 	(tests '()))
     (for-each-file (lambda (file)
-		     (if (string-suffix? ".test" file)
-			 (let ((short-name
-				(substring file root-len)))
-			   (set! tests (cons short-name tests))))
+		     (when (string-suffix? ".test" file)
+                       (let ((short-name (substring file root-len)))
+                         (unless (eqv? #\. (string-ref short-name 0))
+			   (set! tests (cons short-name tests)))))
 		     #t)
 		   test-dir)
 
