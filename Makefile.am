@@ -85,9 +85,6 @@ EXTRA_DIST = LICENSE HACKING GUILE-VERSION			\
 	     .guix/modules/guile-package.scm			\
 	     .guix/manifest.scm
 
-TESTS = check-guile
-TESTS_ENVIRONMENT = @LOCALCHARSET_TESTS_ENVIRONMENT@
-
 ACLOCAL_AMFLAGS = -I m4
 
 CLEANFILES = libguile/guile-procedures.txt
