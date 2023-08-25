@@ -82,6 +82,7 @@
     (apply (module-ref module 'main) args)))
 
 (define-module (test-suite guile-test)
+  :declarative? #f
   :use-module (test-suite lib)
   :use-module (ice-9 getopt-long)
   :use-module (ice-9 and-let-star)
