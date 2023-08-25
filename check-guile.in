@@ -30,8 +30,8 @@ if [ -f "$guile" -a -x "$guile" ] ; then
     echo "Testing $guile ..." "$@"
     echo "with GUILE_LOAD_PATH=$GUILE_LOAD_PATH"
 else
-    echo "ERROR: Cannot execute $guile"
-    exit 1
+    echo "ERROR: Cannot execute $guile" 1>&2
+    exit 2
 fi
 
 # documentation searching ignores GUILE_LOAD_PATH.
