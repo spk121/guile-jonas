@@ -108,7 +108,7 @@ prefix.
 By default, namespaces passed to @code{xml->sxml} are treated as if they
 were declared on the root element.  Passing a false
 @code{#:declare-namespaces?} argument will disable this behavior,
-requiring in-document declarations of namespaces before use..
+requiring in-document declarations of namespaces before use.
 
 @example
 (xml->sxml "<foo><ns2:baz/></foo>"
