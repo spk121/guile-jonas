@@ -204,6 +204,21 @@ the current output port, unless the optional argument @var{port} is
 present.
 @end deffn
 
+Output is automatically escaped as expected for a serializer.
+
+@example
+(sxml->xml `(code "<i>Some example</i>"))
+@result{} <code>&lt;i&gt;Some example&lt;/i&gt;</code>
+@end example
+
+In order to avoid some string from being escaped, it must be wrapped in a
+procedure that writes the string to the @code{(current-output-port)}.
+
+@example
+(sxml->xml `(code ,(lambda () (display "<i>Some example</i>"))))
+@result{} <code><i>Some example</i></code>
+@end example
+
 @deffn {Scheme Procedure} sxml->string sxml
 Detag an sxml tree @var{sxml} into a string. Does not perform any
 formatting.
