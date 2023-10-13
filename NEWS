@@ -41,6 +41,8 @@ the compiler reports it as "possibly unused".
    (<https://bugs.gnu.org/55356>)
 ** 'read-u8' in (scheme base) now defaults to (current-input-port)
    (<https://bugs.gnu.org/62690>)
+** 'ftw' now correctly deals with directory permissions
+   (<https://bugs.gnu.org/55344>)
 ** Hashing of UTF-8 symbols with non-ASCII characters avoids corruption
    (<https://bugs.gnu.org/56413>)
 
