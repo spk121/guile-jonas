@@ -38,6 +38,7 @@ benchmark-guile
 check-guile
 check-guile.log
 build-aux/compile
+build-aux/config.rpath
 confdefs.h
 config.build-subdirs
 config.cache
