@@ -74,7 +74,7 @@
 (define-custom-port-dispatcher truncate length)
 
 
-(eval-when (load)
+(eval-when (expand load eval)
   (load-extension (string-append "libguile-" (effective-version))
                   "scm_init_custom_ports"))
 
