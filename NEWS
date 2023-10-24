@@ -43,6 +43,7 @@ the compiler reports it as "possibly unused".
    (<https://bugs.gnu.org/62690>)
 ** 'ftw' now correctly deals with directory permissions
    (<https://bugs.gnu.org/55344>)
+** 'make-custom-port' now honors its #:conversion-strategy argument
 ** Hashing of UTF-8 symbols with non-ASCII characters avoids corruption
    (<https://bugs.gnu.org/56413>)
 

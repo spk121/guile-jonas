@@ -146,7 +146,7 @@ methods."
       ((? symbol?)
        (string->symbol (string-upcase (symbol->string encoding))))))
   (define (canonicalize-conversion-strategy conversion-strategy)
-    (match encoding
+    (match conversion-strategy
       ('escape 'escape)
       ('substitute 'substitute)
       (_ 'error)))
