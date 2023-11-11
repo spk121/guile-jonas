@@ -59,6 +59,8 @@ files.  See "Random Access" in the manual for details.
    (<https://bugs.gnu.org/55356>)
 ** 'read-u8' in (scheme base) now defaults to (current-input-port)
    (<https://bugs.gnu.org/62690>)
+** Second argument of 'unread-string' is now optional, as previously documented
+   (<https://bugs.gnu.org/67063>)
 ** 'ftw' now correctly deals with directory permissions
    (<https://bugs.gnu.org/55344>)
 ** 'make-custom-port' now honors its #:conversion-strategy argument

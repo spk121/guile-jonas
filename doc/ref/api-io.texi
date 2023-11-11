@@ -2000,7 +2000,7 @@ The same as @code{unget-char}, except that @var{port} defaults to the
 current input port, and the arguments are swapped.  @xref{Textual I/O}.
 @end deffn
 
-@deffn {Scheme Procedure} unread-string str port
+@deffn {Scheme Procedure} unread-string str [port]
 @deffnx {C Function} scm_unread_string (str, port)
 The same as @code{unget-string}, except that @var{port} defaults to the
 current input port, and the arguments are swapped.  @xref{Textual I/O}.

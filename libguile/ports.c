@@ -2228,7 +2228,7 @@ SCM_DEFINE (scm_unread_char, "unread-char", 1, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_unread_string, "unread-string", 2, 0, 0,
+SCM_DEFINE (scm_unread_string, "unread-string", 1, 1, 0,
             (SCM str, SCM port),
 	    "Place the string @var{str} in @var{port} so that its characters will be\n"
 	    "read in subsequent read operations.  If called multiple times, the\n"
