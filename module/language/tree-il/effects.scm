@@ -35,7 +35,8 @@
             effect-free?
             constant?
             depends-on-effects?
-            causes-effects?))
+            causes-effects?
+            add-primcall-effect-analyzer!))
 
 ;;;
 ;;; Hey, it's some effects analysis!  If you invoke
@@ -230,6 +231,12 @@
 (define-inlinable (effects-commute? a b)
   (and (not (causes-effects? a (&depends-on b)))
        (not (causes-effects? b (&depends-on a)))))
+
+(define *primcall-effect-analyzers* (make-hash-table))
+(define (add-primcall-effect-analyzer! name compute-effect-free?)
+  (hashq-set! *primcall-effect-analyzers* name compute-effect-free?))
+(define (primcall-effect-analyzer name)
+  (hashq-ref *primcall-effect-analyzers* name))
 
 (define (make-effects-analyzer assigned-lexical?)
   "Returns a procedure of type EXP -> EFFECTS that analyzes the effects
@@ -576,8 +583,17 @@ of an expression."
 
           ;; A call to an unknown procedure can do anything.
           (($ <primcall> _ name args)
-           (logior &all-effects-but-bailout
-                   (cause &all-effects-but-bailout)))
+           (match (primcall-effect-analyzer name)
+             (#f (logior &all-effects-but-bailout
+                         (cause &all-effects-but-bailout)))
+             (compute-effect-free?
+              (if (and (effect-free?
+                        (exclude-effects (accumulate-effects args) &allocation))
+                       (compute-effect-free? args))
+                  &all-effects-but-bailout
+                  (logior &all-effects-but-bailout
+                          (cause &all-effects-but-bailout))))))
+
           (($ <call> _ proc args)
            (logior &all-effects-but-bailout
                    (cause &all-effects-but-bailout)))
