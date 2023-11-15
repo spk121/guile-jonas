@@ -36,7 +36,8 @@
             constant?
             depends-on-effects?
             causes-effects?
-            add-primcall-effect-analyzer!))
+            add-primcall-effect-analyzer!
+            effect-free-primcall?))
 
 ;;;
 ;;; Hey, it's some effects analysis!  If you invoke
@@ -237,6 +238,31 @@
   (hashq-set! *primcall-effect-analyzers* name compute-effect-free?))
 (define (primcall-effect-analyzer name)
   (hashq-ref *primcall-effect-analyzers* name))
+
+(define (effect-free-primcall? name args)
+  "Return #f unless a primcall of @var{name} with @var{args} can be
+replaced with @code{(begin . @var{args})} in an effect context."
+  (match (cons name args)
+    ((or ('values . _)
+         ('list . _)
+         ('vector . _)
+         ('eq? _ _)
+         ('eqv? _ _)
+         ('cons* _ . _)
+         ('acons _ _ _)
+         ((or 'not
+              'pair? 'null? 'nil? 'list?
+              'symbol? 'variable? 'vector? 'struct? 'string?
+              'number? 'char? 'eof-object? 'exact-integer?
+              'bytevector? 'keyword? 'bitvector?
+              'procedure? 'thunk? 'atomic-box?
+              'vector 'make-variable)
+          _))
+     #t)
+    (_
+     (match (primcall-effect-analyzer name)
+       (#f #f)
+       (effect-free? (effect-free? args))))))
 
 (define (make-effects-analyzer assigned-lexical?)
   "Returns a procedure of type EXP -> EFFECTS that analyzes the effects
