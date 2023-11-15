@@ -1,6 +1,6 @@
 ;;; Effects analysis on Tree-IL
 
-;; Copyright (C) 2011, 2012, 2013, 2021 Free Software Foundation, Inc.
+;; Copyright (C) 2011, 2012, 2013, 2021, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -464,6 +464,21 @@ of an expression."
                    (compute-effects c)
                    (cause &type-check)
                    (cause &string)))
+
+          (($ <primcall> _ 'string->utf8 (s))
+           (logior (compute-effects s)
+                   (cause &type-check)
+                   (cause &allocation)
+                   &string))
+          (($ <primcall> _ 'string-utf8-length (s))
+           (logior (compute-effects s)
+                   (cause &type-check)
+                   &string))
+          (($ <primcall> _ 'utf8->string (bv))
+           (logior (compute-effects bv)
+                   (cause &type-check)
+                   (cause &allocation)
+                   &bytevector))
 
           (($ <primcall> _
               (or 'bytevector-u8-ref 'bytevector-s8-ref

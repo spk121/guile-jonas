@@ -581,9 +581,10 @@ top-level bindings from ENV and return the resulting expression."
       ;; todo: further optimize commutative primitives
       (catch #t
         (lambda ()
+          (define mod (resolve-interface (primitive-module name)))
           (call-with-values
               (lambda ()
-                (apply (module-ref the-scm-module name) args))
+                (apply (module-ref mod name) args))
             (lambda results
               (values #t results))))
         (lambda _

@@ -408,6 +408,64 @@
       (build-term
         ($branch knot-keyword kheap-object src 'heap-object? #f (kw))))))
 
+(define-primcall-converter string->utf8
+  (lambda (cps k src op param str)
+    (define not-string
+      #(wrong-type-arg
+        "string->utf8"
+        "Wrong type argument in position 1 (expecting string): ~S"))
+    (with-cps cps
+      (letk knot-string
+            ($kargs () () ($throw src 'throw/value+data not-string (str))))
+      (letk kstr
+            ($kargs () ()
+              ($continue k src ($primcall 'string->utf8 #f (str)))))
+      (letk kheap-object
+            ($kargs () ()
+              ($branch knot-string kstr src 'string? #f (str))))
+      (build-term
+        ($branch knot-string kheap-object src 'heap-object? #f (str))))))
+
+(define-primcall-converter string-utf8-length
+  (lambda (cps k src op param str)
+    (define not-string
+      #(wrong-type-arg
+        "string-utf8-length"
+        "Wrong type argument in position 1 (expecting string): ~S"))
+    (with-cps cps
+      (letv len)
+      (letk knot-string
+            ($kargs () () ($throw src 'throw/value+data not-string (str))))
+      (letk ktag
+            ($kargs ('len) (len)
+              ($continue k src ($primcall 'u64->scm #f (len)))))
+      (letk kstr
+            ($kargs () ()
+              ($continue ktag src ($primcall 'string-utf8-length #f (str)))))
+      (letk kheap-object
+            ($kargs () ()
+              ($branch knot-string kstr src 'string? #f (str))))
+      (build-term
+        ($branch knot-string kheap-object src 'heap-object? #f (str))))))
+
+(define-primcall-converter utf8->string
+  (lambda (cps k src op param bv)
+    (define not-bv
+      #(wrong-type-arg
+        "utf8->string"
+        "Wrong type argument in position 1 (expecting bytevector): ~S"))
+    (with-cps cps
+      (letk knot-bv
+            ($kargs () () ($throw src 'throw/value+data not-bv (bv))))
+      (letk kbv
+            ($kargs () ()
+              ($continue k src ($primcall 'utf8->string #f (bv)))))
+      (letk kheap-object
+            ($kargs () ()
+              ($branch knot-bv kbv src 'bytevector? #f (bv))))
+      (build-term
+        ($branch knot-bv kheap-object src 'heap-object? #f (bv))))))
+
 (define (ensure-pair cps src op pred x is-pair)
   (define msg
     (match pred

@@ -937,13 +937,15 @@ minimum, and maximum."
   ((symbol->keyword &symbol) &keyword)
   ((keyword->symbol &keyword) &symbol)
   ((symbol->string &symbol) &string)
-  ((string->symbol &string) &symbol))
+  ((string->symbol &string) &symbol)
+  ((string-utf8-length &string) &u64)
+  ((utf8->string &bytevector) &string))
 
 
 
 
 ;;;
-;;; Threads.  We don't currently track threads as an object type.
+;;;  We don't currently track threads as an object type.
 ;;;
 
 (define-simple-types
