@@ -683,6 +683,11 @@ top-level bindings from ENV and return the resulting expression."
     ;; mutable data (like `car' or toplevel references).
     (constant? (compute-effects x)))
 
+  (define (can-elide-statement? stmt)
+    (let ((effects (compute-effects stmt)))
+      (effect-free?
+       (exclude-effects effects (logior &allocation &zero-values)))))
+
   (define (prune-bindings ops in-order? body counter ctx build-result)
     ;; This helper handles both `let' and `letrec'/`fix'.  In the latter
     ;; cases we need to make sure that if referenced binding A needs
@@ -1520,7 +1525,10 @@ top-level bindings from ENV and return the resulting expression."
           (fold-constants src name args ctx))
 
          ((name . args)
-          (make-primcall src name args))))
+          (let ((exp (make-primcall src name args)))
+            (if (and (eq? ctx 'effect) (can-elide-statement? exp))
+                (make-void src)
+                exp)))))
 
       (($ <call> src orig-proc orig-args)
        ;; todo: augment the global env with specialized functions
