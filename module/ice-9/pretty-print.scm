@@ -114,7 +114,7 @@ port directly after OBJ, like (pretty-print OBJ PORT)."
        ((< to col)
         (put-string port "\n")
         (put-string port per-line-prefix)
-        (spaces to))
+        (spaces (- to (string-length per-line-prefix))))
        (else
         (spaces (- to col))))))
 
