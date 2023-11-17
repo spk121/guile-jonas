@@ -807,6 +807,9 @@ minimum, and maximum."
 (define-type-inferrer (string-ref str idx result)
   (define! result &u64 0 *max-codepoint*))
 
+(define-type-inferrer (symbol-hash sym result)
+  (define! result &u64 0 &u64-max))
+
 (define-type-inferrer/param (make-closure param code result)
   (define nfree param)
   (define! result &procedure nfree nfree))

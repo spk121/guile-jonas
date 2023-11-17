@@ -476,6 +476,13 @@
       ($continue kadd src
         ($primcall 'word-ref/immediate '(string . 2) (s))))))
 
+;; precondition: sym is a symbol.
+(define-primcall-lowerer (symbol-hash cps k src #f (sym))
+  (with-cps cps
+    (build-term
+      ($continue k src
+        ($primcall 'word-ref/immediate '(symbol . 2) (sym))))))
+
 ;; precondition: none.
 (define-primcall-lowerer (make-atomic-box cps k src #f (val))
   (with-cps cps

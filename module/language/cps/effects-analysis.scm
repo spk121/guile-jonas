@@ -497,6 +497,8 @@ the LABELS that are clobbered by the effects of LABEL."
   ((string-ref str idx)            (&read-object &string))
   ((string-set! str idx cp)        (&write-object &string))
 
+  ((symbol-hash))
+
   ((make-closure code)             (&allocate &closure))
   ((closure-ref code)              (match param
                                      ((idx . nfree)

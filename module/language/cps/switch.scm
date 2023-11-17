@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2020 Free Software Foundation, Inc.
+;; Copyright (C) 2020, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -371,7 +371,7 @@ object."
               (letk khash
                     ($kargs () ()
                       ($continue kidx #f
-                        ($primcall 'word-ref/immediate '(symbol . 2) (var)))))
+                        ($primcall 'symbol-hash #f (var)))))
               (letk ksym
                     ($kargs () ()
                       ($branch next khash #f 'symbol? #f (var))))
