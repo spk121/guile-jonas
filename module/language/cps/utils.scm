@@ -399,7 +399,8 @@ by a label, respectively."
       word-ref word-ref/immediate
       untag-char
       vector-length vtable-size bv-length
-      string-length string-ref)
+      string-length string-ref
+      symbol-hash)
      '(u64))
     ((untag-fixnum
       assume-s64
