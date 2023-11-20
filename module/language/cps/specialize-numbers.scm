@@ -284,18 +284,23 @@
 
 (define significant-bits-handlers (make-hash-table))
 (define-syntax-rule (define-significant-bits-handler
-                      ((primop label types out def ...) arg ...)
+                      ((primop label types out def ...) param arg ...)
                       body ...)
   (hashq-set! significant-bits-handlers 'primop
               (lambda (label types out param args defs)
                 (match args ((arg ...) (match defs ((def ...) body ...)))))))
 
-(define-significant-bits-handler ((logand label types out res) a b)
+(define-significant-bits-handler ((logand label types out res) param a b)
   (let ((sigbits (sigbits-intersect3 (inferred-sigbits types label a)
                                      (inferred-sigbits types label b)
                                      (intmap-ref out res (lambda (_) 0)))))
     (intmap-add (intmap-add out a sigbits sigbits-union)
                 b sigbits sigbits-union)))
+(define-significant-bits-handler ((logand/immediate label types out res) param a)
+  (let ((sigbits (sigbits-intersect3 (inferred-sigbits types label a)
+                                     param
+                                     (intmap-ref out res (lambda (_) 0)))))
+    (intmap-add out a sigbits sigbits-union)))
 
 (define (significant-bits-handler primop)
   (hashq-ref significant-bits-handlers primop))
@@ -556,11 +561,11 @@ BITS indicating the significant bits needed for a variable.  BITS may be
               (specialize-unop cps k src op param a
                                (unbox-u64 a) (box-u64 result))))
 
-           (('logand/immediate (? u64-result? ) param a)
+           (('logand/immediate (? u64-result? ) param (? u64-operand? a))
             (specialize-unop cps k src 'ulogand/immediate
                              (logand param (1- (ash 1 64)))
                              a
-                             (unbox-u64/truncate a) (box-u64 result)))
+                             (unbox-u64 a) (box-u64 result)))
 
            (((or 'add/immediate 'sub/immediate 'mul/immediate)
              (? s64-result?) (? s64-parameter?) (? s64-operand? a))
