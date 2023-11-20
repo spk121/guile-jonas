@@ -3530,6 +3530,25 @@ compile_ulogand_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 }
 
 static void
+compile_ulogand_immediate (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
+{
+#if SIZEOF_UINTPTR_T >= 8
+  emit_sp_ref_u64 (j, T0, a);
+  emit_andi (j, T0, T0, b);
+  emit_sp_set_u64 (j, dst, T0);
+#else
+  emit_sp_ref_u64 (j, T0, T1, a);
+  emit_andi (j, T0, T0, b);
+  emit_andi (j, T1, T1, 0);
+  emit_sp_set_u64 (j, dst, T0, T1);
+#endif
+}
+static void
+compile_ulogand_immediate_slow (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
+{
+}
+
+static void
 compile_ulogior (scm_jit_state *j, uint32_t dst, uint32_t a, uint32_t b)
 {
 #if SIZEOF_UINTPTR_T >= 8

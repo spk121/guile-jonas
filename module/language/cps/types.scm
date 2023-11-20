@@ -1644,10 +1644,24 @@ where (A0 <= A <= A1) and (B0 <= B <= B1)."
     (lambda (min max)
       (define-exact-integer! result min max))))
 
+(define-simple-type-checker (logand/immediate &exact-integer))
+(define-type-inferrer/param (logand/immediate param a result)
+  (restrict! a &exact-integer -inf.0 +inf.0)
+  (call-with-values (lambda ()
+                      (logand-bounds (&min a) (&max a) param param))
+    (lambda (min max)
+      (define-exact-integer! result min max))))
+
 (define-type-inferrer (ulogand a b result)
   (restrict! a &u64 0 &u64-max)
   (restrict! b &u64 0 &u64-max)
   (define! result &u64 0 (min (&max/u64 a) (&max/u64 b))))
+(define-type-inferrer/param (ulogand/immediate param a result)
+  (restrict! a &u64 0 &u64-max)
+  (call-with-values (lambda ()
+                      (logand-bounds (&min a) (&max a) param param))
+    (lambda (min max)
+      (define! result &u64 min max))))
 
 (define (logsub-bounds a0 a1 b0 b1)
   "Return two values: lower and upper bounds for (logsub A B),

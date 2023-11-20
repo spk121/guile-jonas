@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2015-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2015-2021, 2023 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -116,6 +116,7 @@
     (build-term
       ($continue ks64 src ($primcall 'u64->s64 #f (u64))))))
 (define-simple-primcall scm->u64)
+(define-simple-primcall scm->u64/truncate)
 (define-simple-primcall u64->scm)
 (define-simple-primcall u64->scm/unlikely)
 
@@ -459,6 +460,11 @@ BITS indicating the significant bits needed for a variable.  BITS may be
       (<= (target-most-negative-fixnum) min max (target-most-positive-fixnum)))
     (define (unbox-u64 arg)
       (if (fixnum-operand? arg) fixnum->u64 scm->u64))
+    (define (unbox-u64/truncate arg)
+      (cond
+       ((fixnum-operand? arg) fixnum->u64)
+       ((u64-operand? arg) scm->u64)
+       (else scm->u64/truncate)))
     (define (unbox-s64 arg)
       (if (fixnum-operand? arg) untag-fixnum scm->s64))
     (define (rebox-s64 arg)
@@ -549,6 +555,12 @@ BITS indicating the significant bits needed for a variable.  BITS may be
                         ('mul/immediate 'umul/immediate))))
               (specialize-unop cps k src op param a
                                (unbox-u64 a) (box-u64 result))))
+
+           (('logand/immediate (? u64-result? ) param a)
+            (specialize-unop cps k src 'ulogand/immediate
+                             (logand param (1- (ash 1 64)))
+                             a
+                             (unbox-u64/truncate a) (box-u64 result)))
 
            (((or 'add/immediate 'sub/immediate 'mul/immediate)
              (? s64-result?) (? s64-parameter?) (? s64-operand? a))

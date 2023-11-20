@@ -255,6 +255,22 @@
            ($continue ktest src
              ($primcall 'cache-ref cache-key ()))))))))
 
+(define-ephemeral (mul/immediate cps k src param a)
+  (with-cps cps
+    (letv imm)
+    (letk kop ($kargs ('imm) (imm)
+                ($continue k src ($primcall 'mul #f (a imm)))))
+    (build-term
+      ($continue kop src ($const param)))))
+
+(define-ephemeral (logand/immediate cps k src param a)
+  (with-cps cps
+    (letv imm)
+    (letk kop ($kargs ('imm) (imm)
+                ($continue k src ($primcall 'logand #f (a imm)))))
+    (build-term
+      ($continue kop src ($const param)))))
+
 ;; FIXME: Instead of having to check this, instead every primcall that's
 ;; not ephemeral should be handled by compile-bytecode.
 (define (compute-known-primitives)
@@ -369,14 +385,6 @@
        (with-cps cps
          (setk label ($kargs names vars ($continue k src ($const val))))))
       (($ $kargs names vars
-          ($ $continue k src ($ $primcall 'mul/immediate b (a))))
-       (with-cps cps
-         (letv b*)
-         (letk kb ($kargs ('b) (b*)
-                    ($continue k src ($primcall 'mul #f (a b*)))))
-         (setk label ($kargs names vars
-                       ($continue kb src ($const b))))))
-      (($ $kargs names vars
           ($ $continue k src
              ($ $primcall (or 'assume-u64 'assume-s64) (lo . hi) (val))))
        (with-cps cps
@@ -433,6 +441,7 @@
               ;; ((ursh/immediate (u6? y) x) (ursh x y))
               ;; ((srsh/immediate (u6? y) x) (srsh x y))
               ;; ((ulsh/immediate (u6? y) x) (ulsh x y))
+              ((ulogand/immediate (u8? y) x) (ulogand x y))
               (_
                (match (cons name args)
                  (((or 'allocate-words/immediate

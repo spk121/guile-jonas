@@ -319,6 +319,7 @@
             emit-usub/immediate
             emit-umul/immediate
             emit-ulogand
+            emit-ulogand/immediate
             emit-ulogior
             emit-ulogxor
             emit-ulogsub
@@ -2321,7 +2322,7 @@ needed."
 
 ;; FIXME: Define these somewhere central, shared with C.
 (define *bytecode-major-version* #x0300)
-(define *bytecode-minor-version* 6)
+(define *bytecode-minor-version* 7)
 
 (define (link-dynamic-section asm text rw rw-init frame-maps)
   "Link the dynamic section for an ELF image with bytecode @var{text},

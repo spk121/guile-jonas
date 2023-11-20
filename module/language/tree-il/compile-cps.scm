@@ -1976,6 +1976,10 @@ use as the proc slot."
              (lsh/immediate y (x)))
             (('rsh x ($ <const> _ (? uint? y)))
              (rsh/immediate y (x)))
+            (('logand x ($ <const> _ (? exact-integer? y)))
+             (logand/immediate y (x)))
+            (('logand ($ <const> _ (? exact-integer? x)) y)
+             (logand/immediate x (y)))
             (_
              (default))))
          ;; Tree-IL primcalls are sloppy, in that it could be that
