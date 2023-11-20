@@ -1,4 +1,4 @@
-/* Copyright 1995-1997,2000-2001,2003-2004,2006,2008-2015,2017-2018,2020
+/* Copyright 1995-1997,2000-2001,2003-2004,2006,2008-2015,2017-2018,2020,2023
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -136,6 +136,8 @@ wide_string_hash (const scm_t_wchar *str, size_t len)
   return ret;
 }
 
+/* If you change this to a different hash, also update (language cps
+   guile-vm).  */
 unsigned long
 scm_i_string_hash (SCM str)
 {
