@@ -846,7 +846,7 @@ BITS indicating the significant bits needed for a variable.  BITS may be
       (_ #f)))
 
   (compute-specializable-vars cps body preds defs exp-result-u64?
-                              '(scm->u64 'scm->u64/truncate)))
+                              '(scm->u64 scm->u64/truncate)))
 
 ;; Compute vars whose definitions are all exact integers in the fixnum
 ;; range and whose uses include an untag operation.
