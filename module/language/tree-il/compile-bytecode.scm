@@ -446,6 +446,13 @@
         (make-primcall src 'throw
                        (list key (make-primcall #f 'list args))))
 
+       (($ <primcall> src 'raise-type-error (($ <const> _ #(subr pos what)) x))
+        (define msg
+          (format #f "Wrong type argument in position ~a (expecting ~a): ~~S"
+                  pos what))
+        (make-primcall src 'throw/value+data
+                       (list x (make-const #f `#(wrong-type-arg ,subr ,msg)))))
+
        ;; Now that we handled special cases, ensure remaining primcalls
        ;; are understood by the code generator, and if not, reify them
        ;; as calls.

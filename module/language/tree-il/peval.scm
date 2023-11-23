@@ -1270,14 +1270,9 @@ top-level bindings from ENV and return the resulting expression."
                ;; fixme: introduce logic to fold thunk?
                (make-primcall src 'thunk? (list u))
                (make-call src w '())
-               (make-primcall
-                src 'throw
-                (list
-                 (make-const #f 'wrong-type-arg)
-                 (make-const #f "dynamic-wind")
-                 (make-const #f "Wrong type (expecting thunk): ~S")
-                 (make-primcall #f 'list (list u))
-                 (make-primcall #f 'list (list u)))))
+               (make-primcall src 'raise-type-error
+                              (list (make-const #f #("dynamic-wind" 3 "thunk"))
+                                    u)))
               (make-primcall src 'wind (list w u)))
              (make-begin0 src
                           (make-call src thunk '())

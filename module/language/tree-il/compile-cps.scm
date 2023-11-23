@@ -1513,6 +1513,23 @@ use as the proc slot."
            (build-term
              ($throw src 'raise-exception #f (exn)))))))))
 
+(define-custom-primcall-converter (raise-type-error cps src args convert-args k)
+  (match args
+    ((($ <const> _ #((? string? proc-name)
+                     (? exact-integer? pos)
+                     (? string? what)))
+      val)
+     ;; When called with just one arg, we know that raise-exception is
+     ;; non-continuing, and so we can prune the graph at its continuation.
+     ;; This improves flow analysis, because the path that leads to the
+     ;; raise-exception doesn't rejoin the graph.
+     (convert-args cps (list val)
+       (lambda (cps vals)
+         (with-cps cps
+           (build-term
+             ($throw src 'raise-type-error (vector proc-name pos what)
+                     vals))))))))
+
 (define-custom-primcall-converter (values cps src args convert-args k)
   (convert-args cps args
     (lambda (cps args)
