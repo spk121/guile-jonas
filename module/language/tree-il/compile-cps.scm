@@ -81,17 +81,15 @@
   (convert-primcall* cps k src op param args))
 
 (define (ensure-vector cps src op pred v have-length)
-  (define msg
+  (define expected-type
     (match pred
-      ('vector?
-       "Wrong type argument in position 1 (expecting vector): ~S")
-      ('mutable-vector?
-       "Wrong type argument in position 1 (expecting mutable vector): ~S")))
-  (define not-vector (vector 'wrong-type-arg (symbol->string op) msg))
+      ('vector? "vector")
+      ('mutable-vector? "mutable vector")))
+  (define not-vector (vector (symbol->string op) 1 expected-type))
   (with-cps cps
     (letv ulen)
     (letk knot-vector
-          ($kargs () () ($throw src 'throw/value+data not-vector (v))))
+          ($kargs () () ($throw src 'raise-type-error not-vector (v))))
     (let$ body (have-length ulen))
     (letk k ($kargs ('ulen) (ulen) ,body))
     (letk kv
@@ -106,20 +104,14 @@
 (define (untag-fixnum-index-in-range cps src op idx ulen have-index-in-range)
   ;; Precondition: ULEN is a U64.  Should be within positive fixnum
   ;; range.
-  (define not-fixnum
-    (vector 'wrong-type-arg
-            (symbol->string op)
-            "Wrong type argument in position 2 (expecting small integer): ~S"))
-  (define out-of-range
-    (vector 'out-of-range
-            (symbol->string op)
-            "Argument 2 out of range: ~S"))
+  (define not-fixnum (vector (symbol->string op) 2 "small integer"))
+  (define out-of-range (vector (symbol->string op) 2))
   (with-cps cps
     (letv sidx uidx)
     (letk knot-fixnum
-          ($kargs () () ($throw src 'throw/value+data not-fixnum (idx))))
+          ($kargs () () ($throw src 'raise-type-error not-fixnum (idx))))
     (letk kout-of-range
-          ($kargs () () ($throw src 'throw/value+data out-of-range (idx))))
+          ($kargs () () ($throw src 'raise-range-error out-of-range (idx))))
     (let$ body (have-index-in-range uidx))
     (letk k ($kargs () () ,body))
     (letk kboundlen
@@ -137,20 +129,14 @@
     (build-term ($branch knot-fixnum kuntag src 'fixnum? #f (idx)))))
 
 (define (untag-fixnum-in-imm-range cps src op size max have-int-in-range)
-  (define not-fixnum
-    (vector 'wrong-type-arg
-            (symbol->string op)
-            "Wrong type argument in position 2 (expecting small integer): ~S"))
-  (define out-of-range
-    (vector 'out-of-range
-            (symbol->string op)
-            "Argument 2 out of range: ~S"))
+  (define not-fixnum (vector (symbol->string op) 2 "small integer"))
+  (define out-of-range (vector (symbol->string op) 2))
   (with-cps cps
     (letv ssize usize)
     (letk knot-fixnum
-          ($kargs () () ($throw src 'throw/value+data not-fixnum (size))))
+          ($kargs () () ($throw src 'raise-type-error not-fixnum (size))))
     (letk kout-of-range
-          ($kargs () () ($throw src 'throw/value+data out-of-range (size))))
+          ($kargs () () ($throw src 'raise-range-error out-of-range (size))))
     (let$ body (have-int-in-range usize))
     (letk k ($kargs () () ,body))
     (letk kboundlen
@@ -182,15 +168,12 @@
   (ensure-vector
    cps src op pred v
    (lambda (cps ulen)
-     (define out-of-range
-       (vector 'out-of-range
-               (symbol->string op)
-               "Argument 2 out of range: ~S"))
+     (define out-of-range (vector (symbol->string op) 2))
      (with-cps cps
        (letv tidx)
        (letk kthrow
              ($kargs ('tidx) (tidx)
-               ($throw src 'throw/value+data out-of-range (tidx))))
+               ($throw src 'raise-range-error out-of-range (tidx))))
        (letk kout-of-range
              ($kargs () ()
                ($continue kthrow src ($const idx))))
@@ -352,13 +335,10 @@
 
 (define-primcall-converter symbol->string
   (lambda (cps k src op param sym)
-    (define not-symbol
-      #(wrong-type-arg
-        "symbol->string"
-        "Wrong type argument in position 1 (expecting symbol): ~S"))
+    (define not-symbol #("symbol->string" 1 "symbol"))
     (with-cps cps
       (letk knot-symbol
-            ($kargs () () ($throw src 'throw/value+data not-symbol (sym))))
+            ($kargs () () ($throw src 'raise-type-error not-symbol (sym))))
       ;; This is the right lowering but the Guile-VM backend gets it a
       ;; bit wrong: the symbol->string intrinsic instruction includes a
       ;; type-check and actually allocates.  We should change symbols in
@@ -374,13 +354,10 @@
 
 (define-primcall-converter symbol->keyword
   (lambda (cps k src op param sym)
-    (define not-symbol
-      #(wrong-type-arg
-        "symbol->keyword"
-        "Wrong type argument in position 1 (expecting symbol): ~S"))
+    (define not-symbol #("symbol->keyword" 1 "symbol"))
     (with-cps cps
       (letk knot-symbol
-            ($kargs () () ($throw src 'throw/value+data not-symbol (sym))))
+            ($kargs () () ($throw src 'raise-type-error not-symbol (sym))))
       (letk ksym
             ($kargs () ()
               ($continue k src ($primcall 'symbol->keyword #f (sym)))))
@@ -392,13 +369,10 @@
 
 (define-primcall-converter keyword->symbol
   (lambda (cps k src op param kw)
-    (define not-keyword
-      #(wrong-type-arg
-        "keyword->symbol"
-        "Wrong type argument in position 1 (expecting keyword): ~S"))
+    (define not-keyword #("keyword->symbol" 1 "keyword"))
     (with-cps cps
       (letk knot-keyword
-            ($kargs () () ($throw src 'throw/value+data not-keyword (kw))))
+            ($kargs () () ($throw src 'raise-type-error not-keyword (kw))))
       (letk kkw
             ($kargs () ()
               ($continue k src ($primcall 'keyword->symbol #f (kw)))))
@@ -410,13 +384,10 @@
 
 (define-primcall-converter string->utf8
   (lambda (cps k src op param str)
-    (define not-string
-      #(wrong-type-arg
-        "string->utf8"
-        "Wrong type argument in position 1 (expecting string): ~S"))
+    (define not-string #("string->utf8" 1 "string"))
     (with-cps cps
       (letk knot-string
-            ($kargs () () ($throw src 'throw/value+data not-string (str))))
+            ($kargs () () ($throw src 'raise-type-error not-string (str))))
       (letk kstr
             ($kargs () ()
               ($continue k src ($primcall 'string->utf8 #f (str)))))
@@ -428,14 +399,11 @@
 
 (define-primcall-converter string-utf8-length
   (lambda (cps k src op param str)
-    (define not-string
-      #(wrong-type-arg
-        "string-utf8-length"
-        "Wrong type argument in position 1 (expecting string): ~S"))
+    (define not-string #("string-utf8-length" 1 "string"))
     (with-cps cps
       (letv len)
       (letk knot-string
-            ($kargs () () ($throw src 'throw/value+data not-string (str))))
+            ($kargs () () ($throw src 'raise-type-error not-string (str))))
       (letk ktag
             ($kargs ('len) (len)
               ($continue k src ($primcall 'u64->scm #f (len)))))
@@ -450,13 +418,10 @@
 
 (define-primcall-converter utf8->string
   (lambda (cps k src op param bv)
-    (define not-bv
-      #(wrong-type-arg
-        "utf8->string"
-        "Wrong type argument in position 1 (expecting bytevector): ~S"))
+    (define not-bv #("utf8->string" 1 "bytevector"))
     (with-cps cps
       (letk knot-bv
-            ($kargs () () ($throw src 'throw/value+data not-bv (bv))))
+            ($kargs () () ($throw src 'raise-type-error not-bv (bv))))
       (letk kbv
             ($kargs () ()
               ($continue k src ($primcall 'utf8->string #f (bv)))))
@@ -467,15 +432,13 @@
         ($branch knot-bv kheap-object src 'heap-object? #f (bv))))))
 
 (define (ensure-pair cps src op pred x is-pair)
-  (define msg
+  (define what
     (match pred
-      ('pair?
-       "Wrong type argument in position 1 (expecting pair): ~S")
-      ('mutable-pair?
-       "Wrong type argument in position 1 (expecting mutable pair): ~S")))
-  (define not-pair (vector 'wrong-type-arg (symbol->string op) msg))
+      ('pair? "pair")
+      ('mutable-pair? "mutable pair")))
+  (define not-pair (vector (symbol->string op) 1 "pair"))
   (with-cps cps
-    (letk knot-pair ($kargs () () ($throw src 'throw/value+data not-pair (x))))
+    (letk knot-pair ($kargs () () ($throw src 'raise-type-error not-pair (x))))
     (let$ body (is-pair))
     (letk k ($kargs () () ,body))
     (letk kheap-object ($kargs () () ($branch knot-pair k src pred #f (x))))
@@ -546,12 +509,9 @@
           ($primcall 'box-set! #f (box val)))))))
 
 (define (ensure-box cps src op x is-box)
-  (define not-box
-    (vector 'wrong-type-arg
-            (symbol->string op)
-            "Wrong type argument in position 1 (expecting box): ~S"))
+  (define not-box (vector (symbol->string op) 1 "box"))
   (with-cps cps
-    (letk knot-box ($kargs () () ($throw src 'throw/value+data not-box (x))))
+    (letk knot-box ($kargs () () ($throw src 'raise-type-error not-box (x))))
     (let$ body (is-box))
     (letk k ($kargs () () ,body))
     (letk kheap-object ($kargs () () ($branch knot-box k src 'variable? #f (x))))
@@ -572,14 +532,11 @@
        (convert-primcall cps k src '%box-set! param box val)))))
 
 (define (ensure-struct cps src op x have-vtable)
-  (define not-struct
-    (vector 'wrong-type-arg
-            (symbol->string op)
-            "Wrong type argument in position 1 (expecting struct): ~S"))
+  (define not-struct (vector (symbol->string op) 1 "struct"))
   (with-cps cps
     (letv vtable)
     (letk knot-struct
-          ($kargs () () ($throw src 'throw/value+data not-struct (x))))
+          ($kargs () () ($throw src 'raise-type-error not-struct (x))))
     (let$ body (have-vtable vtable))
     (letk k ($kargs ('vtable) (vtable) ,body))
     (letk kvtable ($kargs () ()
@@ -601,13 +558,10 @@
   (ensure-struct
    cps src op vtable
    (lambda (cps vtable-vtable)
-     (define not-vtable
-       (vector 'wrong-type-arg
-               (symbol->string op)
-               "Wrong type argument in position 1 (expecting vtable): ~S"))
+     (define not-vtable (vector (symbol->string op) 1 "vtable"))
      (with-cps cps
        (letk kf
-             ($kargs () () ($throw src 'throw/value+data not-vtable (vtable))))
+             ($kargs () () ($throw src 'raise-type-error not-vtable (vtable))))
        (let$ body (is-vtable))
        (letk k ($kargs () () ,body))
        (build-term
@@ -618,20 +572,15 @@
     (ensure-vtable
      cps src 'allocate-struct vtable
      (lambda (cps)
-       (define wrong-number
-         (vector 'wrong-number-of-args
-                 (symbol->string op)
-                 "Wrong number of initializers when instantiating ~A"))
+       (define bad-arity (vector (symbol->string op)))
        (define has-unboxed
-         (vector 'wrong-type-arg
-                 (symbol->string op)
-                 "Expected vtable with no unboxed fields: ~A"))
+         (vector (symbol->string op) 1 "vtable with no unboxed fields"))
        (with-cps cps
          (letv actual-nfields)
-         (letk kwna
-               ($kargs () () ($throw src 'throw/value wrong-number (vtable))))
+         (letk kbad-arity
+               ($kargs () () ($throw src 'raise-arity-error bad-arity (vtable))))
          (letk kunboxed
-               ($kargs () () ($throw src 'throw/value+data has-unboxed (vtable))))
+               ($kargs () () ($throw src 'raise-type-error has-unboxed (vtable))))
          (letk kalloc
                ($kargs () ()
                  ($continue k src
@@ -642,30 +591,23 @@
                    'vtable-has-unboxed-fields? nfields (vtable))))
          (letk knfields
                ($kargs ('nfields) (actual-nfields)
-                 ($branch kwna kaccess src
+                 ($branch kbad-arity kaccess src
                    'u64-imm-= nfields (actual-nfields))))
          (build-term
            ($continue knfields src
              ($primcall 'vtable-size #f (vtable)))))))))
 
 (define (ensure-struct-index-in-range cps src op vtable idx in-range)
-  (define bad-type
-    (vector
-     'wrong-type-arg
-     (symbol->string op)
-     "Wrong type argument in position 2 (expecting boxed field): ~S"))
-  (define out-of-range
-    (vector 'out-of-range
-            (symbol->string op)
-            "Argument 2 out of range: ~S"))
+  (define bad-type (vector (symbol->string op) 2 "boxed field"))
+  (define out-of-range (vector (symbol->string op) 2))
   (with-cps cps
     (letv nfields throwval1 throwval2)
     (letk kthrow1
           ($kargs (#f) (throwval1)
-            ($throw src 'throw/value+data out-of-range (throwval1))))
+            ($throw src 'raise-range-error out-of-range (throwval1))))
     (letk kthrow2
           ($kargs (#f) (throwval2)
-            ($throw src 'throw/value+data bad-type (throwval2))))
+            ($throw src 'raise-type-error bad-type (throwval2))))
     (letk kbadidx ($kargs () () ($continue kthrow1 src ($const idx))))
     (letk kbadtype ($kargs () () ($continue kthrow2 src ($const idx))))
 
@@ -682,10 +624,7 @@
         ($primcall 'vtable-size #f (vtable))))))
 
 (define (prepare-struct-scm-access cps src op struct idx in-range)
-  (define not-struct
-    (vector 'wrong-type-arg
-            (symbol->string op)
-            "Wrong type argument in position 1 (expecting struct): ~S"))
+  (define not-struct (vector (symbol->string op) 1 "struct"))
   (ensure-struct
    cps src op struct
    (lambda (cps vtable)
@@ -745,19 +684,14 @@
 
 (define (untag-bytevector-index cps src op idx ulen width have-uidx)
   (define not-fixnum
-    (vector 'wrong-type-arg
-            (symbol->string op)
-            "Wrong type argument in position 2 (expecting small integer): ~S"))
-  (define out-of-range
-    (vector 'out-of-range
-            (symbol->string op)
-            "Argument 2 out of range: ~S"))
+    (vector (symbol->string op) 2 "small integer"))
+  (define out-of-range (vector (symbol->string op) 2))
   (with-cps cps
     (letv sidx uidx maxidx+1)
     (letk knot-fixnum
-          ($kargs () () ($throw src 'throw/value+data not-fixnum (idx))))
+          ($kargs () () ($throw src 'raise-type-error not-fixnum (idx))))
     (letk kout-of-range
-          ($kargs () () ($throw src 'throw/value+data out-of-range (idx))))
+          ($kargs () () ($throw src 'raise-range-error out-of-range (idx))))
     (let$ body (have-uidx uidx))
     (letk k ($kargs () () ,body))
     (letk ktestidx
@@ -782,15 +716,13 @@
     (build-term ($branch knot-fixnum kuntag src 'fixnum? #f (idx)))))
 
 (define (ensure-bytevector cps k src op pred x)
-  (define msg
+  (define what
     (match pred
-      ('bytevector?
-       "Wrong type argument in position 1 (expecting bytevector): ~S")
-      ('mutable-bytevector?
-       "Wrong type argument in position 1 (expecting mutable bytevector): ~S")))
-  (define bad-type (vector 'wrong-type-arg (symbol->string op) msg))
+      ('bytevector? "bytevector")
+      ('mutable-bytevector? "mutable bytevector")))
+  (define bad-type (vector (symbol->string op) 1 what))
   (with-cps cps
-    (letk kf ($kargs () () ($throw src 'throw/value+data bad-type (x))))
+    (letk kf ($kargs () () ($throw src 'raise-type-error bad-type (x))))
     (letk kheap-object ($kargs () () ($branch kf k src pred #f (x))))
     (build-term ($branch kf kheap-object src 'heap-object? #f (x)))))
 
@@ -856,14 +788,11 @@
              ($primcall ptr-op 'bytevector (bv ptr uidx)))))))))
 
 (define (bytevector-set-converter scheme-name ptr-op width kind)
-  (define out-of-range
-    (vector 'out-of-range
-            (symbol->string scheme-name)
-            "Argument 3 out of range: ~S"))
+  (define out-of-range (vector (symbol->string scheme-name) 3))
   (define (limit-urange cps src val uval hi in-range)
     (with-cps cps
       (letk kbad ($kargs () ()
-                   ($throw src 'throw/value+data out-of-range (val))))
+                   ($throw src 'raise-range-error out-of-range (val))))
       (let$ body (in-range uval))
       (letk k ($kargs () () ,body))
       (build-term
@@ -871,7 +800,7 @@
   (define (limit-srange cps src val sval lo hi in-range)
     (with-cps cps
       (letk kbad ($kargs () ()
-                   ($throw src 'throw/value+data out-of-range (val))))
+                   ($throw src 'raise-range-error out-of-range (val))))
       (let$ body (in-range sval))
       (letk k ($kargs () () ,body))
       (letk k' ($kargs () ()
@@ -895,7 +824,7 @@
           (with-cps cps
             (letv sval)
             (letk kbad ($kargs () ()
-                         ($throw src 'throw/value+data out-of-range (val))))
+                         ($throw src 'raise-range-error out-of-range (val))))
             (let$ body (have-val sval))
             (letk k ($kargs () () ,body))
             (letk khi ($kargs () ()
@@ -1001,12 +930,11 @@
   (bv-f64-set! bytevector-ieee-double-native-set! f64-set! 8 float))
 
 (define (ensure-string cps src op x have-length)
-  (define msg "Wrong type argument in position 1 (expecting string): ~S")
-  (define not-string (vector 'wrong-type-arg (symbol->string op) msg))
+  (define not-string (vector (symbol->string op) 1 "string"))
   (with-cps cps
     (letv rlen)
     (letk knot-string
-          ($kargs () () ($throw src 'throw/value+data not-string (x))))
+          ($kargs () () ($throw src 'raise-type-error not-string (x))))
     (let$ body (have-length rlen))
     (letk k ($kargs ('rlen) (rlen) ,body))
     (letk ks
@@ -1019,20 +947,6 @@
     (build-term
       ($branch knot-string kheap-object src 'heap-object? #f (x)))))
 
-(define (ensure-char cps src op x have-char)
-  (define msg "Wrong type argument (expecting char): ~S")
-  (define not-char (vector 'wrong-type-arg (symbol->string op) msg))
-  (with-cps cps
-    (letv uchar)
-    (letk knot-char
-          ($kargs () () ($throw src 'throw/value+data not-char (x))))
-    (let$ body (have-char uchar))
-    (letk k ($kargs ('uchar) (uchar) ,body))
-    (letk kchar
-          ($kargs () () ($continue k src ($primcall 'untag-char #f (x)))))
-    (build-term
-      ($branch knot-char kchar src 'char? #f (x)))))
-
 (define-primcall-converter string-length
   (lambda (cps k src op param x)
     (ensure-string
@@ -1044,8 +958,7 @@
 
 (define-primcall-converter string-ref
   (lambda (cps k src op param s idx)
-    (define out-of-range
-      #(out-of-range string-ref "Argument 2 out of range: ~S"))
+    (define out-of-range #("string-ref" 2))
     (ensure-string
      cps src op s
      (lambda (cps ulen)
@@ -1053,7 +966,7 @@
          (letv uidx start upos buf ptr tag mask bits uwpos u32 uchar)
          (letk kout-of-range
                ($kargs () ()
-                 ($throw src 'throw/value+data out-of-range (idx))))
+                 ($throw src 'raise-range-error out-of-range (idx))))
          (letk kchar
                ($kargs ('uchar) (uchar)
                  ($continue k src
@@ -1070,49 +983,48 @@
 
 (define-primcall-converter string-set!
   (lambda (cps k src op param s idx ch)
-    (define out-of-range
-      #(out-of-range string-ref "Argument 2 out of range: ~S"))
+    (define out-of-range #("string-set!" 2))
+    (define not-char #("string-set!" 3 "char"))
     (define stringbuf-f-wide #x400)
     (ensure-string
      cps src op s
      (lambda (cps ulen)
-       (ensure-char
-        cps src op ch
-        (lambda (cps uchar)
-          (with-cps cps
-            (letv uidx)
-            (letk kout-of-range
-                  ($kargs () ()
-                    ($throw src 'throw/value+data out-of-range (idx))))
-            (letk kuidx
-                  ($kargs () ()
-                    ($continue k src
-                      ($primcall 'string-set! #f (s uidx uchar)))))
-            (letk krange
-                  ($kargs ('uidx) (uidx)
-                    ($branch kout-of-range kuidx src 'u64-< #f (uidx ulen))))
-            (build-term
-              ($continue krange src ($primcall 'scm->u64 #f (idx)))))))))))
+       (with-cps cps
+         (letv uidx uchar)
+         (letk kout-of-range
+               ($kargs () ()
+                 ($throw src 'raise-range-error out-of-range (idx))))
+         (letk knot-char
+               ($kargs () () ($throw src 'raise-type-error not-char (ch))))
+         (letk kset
+               ($kargs ('uchar) (uchar)
+                 ($continue k src
+                   ($primcall 'string-set! #f (s uidx uchar)))))
+         (letk kchar
+               ($kargs () ()
+                 ($continue kset src ($primcall 'untag-char #f (ch)))))
+         (letk kchar?
+               ($kargs () ()
+                 ($branch knot-char kchar src 'char? #f (ch))))
+         (letk krange
+               ($kargs ('uidx) (uidx)
+                 ($branch kout-of-range kchar? src 'u64-< #f (uidx ulen))))
+         (build-term
+           ($continue krange src ($primcall 'scm->u64 #f (idx)))))))))
 
 (define-primcall-converter integer->char
   (lambda (cps k src op param i)
-    (define not-fixnum
-      #(wrong-type-arg
-        "integer->char"
-        "Wrong type argument in position 1 (expecting small integer): ~S"))
-    (define out-of-range
-      #(out-of-range
-        "integer->char"
-        "Argument 1 out of range: ~S"))
+    (define not-fixnum #("integer->char" 1 "small integer"))
+    (define out-of-range #("integer->char" 1))
     (define codepoint-surrogate-start #xd800)
     (define codepoint-surrogate-end #xdfff)
     (define codepoint-max #x10ffff)
     (with-cps cps
       (letv si ui)
       (letk knot-fixnum
-            ($kargs () () ($throw src 'throw/value+data not-fixnum (i))))
+            ($kargs () () ($throw src 'raise-type-error not-fixnum (i))))
       (letk kf
-            ($kargs () () ($throw src 'throw/value+data out-of-range (i))))
+            ($kargs () () ($throw src 'raise-range-error out-of-range (i))))
       (letk ktag ($kargs ('ui) (ui)
                    ($continue k src ($primcall 'tag-char #f (ui)))))
       (letk kt ($kargs () ()
@@ -1136,14 +1048,11 @@
 
 (define-primcall-converter char->integer
   (lambda (cps k src op param ch)
-    (define not-char
-      #(wrong-type-arg
-        "char->integer"
-        "Wrong type argument in position 1 (expecting char): ~S"))
+    (define not-char #("char->integer" 1 "char"))
     (with-cps cps
       (letv ui si)
       (letk knot-char
-            ($kargs () () ($throw src 'throw/value+data not-char (ch))))
+            ($kargs () () ($throw src 'raise-type-error not-char (ch))))
       (letk ktag ($kargs ('si) (si)
                    ($continue k src ($primcall 'tag-fixnum #f (si)))))
       (letk kcvt ($kargs ('ui) (ui)
@@ -1164,12 +1073,9 @@
 (define-primcall-converter lsh convert-shift)
 
 (define (ensure-atomic-box cps src op x is-atomic-box)
-  (define bad-type
-    (vector 'wrong-type-arg
-            (symbol->string op)
-            "Wrong type argument in position 1 (expecting atomic box): ~S"))
+  (define bad-type (vector (symbol->string op) 1 "atomic box"))
   (with-cps cps
-    (letk kbad ($kargs () () ($throw src 'throw/value+data bad-type (x))))
+    (letk kbad ($kargs () () ($throw src 'raise-type-error bad-type (x))))
     (let$ body (is-atomic-box))
     (letk k ($kargs () () ,body))
     (letk kheap-object ($kargs () () ($branch kbad k src 'atomic-box? #f (x))))
@@ -1601,25 +1507,11 @@ use as the proc slot."
   ;; raise-exception doesn't rejoin the graph.
   (convert-args cps args
     (lambda (cps args)
-      (define (maybe-prune-graph cps k)
-        (match args
-          ((_)
-           (with-cps cps
-             (letv vals)
-             (letk kunreachable ($kargs (#f) (vals)
-                                  ($throw src 'unreachable #f ())))
-             (letk kret ($kreceive '() 'rest kunreachable))
-             kret))
-          (_
-           (with-cps cps
-             k))))
-      (with-cps cps
-        (letv prim)
-        (let$ k (maybe-prune-graph k))
-        (letk kcall ($kargs ('prim) (prim)
-                      ($continue k src ($call prim args))))
-        (build-term
-          ($continue kcall src ($prim 'raise-exception)))))))
+      (match args
+        ((exn)
+         (with-cps cps
+           (build-term
+             ($throw src 'raise-exception #f (exn)))))))))
 
 (define-custom-primcall-converter (values cps src args convert-args k)
   (convert-args cps args
@@ -2113,14 +2005,11 @@ use as the proc slot."
                 (match args
                   ((arg)
                    (define not-number
-                     (vector
-                      'wrong-type-arg
-                      (symbol->string name)
-                      "Wrong type argument in position 1 (expecting number): ~S"))
+                     (vector (symbol->string name) 1 "number"))
                    (with-cps cps
                      (letk kerr
                            ($kargs () ()
-                             ($throw src 'throw/value+data not-number (arg))))
+                             ($throw src 'raise-type-error not-number (arg))))
                      (letk ktest ($kargs () ()
                                    ($branch kf kt src name #f (arg))))
                      (build-term
@@ -2469,6 +2358,9 @@ integer."
 
        (($ <primcall> src 'throw ())
         (make-call src (make-primitive-ref src 'throw) '()))
+
+       (($ <primcall> src 'raise-exception (and args (not (_))))
+        (make-call src (make-primitive-ref src 'raise-exception) args))
 
        (($ <prompt> src escape-only? tag body
            ($ <lambda> hsrc hmeta

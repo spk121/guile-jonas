@@ -357,6 +357,55 @@
        (with-cps cps
          (let$ clause (reify-clause))
          (setk label ($kfun src meta self tail clause))))
+      (($ $kargs names vars ($ $throw src op param args))
+       (match op
+         ('raise-type-error
+          (match (cons param args)
+            ((#(proc-name pos what) val)
+             (define msg
+               (format #f
+                       "Wrong type argument in position ~a (expecting ~a): ~~S"
+                       pos what))
+             (with-cps cps
+               (setk label
+                     ($kargs names vars
+                       ($throw src 'throw/value+data
+                               (vector 'wrong-type-arg proc-name msg)
+                               (val))))))))
+         ('raise-range-error
+          (match (cons param args)
+            ((#(proc-name pos) val)
+             (define msg
+               (format #f "Argument ~a out of range: ~~S" pos))
+             (with-cps cps
+               (setk label
+                     ($kargs names vars
+                       ($throw src 'throw/value+data
+                               (vector 'out-of-range proc-name msg)
+                               (val))))))))
+         ('raise-arity-error
+          (match (cons param args)
+            ((#(proc-name) val)
+             (define msg "Wrong number of arguments to ~A")
+             (with-cps cps
+               (setk label
+                     ($kargs names vars
+                       ($throw src 'throw/value
+                               (vector 'wrong-number-of-args proc-name msg)
+                               (val))))))))
+         ('raise-exception
+          (match (cons param args)
+            ((#f exn)
+             (with-cps cps
+               (letv ignored prim)
+               (letk kdie ($kargs (#f) (ignored)
+                                    ($throw src 'unreachable #f ())))
+               (letk kret ($kreceive '() 'rest kdie))
+               (letk kcall ($kargs ('raise-exception) (prim)
+                             ($continue kret src ($call prim (exn)))))
+               (let$ body (resolve-prim 'raise-exception kcall src))
+               (setk label ($kargs names vars ,body))))))
+         ((or 'unreachable 'throw 'throw/value 'throw/value+data) cps)))
       (($ $kargs names vars ($ $continue k src ($ $prim name)))
        (with-cps cps
          (let$ body (resolve-prim name k src))
