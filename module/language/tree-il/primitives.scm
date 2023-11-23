@@ -727,12 +727,9 @@
                src '() #f 'args #f '() (list args)
                (primcall apply handler (make-lexical-ref #f 'args args))
                #f)))
-            (primcall throw
-                      (const 'wrong-type-arg)
-                      (const "call-with-prompt")
-                      (const "Wrong type (expecting procedure): ~S")
-                      (primcall list handler)
-                      (primcall list handler))))))))
+            (primcall raise-type-error
+                      (const #("call-with-prompt" 3 "procedure"))
+                      handler)))))))
    (else #f)))
 
 (define-primitive-expander! 'abort-to-prompt*
