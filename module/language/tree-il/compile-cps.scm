@@ -486,20 +486,36 @@
            ($continue k src
              ($primcall 'set-cdr! #f (pair val)))))))))
 
+(define target-has-unbound-boxes?
+  (let ((cache (make-hash-table)))
+    (lambda ()
+      (let ((rt (target-runtime)))
+        (match (hashq-get-handle cache rt)
+          ((k . v) v)
+          (#f (let ((iface (resolve-interface `(language cps ,rt))))
+                (define v (module-ref iface 'target-has-unbound-boxes?))
+                (hashq-set! cache rt v)
+                v)))))))
+
 (define-primcall-converter %box-ref
   (lambda (cps k src op param box)
-    (define unbound
-      #(misc-error "variable-ref" "Unbound variable: ~S"))
-    (with-cps cps
-      (letv val)
-      (letk kunbound ($kargs () () ($throw src 'throw/value unbound (box))))
-      (letk kbound ($kargs () () ($continue k src ($values (val)))))
-      (letk ktest
-            ($kargs ('val) (val)
-              ($branch kbound kunbound src 'undefined? #f (val))))
-      (build-term
-        ($continue ktest src
-          ($primcall 'box-ref #f (box)))))))
+    (cond
+     ((target-has-unbound-boxes?)
+      (define unbound
+        #(misc-error "variable-ref" "Unbound variable: ~S"))
+      (with-cps cps
+        (letv val)
+        (letk kunbound ($kargs () () ($throw src 'throw/value unbound (box))))
+        (letk kbound ($kargs () () ($continue k src ($values (val)))))
+        (letk ktest
+              ($kargs ('val) (val)
+                ($branch kbound kunbound src 'undefined? #f (val))))
+        (build-term
+          ($continue ktest src
+            ($primcall 'box-ref #f (box))))))
+     (else
+      (with-cps cps
+        ($continue k src ($primcall 'box-ref #f (box))))))))
 
 (define-primcall-converter %box-set!
   (lambda (cps k src op param box val)

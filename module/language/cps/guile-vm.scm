@@ -31,7 +31,8 @@
   #:export (make-lowerer
             available-optimizations
             target-symbol-hash
-            target-symbol-hash-bits))
+            target-symbol-hash-bits
+            target-has-unbound-boxes?))
 
 ;; This hash function is originally from
 ;; http://burtleburtle.net/bob/c/lookup3.c by Bob Jenkins, May 2006,
@@ -107,3 +108,5 @@
 
 (define (available-optimizations)
   '())
+
+(define target-has-unbound-boxes? #t)
