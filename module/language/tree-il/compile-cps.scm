@@ -515,7 +515,8 @@
             ($primcall 'box-ref #f (box))))))
      (else
       (with-cps cps
-        ($continue k src ($primcall 'box-ref #f (box))))))))
+        (build-term
+          ($continue k src ($primcall 'box-ref #f (box)))))))))
 
 (define-primcall-converter %box-set!
   (lambda (cps k src op param box val)
