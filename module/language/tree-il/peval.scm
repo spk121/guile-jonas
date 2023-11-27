@@ -1306,12 +1306,16 @@ top-level bindings from ENV and return the resulting expression."
                                                   '()))))))))
 
       (($ <primcall> src 'values exps)
-       (cond
-        ((null? exps)
-         (if (eq? ctx 'effect)
-             (make-void #f)
-             exp))
-        (else
+       (match exps
+        (()
+         (case ctx
+           ((effect) (make-void #f))
+           ((values) exp)
+           ;; Zero values returned to continuation expecting a value:
+           ;; ensure that we raise an error.
+           (else (make-primcall src 'values (list exp)))))
+        ((($ <primcall> _ 'values ())) exp)
+        (_
          (let ((vals (map for-value exps)))
            (if (and (case ctx
                       ((value test effect) #t)
@@ -1357,12 +1361,11 @@ top-level bindings from ENV and return the resulting expression."
                      ('make-prompt-tag ($ <const> _ (? string?))))
                  #t)
                 (_ #f)))
-         ;; Some expressions can be folded without visiting the
-         ;; arguments for value.
          (let ((res (if (eq? ctx 'effect)
                         (make-void #f)
                         (make-const #f #t))))
-           (for-tail (list->seq src (append args (list res))))))
+           (for-tail (list->seq src (append (map for-value args)
+                                            (list res))))))
         (else
          (match (cons name (map for-value args))
            (('cons x ($ <const> _ (? (cut eq? <> '()))))

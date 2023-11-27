@@ -1583,3 +1583,10 @@
 
   (pass-if-peval (equal? x '(a . b))
     (primcall equal? (toplevel x) (const (a . b)))))
+
+(with-test-prefix "values"
+  (pass-if-peval (begin (cons 1 (values)) #f)
+    (seq (primcall values (primcall values))
+         (const #f)))
+  (pass-if-peval (begin 1 (values) #f)
+    (const #f)))
