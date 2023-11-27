@@ -1588,5 +1588,26 @@
   (pass-if-peval (begin (cons 1 (values)) #f)
     (seq (primcall values (primcall values))
          (const #f)))
+
   (pass-if-peval (begin 1 (values) #f)
     (const #f)))
+
+(with-test-prefix "append"
+  (pass-if-peval (append '() 42)
+    (const 42))
+
+  (pass-if-peval (append '(1 2) 42)
+    (primcall cons (const 1)
+              (primcall cons (const 2) (const 42))))
+
+  (pass-if-peval (append (list 1 2) 42)
+    (primcall cons (const 1)
+              (primcall cons (const 2) (const 42))))
+
+  (pass-if-peval (append (cons* 1 2 '()) 42)
+    (primcall cons (const 1)
+              (primcall cons (const 2) (const 42))))
+
+  (pass-if-peval (append (cons 1 2) 42)
+    (primcall cons (const 1)
+              (primcall append (const 2) (const 42)))))

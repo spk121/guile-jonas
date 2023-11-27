@@ -69,7 +69,7 @@
 
     integer->char char->integer number->string string->number
 
-    acons cons cons*
+    acons cons cons* append
 
     list vector
 
@@ -147,7 +147,7 @@
 
 (define *primitive-constructors*
   ;; Primitives that return a fresh object.
-  '(acons cons cons* list vector make-vector
+  '(acons cons cons* append list vector make-vector
     make-struct/simple
     make-prompt-tag
     make-variable))
@@ -562,6 +562,12 @@
   (x) (values x)
   (x y) (cons x y)
   (x y . rest) (cons x (cons* y . rest)))
+
+(define-primitive-expander append
+  () '()
+  (x) (values x)
+  (x y) (append x y)
+  (x y . rest) (append x (append y . rest)))
 
 (define-primitive-expander acons (x y z)
   (cons (cons x y) z))

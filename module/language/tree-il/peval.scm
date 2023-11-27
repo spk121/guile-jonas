@@ -1350,6 +1350,35 @@ top-level bindings from ENV and return the resulting expression."
                   (make-primcall src 'apply
                                  (cons (for-value proc) args))))))))
 
+      (($ <primcall> src 'append (x z))
+       (let ((x (for-value x)))
+         (match x
+           ((or ($ <const> _ ())
+                ($ <primcall> _ 'list ()))
+            (for-value z))
+           ((or ($ <const> _ (_ . _))
+                ($ <primcall> _ 'cons)
+                ($ <primcall> _ 'list))
+            (for-tail
+             (let lp ((x x))
+               (match x
+                 ((or ($ <const> csrc ())
+                      ($ <primcall> csrc 'list ()))
+                  ;; Defer visiting z in value context to for-tail.
+                  z)
+                 (($ <const> csrc (x . y))
+                  (let ((x (make-const csrc x))
+                        (y (make-const csrc y)))
+                    (make-primcall src 'cons (list x (lp y)))))
+                 (($ <primcall> csrc 'cons (x y))
+                  (make-primcall src 'cons (list x (lp y))))
+                 (($ <primcall> csrc 'list (x . y))
+                  (let ((y (make-primcall csrc 'list y)))
+                    (make-primcall src 'cons (list x (lp y)))))
+                 (x (make-primcall src 'append (list x z)))))))
+           (else
+            (make-primcall src 'append (list x (for-value z)))))))
+
       (($ <primcall> src (? constructor-primitive? name) args)
        (cond
         ((and (memq ctx '(effect test))
