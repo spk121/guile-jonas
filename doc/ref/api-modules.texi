@@ -475,7 +475,7 @@ when a program uses them, on demand.
 
 When a program evaluates @code{(use-modules (ice-9 popen))}, and the
 module is not loaded, Guile searches for a conventionally-named file
-from in the @dfn{load path}.
+in the @dfn{load path}.
 
 In this case, loading @code{(ice-9 popen)} will eventually cause Guile
 to run @code{(primitive-load-path "ice-9/popen")}.
