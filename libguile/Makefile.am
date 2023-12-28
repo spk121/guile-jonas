@@ -85,7 +85,7 @@ gen-scmconfig$(EXEEXT): $(gen_scmconfig_OBJECTS) $(gen_scmconfig_DEPENDENCIES)
 	fi
 
 scmconfig.h: ${top_builddir}/config.h gen-scmconfig$(EXEEXT)
-	$(AM_V_GEN)(rm -f scmconfig.h.tmp; \
+	$(AM_V_GEN)(set -e; rm -f scmconfig.h.tmp; \
 	cat $(srcdir)/scmconfig.h.top > scmconfig.h.tmp; \
 	./gen-scmconfig$(EXEEXT) >> scmconfig.h.tmp; \
 	chmod 444 scmconfig.h.tmp; \
