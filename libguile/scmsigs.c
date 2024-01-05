@@ -86,7 +86,7 @@ static SCM signal_handler_asyncs;
 static SCM signal_handler_threads;
 
 /* The signal delivery thread.  */
-scm_thread *scm_i_signal_delivery_thread = NULL;
+SCM scm_i_signal_delivery_thread = SCM_BOOL_F;
 
 /* The mutex held when launching the signal delivery thread.  */
 static scm_i_pthread_mutex_t signal_delivery_thread_mutex =
@@ -196,6 +196,9 @@ signal_delivery_thread (void *data)
 	perror ("error in signal delivery thread");
     }
 
+  close (signal_pipe[0]);
+  signal_pipe[0] = -1;
+
   return SCM_UNSPECIFIED; /* not reached unless all other threads exited */
 }
 
@@ -211,16 +214,33 @@ start_signal_delivery_thread (void)
   signal_thread = scm_spawn_thread (signal_delivery_thread, NULL,
 				    scm_handle_by_message,
 				    "signal delivery thread");
-  scm_i_signal_delivery_thread = SCM_I_THREAD_DATA (signal_thread);
+  scm_i_signal_delivery_thread = signal_thread;
 
   scm_i_pthread_mutex_unlock (&signal_delivery_thread_mutex);
 }
 
+static scm_i_pthread_once_t once = SCM_I_PTHREAD_ONCE_INIT;
+
 void
 scm_i_ensure_signal_delivery_thread ()
 {
-  static scm_i_pthread_once_t once = SCM_I_PTHREAD_ONCE_INIT;
   scm_i_pthread_once (&once, start_signal_delivery_thread);
+}
+
+static void
+stop_signal_delivery_thread ()
+{
+  scm_i_pthread_mutex_lock (&signal_delivery_thread_mutex);
+
+  if (scm_is_true (scm_i_signal_delivery_thread))
+    {
+      close (signal_pipe[1]);
+      signal_pipe[1] = -1;
+      scm_join_thread (scm_i_signal_delivery_thread);
+      scm_i_signal_delivery_thread = SCM_BOOL_F;
+    }
+
+  scm_i_pthread_mutex_unlock (&signal_delivery_thread_mutex);
 }
 
 #else /* !SCM_USE_PTHREAD_THREADS */
@@ -248,7 +268,43 @@ scm_i_ensure_signal_delivery_thread ()
   return;
 }
 
+static void
+stop_signal_delivery_thread ()
+{
+  return;
+}
+
 #endif /* !SCM_USE_PTHREAD_THREADS */
+
+/* Perform pre-fork cleanup by stopping the signal delivery thread.  */
+void
+scm_i_signals_pre_fork ()
+{
+  stop_signal_delivery_thread ();
+}
+
+/* Perform post-fork setup by restarting the signal delivery thread if
+   it was active before fork.  This happens in both the parent and the
+   child process.  */
+void
+scm_i_signals_post_fork ()
+{
+  int active = 0;
+
+  for (int sig = 0; sig < NSIG; sig++)
+    {
+      if (scm_is_true (SCM_SIMPLE_VECTOR_REF (signal_handler_threads, sig))
+          || scm_is_true (SCM_SIMPLE_VECTOR_REF (signal_handler_asyncs, sig)))
+        {
+          active = 1;
+          break;
+        }
+    }
+
+  once = SCM_I_PTHREAD_ONCE_INIT;
+  if (active)
+    scm_i_ensure_signal_delivery_thread ();
+}
 
 static void
 install_handler (int signum, SCM thread, SCM handler)

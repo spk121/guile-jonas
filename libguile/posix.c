@@ -1295,7 +1295,10 @@ SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
 #define FUNC_NAME s_scm_fork
 {
   int pid;
+
   scm_i_finalizer_pre_fork ();
+  scm_i_signals_pre_fork ();
+
   if (scm_ilength (scm_all_threads ()) != 1)
     /* Other threads may be holding on to resources that Guile needs --
        it is not safe to permit one thread to fork while others are
@@ -1317,6 +1320,9 @@ SCM_DEFINE (scm_fork, "primitive-fork", 0, 0, 0,
 
   if (pid == -1)
     SCM_SYSERROR;
+
+  scm_i_signals_post_fork ();
+
   return scm_from_int (pid);
 }
 #undef FUNC_NAME

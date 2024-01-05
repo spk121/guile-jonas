@@ -1681,18 +1681,19 @@ SCM_DEFINE (scm_all_threads, "all-threads", 0, 0, 0,
 	    "Return a list of all threads.")
 #define FUNC_NAME s_scm_all_threads
 {
-  /* We can not allocate while holding the thread_admin_mutex because
-     of the way GC is done.
-  */
-  int n = thread_count;
   scm_thread *t;
-  SCM list = scm_c_make_list (n, SCM_UNSPECIFIED), *l;
 
   scm_i_pthread_mutex_lock (&thread_admin_mutex);
-  l = &list;
+
+  int n = thread_count;
+  SCM list = scm_c_make_list (n, SCM_UNSPECIFIED);
+  SCM *l = &list;
+
   for (t = all_threads; t && n > 0; t = t->next_thread)
     {
-      if (t != scm_i_signal_delivery_thread)
+      if (!t->exited
+          && (scm_is_false (scm_i_signal_delivery_thread)
+              || (!scm_is_eq (t->handle, scm_i_signal_delivery_thread))))
 	{
 	  SCM_SETCAR (*l, t->handle);
 	  l = SCM_CDRLOC (*l);
@@ -1700,7 +1701,9 @@ SCM_DEFINE (scm_all_threads, "all-threads", 0, 0, 0,
       n--;
     }
   *l = SCM_EOL;
+
   scm_i_pthread_mutex_unlock (&thread_admin_mutex);
+
   return list;
 }
 #undef FUNC_NAME
