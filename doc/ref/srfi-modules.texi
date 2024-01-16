@@ -5748,7 +5748,7 @@ reducer with result-so-far and the maybe-transformed input.
 A simple example is as following:
 
 @example
-(list-transduce (tfilter odd?) + '(1 2 3 4 5)).
+(list-transduce (tfilter odd?) + '(1 2 3 4 5))
 @end example
 
 This first returns a transducer filtering all odd
