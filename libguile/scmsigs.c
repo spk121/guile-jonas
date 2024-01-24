@@ -760,7 +760,7 @@ scm_i_close_signal_pipe()
   scm_i_pthread_mutex_lock (&signal_delivery_thread_mutex);
 
 #if SCM_USE_PTHREAD_THREADS
-  if (scm_i_signal_delivery_thread != NULL)
+  if (scm_is_true (scm_i_signal_delivery_thread))
     close (signal_pipe[1]);
 #endif
 
