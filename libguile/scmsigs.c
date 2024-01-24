@@ -1,4 +1,4 @@
-/* Copyright 1995-2002,2004,2006-2009,2011,2013-2014,2017-2018,2023
+/* Copyright 1995-2002, 2004, 2006-2009, 2011, 2013-2014, 2017-2018, 2023-2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -301,7 +301,9 @@ scm_i_signals_post_fork ()
         }
     }
 
+#if SCM_USE_PTHREAD_THREADS
   once = SCM_I_PTHREAD_ONCE_INIT;
+#endif
   if (active)
     scm_i_ensure_signal_delivery_thread ();
 }
