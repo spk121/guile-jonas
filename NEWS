@@ -1,5 +1,5 @@
 Guile NEWS --- history of user-visible changes.
-Copyright (C) 1996-2023 Free Software Foundation, Inc.
+Copyright (C) 1996-2024 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Guile bug reports to bug-guile@gnu.org.
@@ -31,6 +31,8 @@ the compiler reports it as "possibly unused".
    (<https://bugs.gnu.org/62501>)
 ** Fix 'system*' with non-file input/output/error port
    (<https://bugs.gnu.org/63024>)
+** Support signal handling child processes after 'primitive-fork'
+   (<https://bugs.gnu.org/68087>)
 ** Fix possible deadlock in 'sigaction' (aka. 'scm_sigaction_for_thread')
    (<https://bugs.gnu.org/64666>)
 ** Avoid module resolution in 'call-with-new-thread', which could deadlock
