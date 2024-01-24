@@ -418,6 +418,7 @@ AC_SUBST([SCM_I_GSC_HAVE_STRUCT_DIRENT64])
 #   sys/sendfile.h - non-POSIX, found in glibc
 #
 AC_CHECK_HEADERS([complex.h fenv.h io.h memory.h process.h \
+linux/fs.h \
 sys/dir.h sys/ioctl.h sys/select.h \
 sys/time.h sys/timeb.h sys/times.h sys/stdtypes.h sys/types.h \
 sys/utime.h unistd.h utime.h pwd.h grp.h sys/utsname.h \

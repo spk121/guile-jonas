@@ -896,10 +896,17 @@ of @code{delete-file}.  Why doesn't POSIX have a @code{rmdirat} function
 for this instead?  No idea!
 @end deffn
 
-@deffn {Scheme Procedure} copy-file oldfile newfile
+@deffn {Scheme Procedure} copy-file @var{oldfile} @var{newfile} @
+       [#:copy-on-write='auto]
 @deffnx {C Function} scm_copy_file (oldfile, newfile)
 Copy the file specified by @var{oldfile} to @var{newfile}.
 The return value is unspecified.
+
+@code{#:copy-on-write} keyword argument determines whether copy-on-write
+copy should be attempted and the behavior in case of failure.  Possible
+values are @code{'always} (attempt the copy-on-write, return error if it
+fails), @code{'auto} (attempt the copy-on-write, fallback to regular
+copy if it fails) and @code{'never} (perform the regular copy).
 @end deffn
 
 @deffn {Scheme Procedure} sendfile out in count [offset]

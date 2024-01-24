@@ -1,6 +1,7 @@
 /* Copyright 1996-2002,2004,2006,2009-2019,2021
      Free Software Foundation, Inc.
    Copyright 2021 Maxime Devos <maximedevos@telenet.be>
+   Copyright 2024 Tomas Volf <~@wolfsden.cz>
 
    This file is part of Guile.
 
@@ -67,6 +68,11 @@
 # include <sys/sendfile.h>
 #endif
 
+#if defined(HAVE_SYS_IOCTL_H) && defined(HAVE_LINUX_FS_H)
+# include <linux/fs.h>
+# include <sys/ioctl.h>
+#endif
+
 #include "async.h"
 #include "boolean.h"
 #include "dynwind.h"
@@ -75,6 +81,7 @@
 #include "fports.h"
 #include "gsubr.h"
 #include "iselect.h"
+#include "keywords.h"
 #include "list.h"
 #include "load.h"	/* for scm_i_mirror_backslashes */
 #include "modules.h"
@@ -1255,20 +1262,49 @@ SCM_DEFINE (scm_readlink, "readlink", 1, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_copy_file, "copy-file", 2, 0, 0,
-            (SCM oldfile, SCM newfile),
+static int
+clone_file (int oldfd, int newfd)
+{
+#ifdef FICLONE
+  return ioctl (newfd, FICLONE, oldfd);
+#else
+  (void)oldfd;
+  (void)newfd;
+  errno = EOPNOTSUPP;
+  return -1;
+#endif
+}
+
+SCM_KEYWORD (k_copy_on_write, "copy-on-write");
+SCM_SYMBOL (sym_always, "always");
+SCM_SYMBOL (sym_auto, "auto");
+SCM_SYMBOL (sym_never, "never");
+
+SCM_DEFINE (scm_copy_file2, "copy-file", 2, 0, 1,
+            (SCM oldfile, SCM newfile, SCM rest),
 	    "Copy the file specified by @var{oldfile} to @var{newfile}.\n"
-	    "The return value is unspecified.")
-#define FUNC_NAME s_scm_copy_file
+	    "The return value is unspecified.\n"
+            "\n"
+            "@code{#:copy-on-write} keyword argument determines whether "
+            "copy-on-write copy should be attempted and the "
+            "behavior in case of failure.  Possible values are "
+            "@code{'always} (attempt the copy-on-write, return error if "
+            "it fails), @code{'auto} (attempt the copy-on-write, "
+            "fallback to regular copy if it fails) and @code{'never} "
+            "(perform the regular copy)."
+            )
+#define FUNC_NAME s_scm_copy_file2
 {
   char *c_oldfile, *c_newfile;
   int oldfd, newfd;
   int n, rv;
+  SCM cow = sym_auto;
+  int clone_res;
   char buf[BUFSIZ];
   struct stat_or_stat64 oldstat;
 
   scm_dynwind_begin (0);
-  
+
   c_oldfile = scm_to_locale_string (oldfile);
   scm_dynwind_free (c_oldfile);
   c_newfile = scm_to_locale_string (newfile);
@@ -1292,13 +1328,30 @@ SCM_DEFINE (scm_copy_file, "copy-file", 2, 0, 0,
       SCM_SYSERROR;
     }
 
-  while ((n = read (oldfd, buf, sizeof buf)) > 0)
-    if (write (newfd, buf, n) != n)
-      {
-	close (oldfd);
-	close (newfd);
-	SCM_SYSERROR;
-      }
+  scm_c_bind_keyword_arguments ("copy-file", rest, 0,
+                                k_copy_on_write, &cow,
+                                SCM_UNDEFINED);
+
+  if (scm_is_eq (cow, sym_always) || scm_is_eq (cow, sym_auto))
+    clone_res = clone_file(oldfd, newfd);
+  else if (scm_is_eq (cow, sym_never))
+    clone_res = -1;
+  else
+    scm_misc_error ("copy-file",
+                    "invalid value for #:copy-on-write: ~S",
+                    scm_list_1 (cow));
+
+  if (scm_is_eq (cow, sym_always) && clone_res)
+    scm_syserror ("copy-file: copy-on-write failed");
+
+  if (clone_res)
+    while ((n = read (oldfd, buf, sizeof buf)) > 0)
+      if (write (newfd, buf, n) != n)
+        {
+          close (oldfd);
+          close (newfd);
+          SCM_SYSERROR;
+        }
   close (oldfd);
   if (close (newfd) == -1)
     SCM_SYSERROR;
@@ -1307,6 +1360,12 @@ SCM_DEFINE (scm_copy_file, "copy-file", 2, 0, 0,
   return SCM_UNSPECIFIED;
 }
 #undef FUNC_NAME
+
+SCM
+scm_copy_file (SCM oldfile, SCM newfile)
+{
+  return scm_copy_file2 (oldfile, newfile, SCM_UNSPECIFIED);
+}
 
 SCM_DEFINE (scm_sendfile, "sendfile", 3, 1, 0,
 	    (SCM out, SCM in, SCM count, SCM offset),
