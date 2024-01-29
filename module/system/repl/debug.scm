@@ -1,6 +1,6 @@
 ;;; Guile VM debugging facilities
 
-;;; Copyright (C) 2001, 2009-2011, 2013-2015, 2023 Free Software Foundation, Inc.
+;;; Copyright (C) 2001, 2009-2011, 2013-2015, 2023-2024 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software; you can redistribute it and/or
 ;;; modify it under the terms of the GNU Lesser General Public
@@ -76,7 +76,10 @@
   ;; Maximum number of columns filled by 'print-frames' when writing to
   ;; a port that is not a terminal.  This is a purposefully large value
   ;; to avoid losing important debugging info.
-  (make-fluid 500))
+  (make-parameter 500
+                  (lambda (val)
+                    (and (exact-integer? val) (positive? val)
+                         val))))
 
 
 
@@ -148,7 +151,7 @@
                        #:key
                        (width (if (isatty? port)
                                   (terminal-width)
-                                  (fluid-ref default-frame-width)))
+                                  (default-frame-width)))
                        (full? #f)
                        (forward? #f) count)
   (let* ((len (vector-length frames))
