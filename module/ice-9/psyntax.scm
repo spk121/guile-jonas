@@ -1087,18 +1087,36 @@
                                      (wrap var top-wrap mod)))))
           (define (macro-introduced-identifier? id)
             (not (equal? (wrap-marks (syntax-wrap id)) '(top))))
+          (define (ensure-fresh-name var)
+            ;; If a macro introduces a top-level identifier, we attempt
+            ;; to give it a fresh name by appending the hash of the
+            ;; expression in which it appears.  However, this can fail
+            ;; for hash collisions, which is more common that one might
+            ;; think: Guile's hash function stops descending into cdr's
+            ;; at some point.  So, within an expansion unit, fall back
+            ;; to appending a uniquifying integer.
+            (define (ribcage-has-var? var)
+              (let lp ((labels (ribcage-labels ribcage)))
+                (and (pair? labels)
+                     (let ((wrapped (cdar labels)))
+                       (or (eq? (syntax-expression wrapped) var)
+                           (lp (cdr labels)))))))
+            (let lp ((unique var) (n 1))
+              (if (ribcage-has-var? unique)
+                  (let ((tail (string->symbol (number->string n))))
+                    (lp (symbol-append var '- tail) (1+ n)))
+                  unique)))
           (define (fresh-derived-name id orig-form)
-            (symbol-append
-             (syntax-expression id)
-             '-
-             (string->symbol
-              ;; FIXME: `hash' currently stops descending into nested
-              ;; data at some point, so it's less unique than we would
-              ;; like.  Also this encodes hash values into the ABI of
-              ;; compiled modules; a problem?
-              (number->string
-               (hash (syntax->datum orig-form) most-positive-fixnum)
-               16))))
+            (ensure-fresh-name
+             (symbol-append
+              (syntax-expression id)
+              '-
+              (string->symbol
+               ;; FIXME: This encodes hash values into the ABI of
+               ;; compiled modules; a problem?
+               (number->string
+                (hash (syntax->datum orig-form) most-positive-fixnum)
+                16)))))
           (define (parse body r w s m esew mod)
             (let lp ((body body) (exps '()))
               (if (null? body)
