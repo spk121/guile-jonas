@@ -1697,15 +1697,17 @@
 
 (with-test-prefix "duplicate top-level introduced definitions"
   (pass-if-equal '(42 69)
-      (begin
-        (define-syntax-rule (defconst f val)
-          (begin
-            ;; The zeros cause a hash collision.
-            (define t (begin 0 0 0 0 0 0 0 0 0 val))
-            (define (f) t)))
-        (defconst a 42)
-        (defconst b 69)
-        (list (a) (b)))))
+      (primitive-eval
+       (macroexpand
+        '(begin
+           (define-syntax-rule (defconst f val)
+             (begin
+               ;; The zeros cause a hash collision.
+               (define t (begin 0 0 0 0 0 0 0 0 0 val))
+               (define (f) t)))
+           (defconst a 42)
+           (defconst b 69)
+           (list (a) (b)))))))
 
 ;;; Local Variables:
 ;;; eval: (put 'pass-if-syntax-error 'scheme-indent-function 1)
