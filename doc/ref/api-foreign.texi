@@ -108,7 +108,7 @@ Unless @var{library} denotes an absolute file name or otherwise contains
 a directory separator (@code{/}, and also @code{\} on Windows), Guile
 will search for the library in the directories listed in
 @var{search-paths}.  The default search path has three components, which
-can all be overriden by colon-delimited (semicolon on Windows)
+can all be overridden by colon-delimited (semicolon on Windows)
 environment variables:
 
 @table @env
@@ -146,7 +146,7 @@ We don't use libltdl now, essentially for flexibility and
 error-reporting reasons.  But, to keep this old use-case working, if
 @var{search-ltdl-library-path?} is true, we add each entry of
 @code{LTDL_LIBRARY_PATH} to the default extensions load path,
-additionally adding the @file{.libs} subdirextories for each entry, in
+additionally adding the @file{.libs} subdirectories for each entry, in
 case there are @file{.so} files there instead of alongside the
 @file{.la} files.
 @item GUILE_SYSTEM_EXTENSIONS_PATH
@@ -305,7 +305,7 @@ Note that the new primitives that the extension adds to Guile with
 @code{scm_c_define_gsubr} (@pxref{Primitive Procedures}) or with any of
 the other mechanisms are placed into the module that is current when the
 @code{scm_c_define_gsubr} is executed, so to be clear about what goes
-vwhere it's best to include the @code{load-extension} in a module, as
+where it's best to include the @code{load-extension} in a module, as
 above.  Alternately, the C code can use @code{scm_c_define_module} to
 specify which module is being created:
 
@@ -326,7 +326,7 @@ init_math_bessel ()
 
 And yet... if what we want is just the @code{j0} function, it seems like
 a lot of ceremony to have to compile a Guile-specific wrapper library
-complete with an initialization function and wraper module to allow
+complete with an initialization function and wrapper module to allow
 Guile users to call it.  There is another way, but to get there, we have
 to talk about function pointers and function types first.  @xref{Foreign
 Functions}, to skip to the good parts.
@@ -427,7 +427,7 @@ will try to use ``pointer object'' to refer to Scheme objects, and
 Create a pointer object from a pointer value.
 
 If @var{finalizer} is non-null, Guile arranges to call it on the pointer
-value at some point after the pointer object becomes collectable.
+value at some point after the pointer object becomes collectible.
 @end deftypefn
 
 @deftypefn {C Function} void* scm_to_pointer (SCM obj)
@@ -469,7 +469,7 @@ C types.
 @defvrx {Scheme Variable} complex-float
 These values represent the C numeric types of the specified sizes and
 signednesses. @code{complex-float} and @code{complex-double} stand for
-C99 @code{float _Complex} and @code{double _Complex} respecively.
+C99 @code{float _Complex} and @code{double _Complex} respectively.
 @end defvr
 
 In addition there are some convenience bindings for indicating types of
@@ -533,7 +533,7 @@ return two values, with @code{errno} as the second value.
 @end deffn
 
 Finally, in @code{(system foreign-library)} there is a convenient
-wrapper function, joining together @code{foreign-libary-pointer} and
+wrapper function, joining together @code{foreign-library-pointer} and
 @code{procedure->pointer}:
 
 @deffn {Scheme Procedure} foreign-library-function lib name @
@@ -567,7 +567,7 @@ bessel)}:
                             #:arg-types (list double)))
 @end example
 
-That's it! No C at all.
+That's it!  No C at all.
 
 Before going on to more detailed examples, the next two sections discuss
 how to deal with data that is more complex than, say, @code{int8}.
@@ -704,7 +704,7 @@ In this example, @code{grab-bottle} is guaranteed to return a genuine
 @end deffn
 
 As another example, currently Guile has a variable, @code{scm_numptob},
-as part of its API. It is declared as a C @code{long}. So, to read its
+as part of its API.  It is declared as a C @code{long}. So, to read its
 value, we can do:
 
 @example

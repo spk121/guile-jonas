@@ -902,7 +902,7 @@ enum scm_mutex_kind {
   /* An unowned mutex is like a standard mutex, except that it can be
      unlocked by any thread.  A corrolary of this behavior is that a
      thread's attempt to lock a mutex that it already owns will block
-     instead of signalling an error, as it could be that some other
+     instead of signaling an error, as it could be that some other
      thread unlocks the mutex, allowing the owner thread to proceed.
      This kind of mutex is a bit strange and is here for use by
      SRFI-18.  */

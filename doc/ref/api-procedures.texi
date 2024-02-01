@@ -127,19 +127,19 @@ required.
 @subsection Compiled Procedures
 
 The evaluation strategy given in @ref{Lambda} describes how procedures
-are @dfn{interpreted}. Interpretation operates directly on expanded
+are @dfn{interpreted}.  Interpretation operates directly on expanded
 Scheme source code, recursively calling the evaluator to obtain the
 value of nested expressions.
 
-Most procedures are compiled, however. This means that Guile has done
+Most procedures are compiled, however.  This means that Guile has done
 some pre-computation on the procedure, to determine what it will need to
-do each time the procedure runs. Compiled procedures run faster than
+do each time the procedure runs.  Compiled procedures run faster than
 interpreted procedures.
 
 Loading files is the normal way that compiled procedures come to
-being. If Guile sees that a file is uncompiled, or that its compiled
+being.  If Guile sees that a file is uncompiled, or that its compiled
 file is out of date, it will attempt to compile the file when it is
-loaded, and save the result to disk. Procedures can be compiled at
+loaded, and save the result to disk.  Procedures can be compiled at
 runtime as well. @xref{Read/Load/Eval/Compile}, for more information
 on runtime compilation.
 
@@ -150,7 +150,7 @@ Properties}).  In addition, there are a few more accessors for low-level
 details on programs.
 
 Most people won't need to use the routines described in this section,
-but it's good to have them documented. You'll have to include the
+but it's good to have them documented.  You'll have to include the
 appropriate module first, though:
 
 @example
@@ -194,9 +194,9 @@ really clever.
 Source location annotations for programs, along with their accessors.
 
 Source location information propagates through the compiler and ends
-up being serialized to the program's metadata. This information is
+up being serialized to the program's metadata.  This information is
 keyed by the offset of the instruction pointer within the object code
-of the program. Specifically, it is keyed on the @code{ip} @emph{just
+of the program.  Specifically, it is keyed on the @code{ip} @emph{just
 following} an instruction, so that backtraces can find the source
 location of a call that is in progress.
 @end deffn
@@ -213,24 +213,24 @@ location of a call that is in progress.
 @deffnx {Scheme Procedure} arity:allow-other-keys? arity
 Accessors for a representation of the ``arity'' of a program.
 
-The normal case is that a procedure has one arity. For example,
-@code{(lambda (x) x)}, takes one required argument, and that's it. One
+The normal case is that a procedure has one arity.  For example,
+@code{(lambda (x) x)}, takes one required argument, and that's it.  One
 could access that number of required arguments via @code{(arity:nreq
-(program-arities (lambda (x) x)))}. Similarly, @code{arity:nopt} gets
+(program-arities (lambda (x) x)))}.  Similarly, @code{arity:nopt} gets
 the number of optional arguments, and @code{arity:rest?} returns a true
 value if the procedure has a rest arg.
 
 @code{arity:kw} returns a list of @code{(@var{kw} . @var{idx})} pairs,
-if the procedure has keyword arguments. The @var{idx} refers to the
+if the procedure has keyword arguments.  The @var{idx} refers to the
 @var{idx}th local variable; @xref{Variables and the VM}, for more
-information. Finally @code{arity:allow-other-keys?} returns a true
+information.  Finally @code{arity:allow-other-keys?} returns a true
 value if other keys are allowed. @xref{Optional Arguments}, for more
 information.
 
-So what about @code{arity:start} and @code{arity:end}, then? They
+So what about @code{arity:start} and @code{arity:end}, then?  They
 return the range of bytes in the program's bytecode for which a given
-arity is valid. You see, a procedure can actually have more than one
-arity. The question, ``what is a procedure's arity'' only really makes
+arity is valid.  You see, a procedure can actually have more than one
+arity.  The question, ``what is a procedure's arity'' only really makes
 sense at certain points in the program, delimited by these
 @code{arity:start} and @code{arity:end} values.
 @end deffn
@@ -281,7 +281,7 @@ to give names to the fixed number of arguments, but the remaining
 
 For this reason, Guile provides an extension to @code{lambda},
 @code{lambda*}, which allows the user to define procedures with
-optional and keyword arguments. In addition, Guile's virtual machine
+optional and keyword arguments.  In addition, Guile's virtual machine
 has low-level support for optional and keyword argument dispatch.
 Calls to procedures with optional and keyword arguments can be made
 cheaply, without allocating a rest list.
@@ -564,7 +564,7 @@ Rest lists can be useful with @code{case-lambda}:
 @end lisp
 
 @fnindex case-lambda*
-Also, for completeness. Guile defines @code{case-lambda*} as well,
+Also, for completeness.  Guile defines @code{case-lambda*} as well,
 which is like @code{case-lambda}, except with @code{lambda*} clauses.
 A @code{case-lambda*} clause matches if the arguments fill the
 required arguments, but are not too many for the optional and/or rest

@@ -389,7 +389,7 @@ SCM_DEFINE (scm_setgroups, "setgroups", 1, 0, 0,
 SCM_DEFINE (scm_getpwuid, "getpw", 0, 1, 0,
             (SCM user),
 	    "Look up an entry in the user database.  @var{user} can be an\n"
-	    "integer, a string, or omitted, giving the behaviour of\n"
+	    "integer, a string, or omitted, giving the behavior of\n"
 	    "@code{getpwuid}, @code{getpwnam} or @code{getpwent}\n"
 	    "respectively.")
 #define FUNC_NAME s_scm_getpwuid
@@ -459,7 +459,7 @@ SCM_DEFINE (scm_setpwent, "setpw", 0, 1, 0,
 SCM_DEFINE (scm_getgrgid, "getgr", 0, 1, 0,
             (SCM name),
 	    "Look up an entry in the group database.  @var{name} can be an\n"
-	    "integer, a string, or omitted, giving the behaviour of\n"
+	    "integer, a string, or omitted, giving the behavior of\n"
 	    "@code{getgrgid}, @code{getgrnam} or @code{getgrent}\n"
 	    "respectively.")
 #define FUNC_NAME s_scm_getgrgid
@@ -725,7 +725,7 @@ SCM_DEFINE (scm_waitpid, "waitpid", 1, 1, 0,
 	    "has terminated or (optionally) stopped.  Normally it will\n"
 	    "suspend the calling process until this can be done.  If more than one\n"
 	    "child process is eligible then one will be chosen by the operating system.\n\n"
-	    "The value of @var{pid} determines the behaviour:\n\n"
+	    "The value of @var{pid} determines the behavior:\n\n"
 	    "@table @r\n"
 	    "@item @var{pid} greater than 0\n"
 	    "Request status information from the specified child process.\n"

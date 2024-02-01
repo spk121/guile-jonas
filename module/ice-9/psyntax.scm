@@ -481,7 +481,7 @@
     ;;               (lexical . <var>)               lexical variables
     ;;               (ellipsis . <identifier>)       custom ellipsis
     ;;               (displaced-lexical)             displaced lexicals
-    ;; <level>   ::= <nonnegative integer>
+    ;; <level>   ::= <non-negative integer>
     ;; <var>     ::= variable returned by build-lexical-var
 
     ;; a macro is a user-defined syntactic-form.  a core is a

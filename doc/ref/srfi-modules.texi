@@ -2139,7 +2139,7 @@ Guile provides a set of primitives and SRFI-18 is one of the systems built in te
 * SRFI-18 Mutexes::             Mutual exclusion devices
 * SRFI-18 Condition variables:: Synchronizing of groups of threads
 * SRFI-18 Time::                Representation of times and durations
-* SRFI-18 Exceptions::          Signalling and handling errors
+* SRFI-18 Exceptions::          Signaling and handling errors
 @end menu
 
 @node SRFI-18 Threads
@@ -3065,7 +3065,7 @@ specialization of @code{write}, sending output to
 The special symbol @code{<>} indicates a slot to be filled by an
 argument to the new procedure.  @code{my-output-port} on the other
 hand is an expression to be evaluated and passed, ie.@: it specializes
-the behaviour of @code{write}.
+the behavior of @code{write}.
 
 @table @nicode
 @item <>
@@ -6094,7 +6094,7 @@ These functions are in the @code{(srfi srfi-171 meta)} module and are only
 usable when you want to write your own transducers.
 
 @deffn {Scheme Procedure} reduced value
-Wraps a value in a @code{<reduced>} container, signalling that the
+Wraps a value in a @code{<reduced>} container, signaling that the
 reduction should stop.
 @end deffn
 

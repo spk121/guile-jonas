@@ -84,7 +84,7 @@
 
 (define (build-options-lookup options)
   "Answer an `equal?' Guile hash-table that maps OPTIONS' names back
-to the containing options, signalling an error if a name is
+to the containing options, signaling an error if a name is
 encountered more than once."
   (let ((lookup (make-hash-table (* 2 (length options)))))
     (for-each

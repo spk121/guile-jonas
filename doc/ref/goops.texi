@@ -1801,7 +1801,7 @@ instances of an application-defined class --- and an understanding of
 the MOP makes it much easier to explain such customizations in a precise
 way.  And at a deeper level, understanding the MOP is a key part of
 understanding GOOPS, and of taking full advantage of GOOPS' power, by
-customizing the behaviour of GOOPS itself.
+customizing the behavior of GOOPS itself.
 
 @menu
 * Metaobjects and the Metaobject Protocol::
@@ -1833,18 +1833,18 @@ Of these entities, GOOPS represents classes, generic functions and
 methods as ``metaobjects''.  In other words, the values in a GOOPS
 program that describe classes, generic functions and methods, are
 themselves instances (or ``objects'') of special GOOPS classes that
-encapsulate the behaviour, respectively, of classes, generic functions,
+encapsulate the behavior, respectively, of classes, generic functions,
 and methods.
 
 (The other two entities are slot definitions and instances.  Slot
 definitions are not strictly instances, but every slot definition is
-associated with a GOOPS class that specifies the behaviour of the slot
+associated with a GOOPS class that specifies the behavior of the slot
 as regards accessibility and protection from garbage collection.
 Instances are of course objects in the usual sense, and there is no
 benefit from thinking of them as metaobjects.)
 
 The ``metaobject protocol'' (or ``MOP'') is the specification of the
-generic functions which determine the behaviour of these metaobjects and
+generic functions which determine the behavior of these metaobjects and
 the circumstances in which these generic functions are invoked.
 
 For a concrete example of what this means, consider how GOOPS calculates
@@ -1880,7 +1880,7 @@ performs the slot calculation.
 @end itemize
 
 In other words, rather than being hardcoded in @code{define-class}, the
-default behaviour of class definition is encapsulated by generic
+default behavior of class definition is encapsulated by generic
 function methods that are specialized for the class @code{<class>}.
 
 It is possible to create a new class that inherits from @code{<class>},
@@ -1894,7 +1894,7 @@ with the new @code{initialize} method.  Thus the default slot
 calculation, as well as any other aspect of the new class's relationship
 with its superclasses, can be modified or overridden.
 
-In a similar way, the behaviour of generic functions can be modified or
+In a similar way, the behavior of generic functions can be modified or
 overridden by creating a new class that inherits from the standard
 generic function class @code{<generic>}, writing appropriate methods
 that are specialized to the new class, and creating new generic
@@ -1907,7 +1907,7 @@ of that class.
 
 Such is the power of the MOP.  Note that @code{initialize} is just one
 of a large number of generic functions that can be customized to modify
-the behaviour of application objects and classes and of GOOPS itself.
+the behavior of application objects and classes and of GOOPS itself.
 Each following section covers a particular area of GOOPS functionality,
 and describes the generic functions that are relevant for customization
 of that area.
@@ -2419,7 +2419,7 @@ If the metaclass of the new class is something more specialized than the
 default @code{<class>}, then the type of @var{class} in the calls above
 is more specialized than @code{<class>}, and hence it becomes possible
 to define generic function methods, specialized for the new class's
-metaclass, that can modify or override the default behaviour of
+metaclass, that can modify or override the default behavior of
 @code{initialize}, @code{compute-cpl} or @code{compute-get-n-set}.
 
 @code{compute-cpl} computes the class precedence list (``CPL'') for the
@@ -2508,9 +2508,9 @@ standard @code{initialize} method for classes whose metaclass is
 @code{<class>}.  But @code{initialize} itself can also be modified, by
 defining an @code{initialize} method specialized to the new class's
 metaclass.  Such a method could complete override the standard
-behaviour, by not calling @code{(next-method)} at all, but more
+behavior, by not calling @code{(next-method)} at all, but more
 typically it would perform additional class initialization steps before
-and/or after calling @code{(next-method)} for the standard behaviour.
+and/or after calling @code{(next-method)} for the standard behavior.
 
 
 @node Method Definition
@@ -2759,7 +2759,7 @@ make}).  What then happens if @code{<my-class>} is redefined by calling
 
 @menu
 * Redefinable Classes::
-* Default Class Redefinition Behaviour::
+* Default Class Redefinition Behavior::
 * Customizing Class Redefinition::
 @end menu
 
@@ -2794,8 +2794,8 @@ theory.  In practice, attempting to, for example, redefine
 Still, redefinition is an interesting capability when building
 long-lived resilient systems, so GOOPS does offer this facility.
 
-@node Default Class Redefinition Behaviour
-@subsection Default Class Redefinition Behaviour
+@node Default Class Redefinition Behavior
+@subsection Default Class Redefinition Behavior
 
 When a class is defined using @code{define-class} and the class name was
 previously defined, by default the new binding just replaces the old
@@ -2849,11 +2849,11 @@ updated when a class is redefined.)
 @end itemize
 
 If this class redefinition strategy strikes you as rather counter-intuitive,
-bear in mind that it is derived from similar behaviour in other object
+bear in mind that it is derived from similar behavior in other object
 systems such as CLOS, and that experience in those systems has shown it to be
 very useful in practice.
 
-Also bear in mind that, like most of GOOPS' default behaviour, it can
+Also bear in mind that, like most of GOOPS' default behavior, it can
 be customized@dots{}
 
 @node Customizing Class Redefinition
@@ -2864,7 +2864,7 @@ constructs the new class metaobject as usual, then invokes the
 @code{class-redefinition} generic function with the old and new classes
 as arguments.  Therefore, if the old or new classes have metaclasses
 other than the default @code{<redefinable-class>}, class redefinition
-behaviour can be customized by defining a @code{class-redefinition}
+behavior can be customized by defining a @code{class-redefinition}
 method that is specialized for the relevant metaclasses.
 
 @deffn generic class-redefinition
@@ -2880,8 +2880,8 @@ classes.  @xref{Redefinable Classes}.  This default method just returns
 @end deffn
 
 @deffn method class-redefinition (old <redefinable-class>) (new <redefinable-class>)
-This method implements GOOPS' default class redefinition behaviour, as
-described in @ref{Default Class Redefinition Behaviour}.  Returns the
+This method implements GOOPS' default class redefinition behavior, as
+described in @ref{Default Class Redefinition Behavior}.  Returns the
 metaobject for the new class definition.
 @end deffn
 
@@ -2980,6 +2980,6 @@ instance whose class has just been changed.  The default
 @code{update-instance-for-different-class} method does nothing.
 @end deffn
 
-Customized change of class behaviour can be implemented by defining
+Customized change of class behavior can be implemented by defining
 @code{change-class} methods that are specialized either by the class
 of the instances to be modified or by the metaclass of the new class.

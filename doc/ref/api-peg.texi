@@ -716,7 +716,7 @@ This produces rather pretty parse trees:
 
 Notice that when there's no entry in a field (e.g. @code{nameORcomment}
 for messagebus) the symbol is inserted.  This is the ``don't throw away
-any information'' rule---we succesfully matched a @code{nameORcomment}
+any information'' rule---we successfully matched a @code{nameORcomment}
 of 0 characters (since we used @code{*} when defining it).  This is
 usually what you want, because it allows you to e.g. use @code{list-ref}
 to pull out elements (since they all have known offsets).
@@ -1013,19 +1013,19 @@ First, any string PEG is expanded into an s-expression PEG by the code
 in the @code{(ice-9 peg string-peg)} module.
 
 Then, the s-expression PEG that results is compiled into a parsing
-function by the @code{(ice-9 peg codegen)} module. In particular, the
-function @code{compile-peg-pattern} is called on the s-expression. It then
+function by the @code{(ice-9 peg codegen)} module.  In particular, the
+function @code{compile-peg-pattern} is called on the s-expression.  It then
 decides what to do based on the form it is passed.
 
 The PEG syntax can be expanded by providing @code{compile-peg-pattern} more
-options for what to do with its forms. The extended syntax will be
+options for what to do with its forms.  The extended syntax will be
 associated with a symbol, for instance @code{my-parsing-form}, and will
 be called on all PEG expressions of the form
 @lisp
 (my-parsing-form ...)
 @end lisp
 
-The parsing function should take two arguments. The first will be a
+The parsing function should take two arguments.  The first will be a
 syntax object containing a list with all of the arguments to the form
 (but not the form's name), and the second will be the
 @code{capture-type} argument that is passed to @code{define-peg-pattern}.
@@ -1033,5 +1033,5 @@ syntax object containing a list with all of the arguments to the form
 New functions can be registered by calling @code{(add-peg-compiler!
 symbol function)}, where @code{symbol} is the symbol that will indicate
 a form of this type and @code{function} is the code generating function
-described above. The function @code{add-peg-compiler!} is exported from
+described above.  The function @code{add-peg-compiler!} is exported from
 the @code{(ice-9 peg codegen)} module.

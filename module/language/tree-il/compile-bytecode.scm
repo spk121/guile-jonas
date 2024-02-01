@@ -1124,7 +1124,7 @@ in the frame with for the lambda-case clause @var{clause}."
               (0 
                (emit-load-static-procedure asm dst label))
               (nfree
-               ;; Stage closure in 0 to avoid stompling captured free
+               ;; Stage closure in 0 to avoid stomping captured free
                ;; vars.
                (emit-allocate-closure asm 0 nfree label 1)
                (init-free-vars 0 free-vars env 1 2)
@@ -1148,7 +1148,7 @@ in the frame with for the lambda-case clause @var{clause}."
                          frame-size)))
 
         (($ <primcall> src (? variadic-constructor? name) args)
-         ;; Stage result in 0 to avoid stompling args.
+         ;; Stage result in 0 to avoid stomping args.
          (let ((args (for-args args env)))
            (maybe-emit-source src)
            (match name

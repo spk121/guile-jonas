@@ -2750,8 +2750,8 @@ are not themselves bound to a defined value."
 
 (define (module-symbol-local-binding m v . opt-val)
   "Return the binding of variable V specified by name within module M,
-signalling an error if the variable is unbound.  If the OPT-VALUE is
-passed, then instead of signalling an error, return OPT-VALUE."
+signaling an error if the variable is unbound.  If the OPT-VALUE is
+passed, then instead of signaling an error, return OPT-VALUE."
   (let ((var (module-local-variable m v)))
     (if (and var (variable-bound? var))
         (variable-ref var)
@@ -2761,8 +2761,8 @@ passed, then instead of signalling an error, return OPT-VALUE."
 
 (define (module-symbol-binding m v . opt-val)
   "Return the binding of variable V specified by name within module M,
-signalling an error if the variable is unbound.  If the OPT-VALUE is
-passed, then instead of signalling an error, return OPT-VALUE."
+signaling an error if the variable is unbound.  If the OPT-VALUE is
+passed, then instead of signaling an error, return OPT-VALUE."
   (let ((var (module-variable m v)))
     (if (and var (variable-bound? var))
         (variable-ref var)
@@ -3452,7 +3452,7 @@ error if selected binding does not exist in the used module."
        ;; FIXME: Avoid use of `apply'.
        (apply module-autoload! module autoloads)
        (let ((duplicates (or duplicates
-                             ;; Avoid stompling a previously installed
+                             ;; Avoid stomping a previously installed
                              ;; duplicates handlers if possible.
                              (and (not (module-duplicates-handlers module))
                                   ;; Note: If you change this default,

@@ -461,7 +461,7 @@ never again be used for a read or write operation."
 
 (define* (call-with-output-file file proc #:key (binary #f) (encoding #f))
   "PROC should be a procedure of one argument, and FILE should be a
-string naming a file.  The behaviour is unspecified if the file
+string naming a file.  The behavior is unspecified if the file
 already exists. These procedures call PROC
 with one argument: the port obtained by opening the named file for
 input or output.  If the file cannot be opened, an error is

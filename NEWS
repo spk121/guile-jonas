@@ -9549,7 +9549,7 @@ Use scm_object_to_string instead.
 
 ** Deprecated function:  scm_wta
 
-Use scm_wrong_type_arg, or another appropriate error signalling function
+Use scm_wrong_type_arg, or another appropriate error signaling function
 instead.
 
 ** Explicit support for obarrays has been deprecated.
