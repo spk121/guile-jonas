@@ -1,6 +1,6 @@
 -*-text-*-
 Guile Hacking Guide
-Copyright (c) 1996-2002,2008,2012,2015,2017 Free Software Foundation, Inc.
+Copyright (c) 1996-2002,2008,2012,2015,2017,2024 Free Software Foundation, Inc.
 
    Permission is granted to anyone to make or distribute verbatim copies
    of this document as received, in any medium, provided that the
@@ -117,7 +117,9 @@ Contributing Your Changes ============================================
 
 - If you have put together a change that meets the coding standards
 described below, we encourage you to submit it to Guile.  Post your
-patch to guile-devel@gnu.org.
+patch to guile-devel@gnu.org or bug-guile@gnu.org; the latter is
+tracked at <https://bugs.gnu.org/guile>, which can be browsed from
+Emacs with debbugs.el, and is thus less likely to be lost.
 
 - We prefer patches generated using 'git format-patch'.
 
