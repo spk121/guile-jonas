@@ -1709,6 +1709,18 @@
            (defconst b 69)
            (list (a) (b)))))))
 
+(pass-if-exception "macro-introduced cross-module unbound identifiers"
+    exception:unbound-var
+  (eval
+   '(begin
+      (define-module (foo) #:export (introduce-unbound))
+      (define-syntax-rule (introduce-unbound)
+        variable-bound-in-bar)
+      (define-module (bar) #:use-module (foo))
+      (define variable-bound-in-bar 42)
+      (introduce-unbound))
+   (interaction-environment)))
+
 ;;; Local Variables:
 ;;; eval: (put 'pass-if-syntax-error 'scheme-indent-function 1)
 ;;; eval: (put 'with-ellipsis 'scheme-indent-function 1)
