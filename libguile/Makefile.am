@@ -492,9 +492,9 @@ install-exec-hook:
 
 ## Instantiate a template.
 INSTANTIATE =									\
-  $(SED) -i -e 's,[@]pkgdatadir[@],$(pkgdatadir),g'				\
-            -e 's,[@]pkglibdir[@],$(pkglibdir),g'				\
-            -e 's,[@]GUILE_EFFECTIVE_VERSION[@],$(GUILE_EFFECTIVE_VERSION),g'
+  $(SED) -e 's,[@]pkgdatadir[@],$(pkgdatadir),g'				\
+         -e 's,[@]pkglibdir[@],$(pkglibdir),g'					\
+         -e 's,[@]GUILE_EFFECTIVE_VERSION[@],$(GUILE_EFFECTIVE_VERSION),g'
 
 install-data-hook: libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm
 	@$(MKDIR_P) $(DESTDIR)$(libdir)
@@ -518,9 +518,9 @@ install-data-hook: libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm
 	cd $$here;						\
 	echo " $(INSTALL_DATA) $<				\
 $(DESTDIR)$(libdir)/$$libname-gdb.scm";				\
-	$(INSTALL_DATA) "$<"					\
-	    "$(DESTDIR)$(libdir)/$$libname-gdb.scm";		\
-	$(INSTANTIATE) "$(DESTDIR)$(libdir)/$$libname-gdb.scm"
+	$(INSTANTIATE) "$<" > $$libname-gdb.scm;		\
+	$(INSTALL_DATA) $$libname-gdb.scm			\
+	    "$(DESTDIR)$(libdir)/$$libname-gdb.scm";
 
 # Remove the GDB support file and the Info 'dir' file that
 # 'install-info' 5.x installs.
