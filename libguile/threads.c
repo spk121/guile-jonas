@@ -1398,9 +1398,10 @@ SCM_DEFINE (scm_timed_wait_condition_variable, "wait-condition-variable", 2, 1, 
 "it specifies a point in time where the waiting should be aborted.  It "
 "can be either a integer as returned by @code{current-time} or a pair "
 "as returned by @code{gettimeofday}.  When the waiting is aborted the "
-"mutex is locked and @code{#f} is returned.  When the condition "
-"variable is in fact signaled, the mutex is also locked and @code{#t} "
-"is returned. ")
+"mutex is locked and @code{#f} is returned.  After the condition "
+"variable is signaled, the mutex is locked and @code{#t} is returned.  "
+"@code{#t} may also be returned spuriously, so any relevant conditions "
+"should be re-checked.")
 #define FUNC_NAME s_scm_timed_wait_condition_variable
 {
   scm_t_timespec waittime_val, *waittime = NULL;
