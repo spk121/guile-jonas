@@ -54,6 +54,7 @@ This speeds up copying large files a lot while saving the disk space.
    (<https://bugs.gnu.org/55344>)
 ** 'make-custom-port' now honors its #:conversion-strategy argument
 ** 'eval-string' respects #:column (previously it was set to the #:line)
+** 'string->date' now allows a colon in the ISO 8601 zone offset
 ** Hashing of UTF-8 symbols with non-ASCII characters avoids corruption
    (<https://bugs.gnu.org/56413>)
 
