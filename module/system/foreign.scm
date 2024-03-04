@@ -1,19 +1,18 @@
-;;;; 	Copyright (C) 2010, 2011, 2013 Free Software Foundation, Inc.
-;;;;
-;;;; This library is free software; you can redistribute it and/or
-;;;; modify it under the terms of the GNU Lesser General Public
-;;;; License as published by the Free Software Foundation; either
-;;;; version 2.1 of the License, or (at your option) any later version.
-;;;;
-;;;; This library is distributed in the hope that it will be useful,
-;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;;;; Lesser General Public License for more details.
-;;;;
-;;;; You should have received a copy of the GNU Lesser General Public
-;;;; License along with this library; if not, write to the Free Software
-;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-;;;;
+;;; Copyright (C) 2010-2011,2013-2014,2024 Free Software Foundation, Inc.
+;;;
+;;; This library is free software: you can redistribute it and/or modify
+;;; it under the terms of the GNU Lesser General Public License as
+;;; published by the Free Software Foundation, either version 3 of the
+;;; License, or (at your option) any later version.
+;;;
+;;; This library is distributed in the hope that it will be useful, but
+;;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; Lesser General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU Lesser General Public
+;;; License along with this program.  If not, see
+;;; <http://www.gnu.org/licenses/>.
 
 
 (define-module (system foreign)
@@ -108,12 +107,10 @@
 (define *writers*
   `((,float . ,bytevector-ieee-single-native-set!)
     (,double . ,bytevector-ieee-double-native-set!)
-    ,@(if (defined? 'complex-float)
-          `((,complex-float
-             . ,(writer-complex bytevector-ieee-single-native-set! (sizeof float)))
-            (,complex-double
-             . ,(writer-complex bytevector-ieee-double-native-set! (sizeof double))))
-          '())
+    (,complex-float
+     . ,(writer-complex bytevector-ieee-single-native-set! (sizeof float)))
+    (,complex-double
+     . ,(writer-complex bytevector-ieee-double-native-set! (sizeof double)))
     (,int8 . ,bytevector-s8-set!)
     (,uint8 . ,bytevector-u8-set!)
     (,int16 . ,bytevector-s16-native-set!)
@@ -127,12 +124,10 @@
 (define *readers*
   `((,float . ,bytevector-ieee-single-native-ref)
     (,double . ,bytevector-ieee-double-native-ref)
-    ,@(if (defined? 'complex-float)
-          `((,complex-float
-             . ,(reader-complex bytevector-ieee-single-native-ref (sizeof float)))
-            (,complex-double
-             . ,(reader-complex bytevector-ieee-double-native-ref (sizeof double))))
-          '())
+    (,complex-float
+     . ,(reader-complex bytevector-ieee-single-native-ref (sizeof float)))
+    (,complex-double
+     . ,(reader-complex bytevector-ieee-double-native-ref (sizeof double)))
     (,int8 . ,bytevector-s8-ref)
     (,uint8 . ,bytevector-u8-ref)
     (,int16 . ,bytevector-s16-native-ref)
@@ -142,7 +137,6 @@
     (,int64 . ,bytevector-s64-native-ref)
     (,uint64 . ,bytevector-u64-native-ref)
     (* . ,bytevector-pointer-ref)))
-
 
 (define (align off alignment)
   (1+ (logior (1- off) (1- alignment))))
