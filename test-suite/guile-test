@@ -88,6 +88,7 @@
   :use-module (system vm coverage)
   :use-module (srfi srfi-11)
   :use-module (system vm vm)
+  #:declarative? #f
   :export (main data-file-name test-file-name))
 
 
