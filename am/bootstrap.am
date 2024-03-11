@@ -396,6 +396,9 @@ SOURCES =					\
 						\
   system/syntax.scm				\
 						\
+  language/wisp.scm				\
+  language/wisp/spec.scm			\
+						\
   system/xref.scm				\
 						\
   sxml/apply-templates.scm			\

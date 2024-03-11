@@ -64,6 +64,7 @@ get the relevant SRFI documents from the SRFI home page
 * SRFI-98::                     Accessing environment variables.
 * SRFI-105::                    Curly-infix expressions.
 * SRFI-111::                    Boxes.
+* SRFI-119::                    Wisp: simpler indentation-sensitive Scheme.
 * SRFI-171::                    Transducers
 @end menu
 
@@ -5662,6 +5663,35 @@ Return the current contents of @var{box}.
 Set the contents of @var{box} to @var{value}.
 @end deffn
 
+@node SRFI-119
+@subsection SRFI-119 Wisp: simpler indentation-sensitive Scheme.
+@cindex SRFI-119
+@cindex wisp
+
+The languages shipped in Guile include SRFI-119, also referred to as
+@dfn{Wisp} (for ``Whitespace to Lisp''), an encoding of Scheme that
+allows replacing parentheses with equivalent indentation and inline
+colons.  See
+@uref{http://srfi.schemers.org/srfi-119/srfi-119.html, the specification
+of SRFI-119}.  Some examples:
+
+@example
+display "Hello World!"         @result{}  (display "Hello World!")
+@end example
+
+@example
+define : factorial n           @result{}  (define (factorial n)
+    if : zero? n               @result{}      (if (zero? n)
+       . 1                     @result{}          1
+       * n : factorial @{n - 1@} @result{}    (* n (factorial @{n - 1@}))))
+@end example
+
+To execute a file with Wisp code, select the language and filename
+extension @code{.w} vie @code{guile --language=wisp -x .w}.
+
+In files using Wisp, @xref{SRFI-105} (Curly Infix) is always activated.
+
+
 @node SRFI-171
 @subsection Transducers
 @cindex SRFI-171
@@ -5704,6 +5734,7 @@ left-to-right, due to how transducers are initiated.
 * SRFI-171 Transducers::              Transducers specified by the SRFI
 * SRFI-171 Helpers::                  Utilities for writing your own transducers
 @end menu
+
 
 @node SRFI-171 General Discussion
 @subsubsection SRFI-171 General Discussion

@@ -162,7 +162,8 @@ SCM_TESTS = tests/00-initial-env.test		\
 	    tests/srfi-98.test			\
 	    tests/srfi-105.test			\
 	    tests/srfi-111.test			\
-            tests/srfi-171.test                 \
+	    tests/srfi-119.test			\
+	    tests/srfi-171.test			\
 	    tests/srfi-4.test			\
 	    tests/srfi-9.test			\
 	    tests/statprof.test			\
