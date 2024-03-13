@@ -580,15 +580,15 @@ top-level bindings from ENV and return the resulting expression."
     (define (apply-primitive name args)
       ;; todo: further optimize commutative primitives
       (catch #t
-        (lambda ()
-          (define mod (resolve-interface (primitive-module name)))
-          (call-with-values
-              (lambda ()
-                (apply (module-ref mod name) args))
-            (lambda results
-              (values #t results))))
-        (lambda _
-          (values #f '()))))
+             (lambda ()
+               (define mod (resolve-interface (primitive-module name)))
+               (call-with-values
+                   (lambda ()
+                     (apply (module-ref mod name) args))
+                 (lambda results
+                   (values #t results))))
+             (lambda _
+               (values #f '()))))
     (define (make-values src values)
       (match values
         ((single) single)               ; 1 value
@@ -1307,22 +1307,22 @@ top-level bindings from ENV and return the resulting expression."
 
       (($ <primcall> src 'values exps)
        (match exps
-        (()
-         (case ctx
-           ((effect) (make-void #f))
-           ((values) exp)
-           ;; Zero values returned to continuation expecting a value:
-           ;; ensure that we raise an error.
-           (else (make-primcall src 'values (list exp)))))
-        ((($ <primcall> _ 'values ())) exp)
-        (_
-         (let ((vals (map for-value exps)))
-           (if (and (case ctx
-                      ((value test effect) #t)
-                      (else (null? (cdr vals))))
-                    (every singly-valued-expression? vals))
-               (for-tail (list->seq src (append (cdr vals) (list (car vals)))))
-               (make-primcall src 'values vals))))))
+         (()
+          (case ctx
+            ((effect) (make-void #f))
+            ((values) exp)
+            ;; Zero values returned to continuation expecting a value:
+            ;; ensure that we raise an error.
+            (else (make-primcall src 'values (list exp)))))
+         ((($ <primcall> _ 'values ())) exp)
+         (_
+          (let ((vals (map for-value exps)))
+            (if (and (case ctx
+                       ((value test effect) #t)
+                       (else (null? (cdr vals))))
+                     (every singly-valued-expression? vals))
+                (for-tail (list->seq src (append (cdr vals) (list (car vals)))))
+                (make-primcall src 'values vals))))))
 
       (($ <primcall> src 'apply (proc args ... tail))
        (let lp ((tail* (find-definition tail 1)) (speculative? #t))
