@@ -21,6 +21,7 @@
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-9 gnu)
+  #:use-module (srfi srfi-11)
   #:use-module (system base target)
   #:export (void
             float double
@@ -177,14 +178,16 @@ not cross-compiling; otherwise leave it to be evaluated at run-time."
      (complex-double bytevector-complex-double-native-ref)
      ('* bytevector-pointer-ref))))
 
-(define-syntax read-fields
-  (syntax-rules ()
-    ((read-fields () bv offset k) (k offset))
-    ((read-fields ((field type) . rest) bv offset k)
-     (call-with-values (lambda ()
-                         (read-field bv offset (compile-time-eval type)))
-       (lambda (field offset)
-         (read-fields rest bv offset k))))))
+(define-syntax-rule (read-fields %bv %offset ((field type) ...) k)
+  (let ((bv %bv)
+        (offset %offset)
+        (size (compile-time-eval (sizeof '(type ...)))))
+    (unless (<= (bytevector-length bv) (+ offset size))
+      (error "destination bytevector too small"))
+    (let*-values (((field offset)
+                   (read-field bv offset (compile-time-eval type)))
+                  ...)
+      (k field ...))))
 
 (define-syntax-rule (write-field %bv %offset %type %value)
   (let ((bv %bv)
@@ -220,12 +223,15 @@ not cross-compiling; otherwise leave it to be evaluated at run-time."
      (complex-double bytevector-complex-double-native-set!)
      ('* bytevector-pointer-set!))))
 
-(define-syntax write-fields
-  (syntax-rules ()
-    ((write-fields () bv offset k) (k offset))
-    ((write-fields ((field type) . rest) bv offset k)
-     (let ((offset (write-field bv offset (compile-time-eval type) field)))
-       (write-fields rest bv offset k)))))
+(define-syntax-rule (write-fields %bv %offset ((field type) ...))
+  (let ((bv %bv)
+        (offset %offset)
+        (size (compile-time-eval (sizeof '(type ...)))))
+    (unless (<= (bytevector-length bv) (+ offset size))
+      (error "destination bytevector too small"))
+    (let* ((offset (write-field bv offset (compile-time-eval type) field))
+           ...)
+      (values))))
 
 ;; Same as write-fields, but with run-time dispatch.
 (define (write-c-struct bv offset types vals)
