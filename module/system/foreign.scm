@@ -55,6 +55,8 @@
 
             pointer->procedure
             ;; procedure->pointer (see below)
+
+            read-c-struct write-c-struct
             make-c-struct parse-c-struct
 
             define-wrapped-pointer-type))
@@ -160,7 +162,7 @@ not cross-compiling; otherwise leave it to be evaluated at run-time."
        (... ...)
        (else
         (let ((offset (align offset (alignof type))))
-          (values (read-c-struct bv offset type)
+          (values (%read-c-struct bv offset type)
                   (+ offset (sizeof type)))))))
     (dispatch-read
      type
@@ -178,10 +180,10 @@ not cross-compiling; otherwise leave it to be evaluated at run-time."
      (complex-double bytevector-complex-double-native-ref)
      ('* bytevector-pointer-ref))))
 
-(define-syntax-rule (read-fields %bv %offset ((field type) ...) k)
+(define-syntax-rule (read-c-struct %bv %offset ((field type) ...) k)
   (let ((bv %bv)
         (offset %offset)
-        (size (compile-time-eval (sizeof '(type ...)))))
+        (size (compile-time-eval (sizeof (list type ...)))))
     (unless (<= (bytevector-length bv) (+ offset size))
       (error "destination bytevector too small"))
     (let*-values (((field offset)
@@ -205,7 +207,7 @@ not cross-compiling; otherwise leave it to be evaluated at run-time."
        (... ...)
        (else
         (let ((offset (align offset (alignof type))))
-          (write-c-struct bv offset type value)
+          (%write-c-struct bv offset type value)
           (+ offset (sizeof type))))))
     (dispatch-write
      type
@@ -223,18 +225,18 @@ not cross-compiling; otherwise leave it to be evaluated at run-time."
      (complex-double bytevector-complex-double-native-set!)
      ('* bytevector-pointer-set!))))
 
-(define-syntax-rule (write-fields %bv %offset ((field type) ...))
+(define-syntax-rule (write-c-struct %bv %offset ((field type) ...))
   (let ((bv %bv)
         (offset %offset)
-        (size (compile-time-eval (sizeof '(type ...)))))
+        (size (compile-time-eval (sizeof (list type ...)))))
     (unless (<= (bytevector-length bv) (+ offset size))
       (error "destination bytevector too small"))
     (let* ((offset (write-field bv offset (compile-time-eval type) field))
            ...)
       (values))))
 
-;; Same as write-fields, but with run-time dispatch.
-(define (write-c-struct bv offset types vals)
+;; Same as write-c-struct, but with run-time dispatch.
+(define (%write-c-struct bv offset types vals)
   (let lp ((offset offset) (types types) (vals vals))
     (match types
       (() (match vals
@@ -246,8 +248,8 @@ not cross-compiling; otherwise leave it to be evaluated at run-time."
           (lp (write-field bv offset type val) types vals))
          (() (error "too few values" vals)))))))
 
-;; Same as read-fields, but with run-time dispatch.
-(define (read-c-struct bv offset types)
+;; Same as read-c-struct, but with run-time dispatch.
+(define (%read-c-struct bv offset types)
   (let lp ((offset offset) (types types))
     (match types
       (() '())
@@ -258,11 +260,11 @@ not cross-compiling; otherwise leave it to be evaluated at run-time."
 
 (define (make-c-struct types vals)
   (let ((bv (make-bytevector (sizeof types) 0)))
-    (write-c-struct bv 0 types vals)
+    (%write-c-struct bv 0 types vals)
     (bytevector->pointer bv)))
 
 (define (parse-c-struct foreign types)
-  (read-c-struct (pointer->bytevector foreign (sizeof types)) 0 types))
+  (%read-c-struct (pointer->bytevector foreign (sizeof types)) 0 types))
 
 
 ;;;
