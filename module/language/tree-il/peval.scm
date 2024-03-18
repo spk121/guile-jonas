@@ -1759,7 +1759,7 @@ top-level bindings from ENV and return the resulting expression."
                 ;; is required by (and checked by) other parts of the
                 ;; compiler, e.g. tree-il-to-cps lowering.
                 (unless (equal? syms (match kw (((k name sym) ...) sym)))
-                  (error "internal error: unexpected kwarg syms"))
+                  (error "internal error: unexpected kwarg syms" kw syms))
 
                 (define (process-kw-args positional? args pbinds)
                   (match args
