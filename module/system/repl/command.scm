@@ -672,7 +672,7 @@ Break on calls to PROCEDURE.
 Starts a recursive prompt when PROCEDURE is called."
   (let ((proc (repl-eval repl (repl-parse repl form))))
     (if (not (procedure? proc))
-        (error "Not a procedure: ~a" proc)
+        (error (format #f "Not a procedure: ~a" proc))
         (let ((idx (add-trap-at-procedure-call! proc)))
           (format #t "Trap ~a: ~a.~%" idx (trap-name idx))))))
 
@@ -783,7 +783,7 @@ A tracepoint will print out the procedure and its arguments, when it is
 called, and its return value(s) when it returns."
   (let ((proc (repl-eval repl (repl-parse repl form))))
     (if (not (procedure? proc))
-        (error "Not a procedure: ~a" proc)
+        (error (format #f "Not a procedure: ~a" proc))
         (let ((idx (add-trace-at-procedure-call! proc)))
           (format #t "Trap ~a: ~a.~%" idx (trap-name idx))))))
 

@@ -142,7 +142,12 @@ See <http://www.gnu.org/licenses/lgpl.html>, for more details.")
          (lambda (x)
            (if (memq x vals)
                x
-               (error "Bad on-error value ~a; expected one of ~a" x vals))))))))
+               (error
+                 (format
+                   #f
+                   "Bad on-error value ~a; expected one of ~a"
+                   x
+                   vals)))))))))
 
 (define %make-repl make-repl)
 (define* (make-repl lang #:optional debug)
