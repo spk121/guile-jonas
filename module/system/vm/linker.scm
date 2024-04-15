@@ -769,10 +769,21 @@ Returns a bytevector."
            objects)
           bv)
         (lambda (port)
-          (define (write-padding port size)
-            ;; Write SIZE bytes of padding to PORT.  Use 'seek' to
-            ;; create a sparse file.
-            (seek port size SEEK_CUR))
+          (define write-padding
+            ;; Write SIZE bytes of padding to PORT.
+            (if (file-port? port)
+                (lambda (size)
+                  ;; Use 'seek' to create a sparse file.
+                  (seek port size SEEK_CUR))
+                (let ((blank (make-bytevector 4096 0)))
+                  (lambda (size)
+                    ;; Write SIZE zeros.
+                    (let loop ((size size))
+                      (unless (zero? size)
+                        (let ((count (min size
+                                          (bytevector-length blank))))
+                          (put-bytevector port blank 0 count)
+                          (loop (- size count)))))))))
 
           (define (compute-padding objects)
             ;; Return the list of padding in between OBJECTS--the list
@@ -796,7 +807,7 @@ Returns a bytevector."
           (for-each
            (lambda (object padding)
              (let ((bv (make-bytevector (linker-object-size object) 0)))
-               (write-padding port padding)
+               (write-padding padding)
                (write-linker-object bv object symtab endianness)
                (put-bytevector port bv)))
            objects
