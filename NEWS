@@ -30,6 +30,13 @@ and 'never, with 'auto being the default.
 
 This speeds up copying large files a lot while saving the disk space.
 
+** 'seek' can now navigate holes in sparse files
+
+On systems that support it, such as GNU/Linux, the new SEEK_DATA and
+SEEK_HOLE values can now be passed to the 'seek' procedure to change
+file offset to the next piece of data or to the next hole in sparse
+files.  See "Random Access" in the manual for details.
+
 * Bug fixes
 
 ** (ice-9 suspendable-ports) incorrect UTF-8 decoding

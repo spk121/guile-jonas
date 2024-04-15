@@ -1,5 +1,5 @@
 ;;; Ports
-;;; Copyright (C) 2016,2019,2021 Free Software Foundation, Inc.
+;;; Copyright (C) 2016,2019,2021,2024 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -152,6 +152,12 @@
                 "scm_init_ice_9_fports")
 (load-extension (string-append "libguile-" (effective-version))
                 "scm_init_ice_9_ioext")
+
+(eval-when (load eval expand)
+  (when (defined? 'SEEK_DATA)
+    (module-export! (current-module) '(SEEK_DATA)))
+  (when (defined? 'SEEK_HOLE)
+    (module-export! (current-module) '(SEEK_HOLE))))
 
 
 

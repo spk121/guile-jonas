@@ -1,8 +1,8 @@
 ;;;; ports.test --- Guile I/O ports.    -*- coding: utf-8; mode: scheme; -*-
 ;;;; Jim Blandy <jimb@red-bean.com> --- May 1999
 ;;;;
-;;;; 	Copyright (C) 1999, 2001, 2004, 2006, 2007, 2009, 2010,
-;;;;      2011, 2012, 2013, 2014, 2015, 2017, 2019, 2020, 2021 Free Software Foundation, Inc.
+;;;; 	Copyright (C) 1999, 2001, 2004, 2006-2007, 2009-2015, 2017, 2019-2021,
+;;;;      2024 Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -184,6 +184,52 @@
              (char=? (read-char iport) #\x))
     (close-port iport))
   (delete-file filename))
+
+(let* ((file (test-file))
+       (port (open-output-file file)))
+  (seek port 4096 SEEK_SET)
+  (display "bye." port)
+  (close-port port)
+
+  (pass-if-equal "size of sparse file"
+      4100
+    (stat:size (stat file)))
+
+  (pass-if-equal "SEEK_DATA while on data"
+      4096
+    (if (defined? 'SEEK_DATA)
+        (call-with-input-file file
+          (lambda (port)
+            (catch 'system-error
+              (lambda ()
+                (seek port 4096 SEEK_DATA))
+              (lambda _
+                (throw 'unresolved)))))
+        (throw 'unresolved)))
+
+  (pass-if-equal "SEEK_DATA while in hole"
+      4096
+    (if (defined? 'SEEK_DATA)
+        (call-with-input-file file
+          (lambda (port)
+            (catch 'system-error
+              (lambda ()
+                (seek port 10 SEEK_DATA))
+              (lambda _
+                (throw 'unresolved)))))
+        (throw 'unresolved)))
+
+  (pass-if-equal "SEEK_HOLE while in hole"
+      10
+    (if (defined? 'SEEK_HOLE)
+        (call-with-input-file file
+          (lambda (port)
+            (catch 'system-error
+              (lambda ()
+                (seek port 10 SEEK_HOLE))
+              (lambda _
+                (throw 'unresolved)))))
+        (throw 'unresolved))))
 
 ;;; unusual characters.
 (let* ((filename (test-file))
