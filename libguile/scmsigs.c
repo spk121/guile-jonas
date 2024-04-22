@@ -302,7 +302,7 @@ scm_i_signals_post_fork ()
     }
 
 #if SCM_USE_PTHREAD_THREADS
-  once = SCM_I_PTHREAD_ONCE_INIT;
+  once = (scm_i_pthread_once_t) SCM_I_PTHREAD_ONCE_INIT;
 #endif
   if (active)
     scm_i_ensure_signal_delivery_thread ();
