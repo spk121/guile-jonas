@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2017, 2019  Free Software Foundation, Inc.
+ * Copyright (C) 2013-2017, 2019, 2024  Free Software Foundation, Inc.
  *
  * This file is part of GNU lightning.
  *
@@ -2532,10 +2532,10 @@ str_atomic(jit_state_t *_jit, int32_t loc, int32_t val)
 static void
 swap_atomic(jit_state_t *_jit, int32_t dst, int32_t loc, int32_t val)
 {
-  void *retry = jit_address(_jit);
   int32_t result = jit_gpr_regno(get_temp_gpr(_jit));
   int32_t val_or_tmp = dst == val ? jit_gpr_regno(get_temp_gpr(_jit)) : val;
   movr(_jit, val_or_tmp, val);
+  void *retry = jit_address(_jit);
   LDAXR(_jit, dst, loc);
   STLXR(_jit, val_or_tmp, loc, result);
   jit_patch_there(_jit, bnei(_jit, result, 0), retry);
