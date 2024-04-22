@@ -823,8 +823,26 @@ Seek from the current position.
 @defvar SEEK_END
 Seek from the end of the file.
 @end defvar
-If @var{fd_port} is a file descriptor, the underlying system
-call is @code{lseek}.  @var{port} may be a string port.
+
+On systems that support it, such as GNU/Linux, the following
+constants can be used for @var{whence} to navigate ``holes'' in
+sparse files:
+@defvar SEEK_DATA
+Seek to the next location in the file greater than or equal to
+@var{offset} containing data.  If @var{offset} points to data,
+then the file offset is set to @var{offset}.
+@end defvar
+@defvar SEEK_HOLE
+Seek to the next hole in the file greater than or equal to the
+@var{offset}.  If @var{offset} points into the middle of a hole,
+then the file offset is set to @var{offset}.  If there is no hole
+past @var{offset}, then the file offset is adjusted to the end of
+the file---i.e., there is an implicit hole at the end of any file.
+@end defvar
+
+If @var{fd_port} is a file descriptor, the underlying system call
+is @code{lseek} (@pxref{File Position Primitive,,, libc, The GNU C
+Library Reference Manual}).  @var{port} may be a string port.
 
 The value returned is the new position in @var{fd_port}.  This means
 that the current position of a port can be obtained using:

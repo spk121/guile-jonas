@@ -1,4 +1,4 @@
-/* Copyright 1995-2001,2003-2004,2006-2019,2021
+/* Copyright 1995-2001,2003-2004,2006-2019,2021,2024
      Free Software Foundation, Inc.
 
    This file is part of Guile.
@@ -3713,9 +3713,26 @@ SCM_DEFINE (scm_seek, "seek", 3, 0, 0,
 	    "@defvar SEEK_END\n"
 	    "Seek from the end of the file.\n"
 	    "@end defvar\n"
-	    "If @var{fd_port} is a file descriptor, the underlying system\n"
-	    "call is @code{lseek}.  @var{port} may be a string port.\n"
-	    "\n"
+            "On systems that support it, such as GNU/Linux, the following\n"
+            "constants can be used for @var{whence} to navigate ``holes'' in\n"
+            "sparse files:\n"
+            "@defvar SEEK_DATA\n"
+            "Seek to the next location in the file greater than or equal to\n"
+            "@var{offset} containing data.  If @var{offset} points to data,\n"
+            "then the file offset is set to @var{offset}.\n"
+            "@end defvar\n"
+            "@defvar SEEK_HOLE\n"
+            "Seek to the next hole in the file greater than or equal to the\n"
+            "@var{offset}.  If @var{offset} points into the middle of a hole,\n"
+            "then the file offset is set to @var{offset}.  If there is no hole\n"
+            "past @var{offset}, then the file offset is adjusted to the end of\n"
+            "the file---i.e., there is an implicit hole at the end of any file.\n"
+            "@end defvar\n"
+            "\n"
+            "If @var{fd_port} is a file descriptor, the underlying system call\n"
+            "is @code{lseek} (@pxref{File Position Primitive,,, libc, The GNU C\n"
+            "Library Reference Manual}).  @var{port} may be a string port.\n"
+            "\n"
 	    "The value returned is the new position in the file.  This means\n"
 	    "that the current position of a port can be obtained using:\n"
 	    "@lisp\n"
@@ -3728,7 +3745,14 @@ SCM_DEFINE (scm_seek, "seek", 3, 0, 0,
   fd_port = SCM_COERCE_OUTPORT (fd_port);
 
   how = scm_to_int (whence);
-  if (how != SEEK_SET && how != SEEK_CUR && how != SEEK_END)
+  if (how != SEEK_SET && how != SEEK_CUR && how != SEEK_END
+#ifdef SEEK_DATA
+      && how != SEEK_DATA
+#endif
+#ifdef SEEK_HOLE
+      && how != SEEK_HOLE
+#endif
+      )
     SCM_OUT_OF_RANGE (3, whence);
 
   if (SCM_OPPORTP (fd_port))
@@ -4150,6 +4174,14 @@ scm_init_ice_9_ports (void)
   scm_c_define ("SEEK_SET", scm_from_int (SEEK_SET));
   scm_c_define ("SEEK_CUR", scm_from_int (SEEK_CUR));
   scm_c_define ("SEEK_END", scm_from_int (SEEK_END));
+
+  /* Support for sparse files (glibc).  */
+#ifdef SEEK_DATA
+  scm_c_define ("SEEK_DATA", scm_from_int (SEEK_DATA));
+#endif
+#ifdef SEEK_HOLE
+  scm_c_define ("SEEK_HOLE", scm_from_int (SEEK_HOLE));
+#endif
 
   scm_c_define ("%current-input-port-fluid", cur_inport_fluid);
   scm_c_define ("%current-output-port-fluid", cur_outport_fluid);
