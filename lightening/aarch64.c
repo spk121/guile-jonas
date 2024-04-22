@@ -165,7 +165,6 @@ struct abi_arg_iterator
 };
 
 static size_t page_size;
-static int has_lse_atomics;
 
 # define HWCAP_ATOMICS	(1 << 8)
 
