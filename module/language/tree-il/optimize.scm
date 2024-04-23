@@ -28,6 +28,15 @@
             make-lowerer
             tree-il-optimizations))
 
+(define-syntax-rule (lazy-ref mod proc)
+  (module-ref (resolve-interface 'mod) 'proc))
+
+(define (dump-optimized-tree-il exp env)
+  ((lazy-ref (ice-9 pretty-print) pretty-print)
+   ((lazy-ref (language scheme decompile-tree-il) decompile-tree-il)
+    exp env '()))
+  exp)
+
 (define (make-optimizer opts)
   (define-syntax lookup
     (syntax-rules ()
@@ -35,8 +44,7 @@
        (lookup kw id id))
       ((lookup kw submodule proc)
        (and (assq-ref opts kw)
-            (module-ref (resolve-interface '(language tree-il submodule))
-                        'proc)))))
+            (lazy-ref (language tree-il submodule) proc)))))
   (let ((verify     (or (lookup #:verify-tree-il? debug verify-tree-il)
                         (lambda (exp) exp)))
         (modulify   (lookup #:resolve-free-vars? resolve-free-vars))
@@ -62,6 +70,8 @@
       (run-pass! (peval exp env #:cross-module-inlining? xinline?))
       (run-pass! (eta-expand exp))
       (run-pass! (inlinables exp))
+      (when (assq-ref opts #:dump-optimized-tree-il?)
+        (dump-optimized-tree-il exp env))
       exp)))
 
 (define (optimize x env opts)
@@ -70,14 +80,19 @@
 (define (tree-il-optimizations)
   (available-optimizations 'tree-il))
 
+(define (tree-il-options)
+  (cons* '(#:dump-optimized-tree-il? #f)
+         '(#:verify-tree-il? #f)
+         (tree-il-optimizations)))
+
 (define (make-lowerer optimization-level opts)
   (define (kw-arg-ref args kw default)
     (match (memq kw args)
       ((_ val . _) val)
       (_ default)))
-  (define (enabled-for-level? level) (<= level optimization-level))
+  (define (enabled-for-level? level) (and level (<= level optimization-level)))
   (make-optimizer
-   (let lp ((all-opts (tree-il-optimizations)))
+   (let lp ((all-opts (tree-il-options)))
      (match all-opts
        (() '())
        (((kw level) . all-opts)
