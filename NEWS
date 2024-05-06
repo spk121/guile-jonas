@@ -47,6 +47,8 @@ files.  See "Random Access" in the manual for details.
    (<https://bugs.gnu.org/62501>)
 ** Fix 'system*' with non-file input/output/error port
    (<https://bugs.gnu.org/63024>)
+** 'spawn' errors out instead of crashing when passed non-file ports
+   (<https://bugs.gnu.org/61073>)
 ** Support signal handling child processes after 'primitive-fork'
    (<https://bugs.gnu.org/68087>)
 ** Fix possible deadlock in 'sigaction' (aka. 'scm_sigaction_for_thread')
