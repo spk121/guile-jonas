@@ -1,4 +1,4 @@
-/* Copyright 1995-2014, 2016-2019, 2021-2023
+/* Copyright 1995-2014, 2016-2019, 2021-2024
      Free Software Foundation, Inc.
    Copyright 2021 Maxime Devos <maximedevos@telenet.be>
 
@@ -1642,27 +1642,6 @@ scm_piped_process (SCM prog, SCM args, SCM from, SCM to)
 }
 #undef FUNC_NAME
 
-static void
-restore_sigaction (SCM pair)
-{
-  SCM sig, handler, flags;
-  sig = scm_car (pair);
-  handler = scm_cadr (pair);
-  flags = scm_cddr (pair);
-  scm_sigaction (sig, handler, flags);
-}
-
-static void
-scm_dynwind_sigaction (int sig, SCM handler, SCM flags)
-{
-  SCM old, scm_sig;
-  scm_sig = scm_from_int (sig);
-  old = scm_sigaction (scm_sig, handler, flags);
-  scm_dynwind_unwind_handler_with_scm (restore_sigaction,
-                                       scm_cons (scm_sig, old),
-                                       SCM_F_WIND_EXPLICITLY);
-}
-
 SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
            (SCM args),
 "Execute the command indicated by @var{args}.  The first element must\n"
@@ -1692,17 +1671,8 @@ SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
   prog = scm_car (args);
   args = scm_cdr (args);
 
-  scm_dynwind_begin (0);
-  /* Make sure the child can't kill us (as per normal system call).  */
-  scm_dynwind_sigaction (SIGINT,
-                         scm_from_uintptr_t ((uintptr_t) SIG_IGN),
-                         SCM_UNDEFINED);
-#ifdef SIGQUIT
-  scm_dynwind_sigaction (SIGQUIT,
-                         scm_from_uintptr_t ((uintptr_t) SIG_IGN),
-                         SCM_UNDEFINED);
-#endif
-
+  /* Note: under the hood 'posix_spawn' takes care of blocking signals
+     around the call to fork and resetting handlers in the child.  */
   err = piped_process (&pid, prog, args,
                        SCM_UNDEFINED, SCM_UNDEFINED);
   if (err != 0)
@@ -1717,8 +1687,6 @@ SCM_DEFINE (scm_system_star, "system*", 0, 0, 1,
       if (wait_result == -1)
         SCM_SYSERROR;
     }
-
-  scm_dynwind_end ();
 
   return scm_from_int (status);
 }

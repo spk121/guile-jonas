@@ -62,6 +62,8 @@ files.  See "Random Access" in the manual for details.
 ** 'make-custom-port' now honors its #:conversion-strategy argument
 ** 'eval-string' respects #:column (previously it was set to the #:line)
 ** 'string->date' now allows a colon in the ISO 8601 zone offset
+** 'system*' no longer fiddles with the process' signal handlers
+   (<https://bugs.gnu.org/70144>)
 ** Hashing of UTF-8 symbols with non-ASCII characters avoids corruption
    (<https://bugs.gnu.org/56413>)
 
