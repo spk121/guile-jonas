@@ -9510,7 +9510,7 @@ difference to you.
 If you need to keep the old value of an association list in a form
 independent from the list that results from modification by
 @code{acons}, @code{assq-set!}, @code{assv-set!} or @code{assoc-set!},
-use @code{list-copy} to copy the old association list before modifying
+use @code{alist-copy} to copy the old association list before modifying
 it.
 
 @rnindex acons
