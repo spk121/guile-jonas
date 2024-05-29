@@ -534,7 +534,7 @@ return two values, with @code{errno} as the second value.
 
 Finally, in @code{(system foreign-library)} there is a convenient
 wrapper function, joining together @code{foreign-library-pointer} and
-@code{procedure->pointer}:
+@code{pointer->procedure}:
 
 @deffn {Scheme Procedure} foreign-library-function lib name @
        [#:return-type=void] [#:arg-types='()] [#:return-errno?=#f]
