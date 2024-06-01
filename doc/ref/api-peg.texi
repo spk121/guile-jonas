@@ -312,7 +312,7 @@ You can use this nonterminal with all of the regular PEG functions:
 
 @lisp
 (match-pattern as "aaaaa") @result{}
-#<peg start: 0 end: 5 string: bbbbb tree: bbbbb>
+#<peg start: 0 end: 5 string: aaaaa tree: aaaaa>
 @end lisp
 
 @subsubheading Parsing & Matching Functions
