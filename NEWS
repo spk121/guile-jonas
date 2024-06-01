@@ -9,6 +9,13 @@ Changes in 3.0.10 (since 3.0.9)
 
 * New interfaces and functionality
 
+** New language: Wisp (SRFI-119)
+
+Guile now includes SRFI-119, commonly referred to as Wisp (for
+"Whitespace for Lisp"), a Pythonesque surface syntax for Scheme where
+parentheses are replaced by equivalent indentation.  See SRFI-119 in the
+manual.
+
 ** New warning: unused-module
 
 This analysis, enabled at `-W2', issues warnings for modules that appear
