@@ -1,6 +1,6 @@
 ;;; Wisp
 
-;; Copyright (C) 2013, 2017, 2018, 2020 Free Software Foundation, Inc.
+;; Copyright (C) 2013, 2017, 2018, 2020, 2024 Free Software Foundation, Inc.
 ;; Copyright (C) 2014--2023 Arne Babenhauserheide.
 ;; Copyright (C) 2023 Maxime Devos <maximedevos@telenet.be>
 
@@ -88,29 +88,28 @@
 (define readcolon
   (string->symbol ":"))
 
-(define wisp-uuid "e749c73d-c826-47e2-a798-c16c13cb89dd")
 ;; define an intermediate dot replacement with UUID to avoid clashes.
 (define repr-dot ; .
-  (string->symbol (string-append "REPR-DOT-" wisp-uuid)))
+  (make-symbol "wisp-dot"))
 
 ;; allow using reader additions as the first element on a line to prefix the list
 (define repr-quote ; '
-  (string->symbol (string-append "REPR-QUOTE-" wisp-uuid)))
+  (make-symbol "wisp-quote"))
 (define repr-unquote ; ,
-  (string->symbol (string-append "REPR-UNQUOTE-" wisp-uuid)))
+  (make-symbol "wisp-unquote"))
 (define repr-quasiquote ; `
-  (string->symbol (string-append "REPR-QUASIQUOTE-" wisp-uuid)))
+  (make-symbol "wisp-quasiquote"))
 (define repr-unquote-splicing ; ,@
-  (string->symbol (string-append "REPR-UNQUOTESPLICING-" wisp-uuid)))
+  (make-symbol "wisp-unquote-splicing"))
 
 (define repr-syntax ; #'
-  (string->symbol (string-append "REPR-SYNTAX-" wisp-uuid)))
+  (make-symbol "wisp-syntax"))
 (define repr-unsyntax ; #,
-  (string->symbol (string-append "REPR-UNSYNTAX-" wisp-uuid)))
+  (make-symbol "wisp-unsyntax"))
 (define repr-quasisyntax ; #`
-  (string->symbol (string-append "REPR-QUASISYNTAX-" wisp-uuid)))
+  (make-symbol "wisp-quasisyntax"))
 (define repr-unsyntax-splicing ; #,@
-  (string->symbol (string-append "REPR-UNSYNTAXSPLICING-" wisp-uuid)))
+  (make-symbol "wisp-unsyntax-splicing"))
 
 ;; TODO: wrap the reader to return the repr of the syntax reader
 ;; additions
@@ -160,7 +159,7 @@
 
 
 (define (line-continues? line)
-  (equal? repr-dot (car (line-code line))))
+  (eq? repr-dot (car (line-code line))))
 
 (define (line-only-colon? line)
   (and
@@ -217,8 +216,8 @@
   "Check whether indent-and-symbols ends with a period, indicating the end of a chunk."
   (and (not (null? currentsymbols))
        (equal? #\newline next-char)
-       (equal? repr-dot
-               (list-ref currentsymbols (- (length currentsymbols) 1)))))
+       (eq? repr-dot
+            (list-ref currentsymbols (- (length currentsymbols) 1)))))
 
 
 (define (wisp-scheme-read-chunk-lines port)
@@ -384,7 +383,9 @@
       ;; format #t "inline-colons processed line: ~A\n" processed
       processed)
      ;; replace : . with nothing
-     ((and (<= 2 (length unprocessed)) (equal? readcolon (car unprocessed)) (equal? repr-dot (car (cdr unprocessed))))
+     ((and (<= 2 (length unprocessed))
+           (equal? readcolon (car unprocessed))
+           (eq? repr-dot (car (cdr unprocessed))))
       (loop
        (append processed
                (loop '() (cdr (cdr unprocessed))))
@@ -623,40 +624,43 @@
 
 
 (define (wisp-replace-paren-quotation-repr code)
-  "Replace lists starting with a quotation symbol by
-         quoted lists."
+  "Replace lists starting with a quotation symbol by quoted lists."
+  (define (pred value)
+    (lambda (x)
+      (eq? x value)))
+
   (wisp-add-source-properties-from/when-required
    code
    (match code
-     (('REPR-QUOTE-e749c73d-c826-47e2-a798-c16c13cb89dd a ...)
+     (((? (pred repr-quote)) a ...)
       (list 'quote (map wisp-replace-paren-quotation-repr a)))
-     ((a ... 'REPR-QUOTE-e749c73d-c826-47e2-a798-c16c13cb89dd b); this is the quoted empty list
+     ((a ... (? (pred repr-quote)) b); this is the quoted empty list
       (append
        (map wisp-replace-paren-quotation-repr a)
        (list (list 'quote (map wisp-replace-paren-quotation-repr b)))))
-     (('REPR-QUASIQUOTE-e749c73d-c826-47e2-a798-c16c13cb89dd 'REPR-UNQUOTE-e749c73d-c826-47e2-a798-c16c13cb89dd a ...)
+     (((? (pred repr-quasiquote)) (? (pred repr-unquote)) a ...)
       (list 'quasiquote (list 'unquote (map wisp-replace-paren-quotation-repr a))))
-     (('REPR-UNQUOTE-e749c73d-c826-47e2-a798-c16c13cb89dd a ...)
+     (((? (pred repr-unquote)) a ...)
       (list 'unquote (map wisp-replace-paren-quotation-repr a)))
-     ((a ... 'REPR-UNQUOTE-e749c73d-c826-47e2-a798-c16c13cb89dd b)
+     ((a ... (? (pred repr-unquote)) b)
       (append
        (map wisp-replace-paren-quotation-repr a)
        (list (list 'unquote (map wisp-replace-paren-quotation-repr b)))))
-     (('REPR-QUASIQUOTE-e749c73d-c826-47e2-a798-c16c13cb89dd a ...)
+     (((? (pred repr-quasiquote)) a ...)
       (list 'quasiquote (map wisp-replace-paren-quotation-repr a)))
-     ((a ... 'REPR-QUASIQUOTE-e749c73d-c826-47e2-a798-c16c13cb89dd b); this is the quoted empty list
+     ((a ... (? (pred repr-quasiquote)) b) ;this is the quoted empty list
       (append
        (map wisp-replace-paren-quotation-repr a)
        (list (list 'quasiquote (map wisp-replace-paren-quotation-repr b)))))
-     (('REPR-UNQUOTESPLICING-e749c73d-c826-47e2-a798-c16c13cb89dd a ...)
+     (((? (pred repr-unquote-splicing)) a ...)
       (list 'unquote-splicing (map wisp-replace-paren-quotation-repr a)))
-     (('REPR-SYNTAX-e749c73d-c826-47e2-a798-c16c13cb89dd a ...)
+     (((? (pred repr-syntax)) a ...)
       (list 'syntax (map wisp-replace-paren-quotation-repr a)))
-     (('REPR-UNSYNTAX-e749c73d-c826-47e2-a798-c16c13cb89dd a ...)
+     (((? (pred repr-unsyntax)) a ...)
       (list 'unsyntax (map wisp-replace-paren-quotation-repr a)))
-     (('REPR-QUASISYNTAX-e749c73d-c826-47e2-a798-c16c13cb89dd a ...)
+     (((? (pred repr-quasisyntax)) a ...)
       (list 'quasisyntax (map wisp-replace-paren-quotation-repr a)))
-     (('REPR-UNSYNTAXSPLICING-e749c73d-c826-47e2-a798-c16c13cb89dd a ...)
+     (((? (pred repr-unsyntax-splicing)) a ...)
       (list 'unsyntax-splicing (map wisp-replace-paren-quotation-repr a)))
      ;; literal array as start of a line: # (a b) c -> (#(a b) c)
      ((#\# a ...)
@@ -682,15 +686,19 @@ when it reads a dot. So we have to take another pass over the
 code to recreate the improper lists.
 
 Match is awesome!"
+  (define (dot? x)
+    (eq? repr-dot x))
+
   (define is-proper? #t)
   ;; local alias
   (define (add-prop/req form)
     (wisp-add-source-properties-from/when-required code form))
+
   (wisp-add-source-properties-from/when-required
    code
    (let ((improper
           (match code
-            ((a ... b 'REPR-DOT-e749c73d-c826-47e2-a798-c16c13cb89dd c)
+            ((a ... b (? dot?) c)
              (set! is-proper? #f)
              (wisp-add-source-properties-from/when-required
               code
@@ -707,12 +715,13 @@ Match is awesome!"
         (make-exception-from-throw
          'wisp-syntax-error
          (list (format #f "incorrect dot-syntax #{.}# in code: ~A: ~A" msg li)))))
+
      (if is-proper?
          improper
          (let check ((tocheck improper))
            (match tocheck
              ;; lists with only one member
-             (('REPR-DOT-e749c73d-c826-47e2-a798-c16c13cb89dd)
+             (((? dot?))
               (syntax-error tocheck "list with the period as only member"))
              ;; list with remaining dot.
              ((a ...)
@@ -720,21 +729,21 @@ Match is awesome!"
                   (syntax-error tocheck "leftover period in list")
                   (map check a)))
              ;; simple pair - this and the next do not work when parsed from wisp-scheme itself. Why?
-             (('REPR-DOT-e749c73d-c826-47e2-a798-c16c13cb89dd . c)
+             (((? dot?) . c)
               (syntax-error tocheck "dot as first element in already improper pair"))
              ;; simple pair, other way round
-             ((a . 'REPR-DOT-e749c73d-c826-47e2-a798-c16c13cb89dd)
+             ((a . (? dot?))
               (syntax-error tocheck "dot as last element in already improper pair"))
              ;; more complex pairs
              ((? pair? a)
               (let ((head (drop-right a 1))
                     (tail (last-pair a)))
                 (cond
-                 ((equal? repr-dot (car tail))
+                 ((eq? repr-dot (car tail))
                   (syntax-error tocheck "equal? repr-dot : car tail"))
-                 ((equal? repr-dot (cdr tail))
+                 ((eq? repr-dot (cdr tail))
                   (syntax-error tocheck "equal? repr-dot : cdr tail"))
-                 ((member repr-dot head)
+                 ((memq repr-dot head)
                   (syntax-error tocheck "member repr-dot head"))
                  (else
                   a))))
