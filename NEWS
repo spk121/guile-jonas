@@ -48,6 +48,13 @@ files.  See "Random Access" in the manual for details.
 
 A list of superclasses can now be provided via #:super.
 
+** 'get-bytevector-all' is now written in Scheme and is thus suspendable
+
+The 'get-bytevector-all' procedure from (rnrs io ports) and (ice-9
+binary-port) used to be implemented in C, making it non-suspendable--a
+bummer for programs using suspendable ports and Fibers.  It has been
+rewritten in Scheme, addressing this limitation.
+
 * Bug fixes
 
 ** Fix incorrect comparison between exact and inexact numbers
