@@ -7,9 +7,73 @@ Please send Guile bug reports to bug-guile@gnu.org.
 
 Changes in 3.0.10 (since 3.0.9)
 
+* Notable changes
+
+** Beginnings of support for alternate back-ends
+
+A number of adaptations and additions of as-yet unstable interfaces have
+been made to allow third-party projects such as the Hoot
+Guile-to-WebAssembly whole-program compiler
+(https://spritely.institute/hoot/) to use the Guile front-end and
+optimizer.  Depending on how Hoot development goes, we may consider
+adding first-class support for WebAssembly as a compilation target;
+discussion is welcome on the guile-devel mailing list.
+
+** `define` in all bodies
+
+`define` adds a definition to the body in which it appears, as if each
+non-tail definition or expression in that body were a binding in a
+surrounding `letrec*` clause.  However, in some places, using `define`
+would result in the annoying error "definition in expression context,
+where definitions are not allowed", which could be fixed by explicitly
+adding a surrounding binding contour, for example an empty `let`.  This
+was because there was no implicit surrounding lexical binding contour
+for the body of `when` and `unless`, for `cond` clauses, `case` clauses,
+`and-let*` bodies, and `with-fluids`.  But no more; now these contexts
+now create a binding contour, allowing the use of `define`.
+
+** Two bug fixes of note regarding scoping of top-level variables
+
+Previously, a reference to a top-level variable in a module other than
+the current module would be silently rewritten to reference the current
+module, if the variable was unbound in its original module.  This was a
+hack from the early days of when we extended psyntax to know about the
+module system, and is now fixed to properly use the scope of the
+introduced binding instead of the scope of the macro use site.
+
+Also, embarrassingly, sometimes macro-introduced top-level variables
+would use the same generated name.  This is because of the strategy
+discussed in the manual, "Hygiene and the Top-Level"; sometimes the
+hashes would collide, for example if two definitions were the same in
+the beginning and only differed long into the end.  This has been fixed
+to ensure name uniqueness.
+
 * New interfaces and functionality
 
-** New language: Wisp (SRFI-119)
+** R6RS custom textual ports
+
+Guile finally supports this venerable R6RS interface; see "Custom Ports"
+in the manual for more.  These ports are suspendable (see "Non-Blocking
+I/O").  Also new in this release, custom binary ports are now
+suspendable as well.
+
+** New "soft port" interface
+
+Instead of using R6RS custom textual ports, we recommend the new "soft
+ports" facility, because it is easier to use while also being more
+expressive.  See "Soft Ports" in the manual for more details.
+
+Soft ports are implemented by the new module `(ice-9 soft-ports)`.
+There is a legacy "soft ports" facility exported by `(guile)` which will
+be deprecated at some point.
+
+** New "custom port" facility: (ice-9 custom-ports)
+
+Custom ports are like R6RS custom binary ports, but lower-level, having
+access to all of Guile's internal port API.  See "Custom Ports" in the
+manual.
+
+** New surface syntax: Wisp (SRFI-119)
 
 Guile now includes SRFI-119, commonly referred to as Wisp (for
 "Whitespace for Lisp"), a Pythonesque surface syntax for Scheme where
@@ -27,6 +91,44 @@ In some cases, the compiler cannot conclude whether a module is
 definitely unused---this is notably the case for modules that are only
 used at macro-expansion time, such as (srfi srfi-26).  In those cases,
 the compiler reports it as "possibly unused".
+
+** New documentation on inline procedure property declarations
+
+Did you know that you can annotate procedures with properties?  It goes
+like this:
+
+  (define (frobnicate)
+    #((fruits . (apple banana)))
+    (whatever))
+  (procedure-property frobnicate 'fruits) => (apple banana)
+
+Now you know, and now it is documented in "Procedure Properties" in the
+manual.  It has been this way since at Guile 2.0, but was never
+documented before.
+
+** New procedure annotation: maybe-unused
+
+The utility of the `-Wunused-toplevel` warning, enabled at `-W2`, has
+historically been somewhat limited, especially when a macro generates a
+number of bindings, not all of which may be used.  To produce more
+useful results, we now allow procedures to set the `maybe-unused`
+property, which if true will not result in unused-toplevel warnings.
+This property is set by `define-inlinable`, in case an inline binding
+never needs the procedure-as-value definition.
+
+** New exports from `(system foreign)`: read-c-struct, write-c-struct
+
+See "Foreign Structs" in the manual.  These macros are like the older
+`parse-c-struct` / `make-c-struct` procedures, but they are more
+efficient because they inline the field accesses and don't deal in
+lists.
+
+** Wider backtraces when not writing to a terminal
+
+When writing a backtrace, if the output port is not a terminal, Guile
+truncates the lines at 500 characters instead of 80.  Override this
+width via the `default-frame-width` parameter exported by the `(system
+repl debug)` module.
 
 ** copy-file now supports copy-on-write
 
@@ -54,6 +156,30 @@ The 'get-bytevector-all' procedure from (rnrs io ports) and (ice-9
 binary-port) used to be implemented in C, making it non-suspendable--a
 bummer for programs using suspendable ports and Fibers.  It has been
 rewritten in Scheme, addressing this limitation.
+
+* Performance improvements
+
+** Better compilation of calls to procedures with keyword arguments
+
+Calls to keyword-arg functions can now be inlined.  Even when not
+inlined, sometimes now we can compute default values for missing
+keywords at the callee instead of in the caller.
+
+** Better compilation of append with more than 2 arguments
+** Better compilation logand with one immediate argument
+** Better type inference for result of symbol-hash
+** Elide effect-free primitive calls when called for effect
+** Constant folding for string->utf8
+** JIT improvements for rarely-used push/pop/drop
+** Better type inference for numeric tower predicates
+** Better compilation for calls to raise-exception
+** Smaller disk usage via sparse binary files
+
+* New deprecations
+
+** (ice-9 lineio)
+
+Use read-line together with unread-string instead.
 
 * Bug fixes
 
@@ -88,6 +214,12 @@ rewritten in Scheme, addressing this limitation.
 ** 'string->date' now allows a colon in the ISO 8601 zone offset
 ** 'system*' no longer fiddles with the process' signal handlers
    (<https://bugs.gnu.org/70144>)
+** Fix bug with JIT of atomic swap on AArch64
+   (https://github.com/wingo/fibers/issues/83)
+** Fix exception dispatch for exceptions thrown within pre-unwind
+   handlers
+** Fix error computing backtrace when call-with-values on stack
+** Fix r7rs string-for-each to stop when any string runs out of chars
 ** Hashing of UTF-8 symbols with non-ASCII characters avoids corruption
    (<https://bugs.gnu.org/56413>)
 
