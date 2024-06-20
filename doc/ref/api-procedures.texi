@@ -123,6 +123,9 @@ same way as @code{scm_c_make_gsubr}, which is usually not further
 required.
 @end deftypefun
 
+@xref{Foreign Functions}, for another interface to call procedures
+written in C from Scheme.
+
 @node Compiled Procedures
 @subsection Compiled Procedures
 
