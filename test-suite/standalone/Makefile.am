@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in.
 ##
-## Copyright 2003-2014, 2020-2023 Free Software Foundation, Inc.
+## Copyright 2003-2014, 2020-2024 Free Software Foundation, Inc.
 ##
 ## This file is part of GUILE.
 ##
@@ -29,7 +29,7 @@ check_SCRIPTS =
 BUILT_SOURCES =
 EXTRA_DIST =
 
-TESTS_ENVIRONMENT =						\
+AM_TESTS_ENVIRONMENT =						\
   top_srcdir="$(top_srcdir)"					\
   srcdir="$(srcdir)"						\
   builddir="$(builddir)"					\
