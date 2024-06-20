@@ -1,6 +1,6 @@
 ## Process this file with Automake to create Makefile.in
 ##
-##   Copyright (C) 1998-2004, 2006-2014, 2016-2023
+##   Copyright (C) 1998-2004, 2006-2014, 2016-2024
 ##     Free Software Foundation, Inc.
 ##
 ##   This file is part of GUILE.
@@ -521,7 +521,8 @@ install-data-hook: libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm
 $(DESTDIR)$(libdir)/$$libname-gdb.scm";				\
 	$(INSTANTIATE) "$<" > $$libname-gdb.scm;		\
 	$(INSTALL_DATA) $$libname-gdb.scm			\
-	    "$(DESTDIR)$(libdir)/$$libname-gdb.scm";
+	    "$(DESTDIR)$(libdir)/$$libname-gdb.scm";		\
+	rm $$libname-gdb.scm
 
 # Remove the GDB support file and the Info 'dir' file that
 # 'install-info' 5.x installs.
