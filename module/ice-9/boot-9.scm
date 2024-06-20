@@ -1,6 +1,6 @@
 ;;; -*- mode: scheme; coding: utf-8; -*-
 
-;;;; Copyright (C) 1995-2014, 2016-2023  Free Software Foundation, Inc.
+;;;; Copyright (C) 1995-2014, 2016-2024  Free Software Foundation, Inc.
 ;;;;
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -3352,9 +3352,7 @@ error if selected binding does not exist in the used module."
       (error "no code for module" name))
     (if (and (not select) (null? hide) (eq? renamer identity))
         public-i
-        (let ((selection (or select (module-map (lambda (sym var) sym)
-                                                public-i)))
-              (custom-i (make-module)))
+        (let ((custom-i (make-module)))
           (set-module-kind! custom-i 'custom-interface)
           (set-module-name! custom-i name)
           ;; Check that we are not hiding bindings which don't exist
