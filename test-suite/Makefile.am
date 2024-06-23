@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in.
 ##
-## Copyright 2001-2020, 2023 Software Foundation, Inc.
+## Copyright 2001-2020, 2023, 2024 Software Foundation, Inc.
 ##
 ## This file is part of GUILE.
 ##
@@ -203,6 +203,7 @@ SCM_TESTS = tests/00-initial-env.test		\
 EXTRA_DIST = \
 	guile-test \
 	test-suite/lib.scm \
+	test-suite/lib/automake.scm \
 	$(SCM_TESTS) \
 	tests/match.test.upstream \
 	tests/multilingual.nottest \
@@ -259,6 +260,6 @@ AM_SCM_LOG_FLAGS = --no-auto-compile
 
 # Use a custom driver for *.test (assume they use (test-suite lib)).
 # See the automake info pages regarding "Custom Test Drivers".
-TEST_LOG_DRIVER = ./driver
+TEST_LOG_DRIVER = $(srcdir)/driver
 
-EXTRA_DIST += $(LALR_EXTRA) $(LALR_TESTS) tests/sxml-match-tests.ss
+EXTRA_DIST += $(LALR_EXTRA) $(LALR_TESTS) tests/sxml-match-tests.ss driver
