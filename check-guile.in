@@ -31,11 +31,6 @@ if ! [ -f "$guile" -a -x "$guile" ] ; then
     exit 2
 fi
 
-# documentation searching ignores GUILE_LOAD_PATH.
-if [ ! -f guile-procedures.txt ] ; then
-   @LN_S@ libguile/guile-procedures.txt .
-fi
-
 exec "$guile" \
     --debug \
     -L "$TEST_SUITE_DIR" \
