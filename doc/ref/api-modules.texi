@@ -212,10 +212,10 @@ and @var{seen} is the name in the using module.  Note that @var{seen} is
 also modified by @var{prefix} and @var{renamer}.
 
 The @code{#:select}, @code{#:hide}, @code{#:prefix}, and
-@code{#:renamer} clauses are optional.  If all are omitted, the returned
-interface has no bindings.  If the @code{#:select} clause is omitted,
-@var{prefix} and @var{renamer} operate on the used module's public
-interface.
+@code{#:renamer} clauses are optional.  If all are omitted, this form
+behaves identically to the previous one.  If the @code{#:select} clause
+is omitted, @var{prefix} and @var{renamer} operate on the used module's
+public interface.
 
 The @code{#:hide} operates on list of bindings in the module being
 imported, before any renaming is performed.  If both @code{#:select} and
