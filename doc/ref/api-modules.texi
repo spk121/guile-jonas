@@ -196,25 +196,32 @@ whose public interface is found and used.
 @cindex binding renamer
 @lisp
  (MODULE-NAME [#:select SELECTION]
+              [#:hide HIDE]
               [#:prefix PREFIX]
               [#:renamer RENAMER])
 @end lisp
 
 in which case a custom interface is newly created and used.
 @var{module-name} is a list of symbols, as above; @var{selection} is a
-list of selection-specs; @var{prefix} is a symbol that is prepended to
-imported names; and @var{renamer} is a procedure that takes a symbol and
-returns its new name.  A selection-spec is either a symbol or a pair of
-symbols @code{(ORIG . SEEN)}, where @var{orig} is the name in the used
-module and @var{seen} is the name in the using module.  Note that
-@var{seen} is also modified by @var{prefix} and @var{renamer}.
+list of selection-specs; @var{hide} is a list of bindings which should
+not be imported; @var{prefix} is a symbol that is prepended to imported
+names; and @var{renamer} is a procedure that takes a symbol and returns
+its new name.  A selection-spec is either a symbol or a pair of symbols
+@code{(ORIG . SEEN)}, where @var{orig} is the name in the used module
+and @var{seen} is the name in the using module.  Note that @var{seen} is
+also modified by @var{prefix} and @var{renamer}.
 
-The @code{#:select}, @code{#:prefix}, and @code{#:renamer} clauses are
-optional.  If all are omitted, the returned interface has no bindings.
-If the @code{#:select} clause is omitted, @var{prefix} and @var{renamer}
-operate on the used module's public interface.
+The @code{#:select}, @code{#:hide}, @code{#:prefix}, and
+@code{#:renamer} clauses are optional.  If all are omitted, the returned
+interface has no bindings.  If the @code{#:select} clause is omitted,
+@var{prefix} and @var{renamer} operate on the used module's public
+interface.
 
-In addition to the above, @var{spec} can also include a @code{#:version} 
+The @code{#:hide} operates on list of bindings in the module being
+imported, before any renaming is performed.  If both @code{#:select} and
+@code{#:hide} contain a binding, the @code{#:hide} wins.
+
+In addition to the above, @var{spec} can also include a @code{#:version}
 clause, of the form:
 
 @lisp
