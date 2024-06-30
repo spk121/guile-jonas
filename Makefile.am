@@ -110,8 +110,6 @@ endif !HAVE_READLINE
 clean-local:
 	rm -rf cache/
 
-CONFIG_STATUS_DEPENDENCIES = GUILE-VERSION
-
 gen_start_rev = 61db429e251bfd2f75cb4632972e0238056eb24b
 .PHONY: gen-ChangeLog
 gen-ChangeLog:
@@ -133,7 +131,7 @@ assert-no-store-file-names:
 	fi
 
 BUILT_SOURCES += $(top_srcdir)/.version
-$(top_srcdir)/.version:
+$(top_srcdir)/.version: Makefile
 	echo $(VERSION) > $@-t && mv $@-t $@
 gen-tarball-version:
 	echo $(VERSION) > $(distdir)/.tarball-version
