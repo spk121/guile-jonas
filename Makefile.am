@@ -26,6 +26,8 @@
 #
 AUTOMAKE_OPTIONS = 1.10
 
+# The test-suite goes last so that it can depend on everything else
+# (e.g. guile-procedures.txt).
 SUBDIRS =					\
 	lib					\
 	meta					\
@@ -36,8 +38,9 @@ SUBDIRS =					\
 	stage2					\
 	guile-readline				\
 	examples				\
-	test-suite				\
-	doc
+	doc					\
+	.					\
+	test-suite
 
 DIST_SUBDIRS = $(SUBDIRS) prebuilt
 
@@ -57,15 +60,9 @@ BUILT_SOURCES = libguile/scmconfig.h
 libguile/scmconfig.h:
 	$(MAKE) -C libguile scmconfig.h
 
-# Build it from here so that all the modules are compiled by the time we
-# build it.
-libguile/guile-procedures.txt: libguile/guile-procedures.texi
-	$(AM_V_GEN)						\
-	$(top_builddir)/meta/guile --no-auto-compile		\
-	  "$(srcdir)/libguile/texi-fragments-to-docstrings"	\
-	  "$(builddir)/libguile/guile-procedures.texi"		\
-	  > $@.tmp
-	@mv $@.tmp $@
+# Build it here so that (given SUBDIRS order) the modules are available
+libguile/guile-procedures.txt:
+	$(MAKE) -C libguile guile-procedures.txt
 
 EXTRA_DIST = LICENSE HACKING GUILE-VERSION			\
 	     am/maintainer-dirs					\
@@ -87,7 +84,6 @@ EXTRA_DIST = LICENSE HACKING GUILE-VERSION			\
 
 ACLOCAL_AMFLAGS = -I m4
 
-CLEANFILES = libguile/guile-procedures.txt
 DISTCLEANFILES = check-guile.log
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-error-on-warning --enable-mini-gmp

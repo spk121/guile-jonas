@@ -468,10 +468,6 @@ BUILT_INCLUDES = vm-operations.h scmconfig.h libpath.h srfi-14.i.c
 BUILT_SOURCES = cpp-E.c cpp-SIG.c $(BUILT_INCLUDES) \
     $(DOT_X_FILES) $(EXTRA_DOT_X_FILES)
 
-# Force the generation of `guile-procedures.texi' because the top-level
-# Makefile expects it to be built.
-all-local: guile-procedures.texi
-
 EXTRA_libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES = \
     syscalls.h					\
     dynl.c regex-posix.c			\
@@ -734,8 +730,6 @@ EXTRA_DIST = ChangeLog-scm ChangeLog-threads				\
     unidata_to_charset.awk UnicodeData.txt				\
     vm-operations.h libguile-@GUILE_EFFECTIVE_VERSION@-gdb.scm		\
     $(lightening_c_files) $(lightening_extra_files)
-#    $(DOT_DOC_FILES) $(EXTRA_DOT_DOC_FILES) \
-#    guile-procedures.txt guile.texi
 
 ## FIXME: Consider using timestamp file, to avoid unnecessary rebuilds.
 if MINGW_LIBPATH
@@ -852,6 +846,15 @@ guile.texi: $(alldotdocfiles) guile$(EXEEXT)
 
 guile-procedures.texi: $(alldotdocfiles) guile$(EXEEXT)
 	$(AM_V_GEN)$(dotdoc2texi)          > $@ || { rm $@; false; }
+
+# Requires meta to be listed before libguile in SUBDIRS
+guile-procedures.txt: guile-procedures.texi
+	$(AM_V_GEN)						\
+	$(top_builddir)/meta/guile --no-auto-compile		\
+	  "$(srcdir)/texi-fragments-to-docstrings"		\
+	  "$(builddir)/guile-procedures.texi"			\
+	  > $@.tmp
+	@mv $@.tmp $@
 
 c-tokenize.c: c-tokenize.lex
 	flex -t $(srcdir)/c-tokenize.lex > $@ || { rm $@; false; }
