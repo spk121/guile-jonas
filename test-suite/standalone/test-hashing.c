@@ -38,9 +38,15 @@ test_hashing ()
 
   // Value determined by calling wide_string_hash on {0x3A0, 0x3B5,
   // 0x3C1, 0x3AF} via a temporary test program.
+#if SIZEOF_UNSIGNED_LONG == 8
   const unsigned long expect = 4029223418961680680;
-  const unsigned long actual = scm_to_ulong (scm_symbol_hash (sym));
+#elif SIZEOF_UNSIGNED_LONG == 4
+  const unsigned long expect = 938126682;
+#else
+#error "unsigned long not 4 or 8 bytes (need additonal test data)"
+#endif
 
+  const unsigned long actual = scm_to_ulong (scm_symbol_hash (sym));
   if (actual != expect)
     {
       fprintf (stderr, "fail: unexpected utf-8 symbol hash (%lu != %lu)\n",
