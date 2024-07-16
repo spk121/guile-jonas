@@ -62,15 +62,14 @@ gen_scmconfig_SOURCES = gen-scmconfig.c
 ## Override default rule; this should be compiled for BUILD host.  Note
 ## that we don't add $(AM_CPPFLAGS) here, as we need to run this
 ## program, but $(top_srcdir)/lib has a gnulib configured for the
-## target.  Instead we manually add $(top_builddir) and the current
-## directory, in order to pick up the generated config.h and
-## gen-scmconfig.h.  Nothing else from Guile is included by this code
-## generator.
+## target.  Instead we manually add $(top_builddir) and $(builddir), in
+## order to pick up the generated config.h and gen-scmconfig.h.  Nothing
+## else from Guile is included by this code generator.
 gen-scmconfig.$(OBJEXT): gen-scmconfig.c
 	$(AM_V_GEN) \
 	if [ "$(cross_compiling)" = "yes" ]; then \
 		$(CC_FOR_BUILD) $(DEFS) $(DEFAULT_INCLUDES) -I$(top_builddir) \
-		   -I. -c -o $@ $<; \
+		   -iquote$(builddir) -c -o $@ $<; \
 	else \
 		$(COMPILE) -c -o $@ $<; \
 	fi
