@@ -982,6 +982,41 @@ CLIST1 ... CLISTN, that satisfies PRED."
 	    (else
 	     (lp (map cdr lists) (+ i 1)))))))
 
+;;; Deletion
+
+(define* (delete x lst #:optional (pred equal?))
+  "Return a list containing the elements of @var{lst} but with
+those equal to @var{x} deleted.  The returned elements will be in the
+same order as they were in @var{lst}.
+
+Equality is determined by @var{pred}, or @code{equal?} if not given.  An
+equality call is made just once for each element, but the order in which
+the calls are made on the elements is unspecified.
+
+The equality calls are always @code{(pred x elem)}, ie.@: the given
+@var{x} is first.  This means for instance elements greater than 5 can
+be deleted with @code{(delete 5 lst <)}.
+
+@var{lst} is not modified, but the returned list might share a common
+tail with @var{lst}."
+  (remove (lambda (elem) (pred x elem)) lst))
+
+(define* (delete! x lst #:optional (pred equal?))
+  "Return a list containing the elements of @var{lst} but with
+those equal to @var{x} deleted.  The returned elements will be in the
+same order as they were in @var{lst}.
+
+Equality is determined by @var{pred}, or @code{equal?} if not given.  An
+equality call is made just once for each element, but the order in which
+the calls are made on the elements is unspecified.
+
+The equality calls are always @code{(pred x elem)}, ie.@: the given
+@var{x} is first.  This means for instance elements greater than 5 can
+be deleted with @code{(delete 5 lst <)}.
+
+@var{lst} may be modified to construct the returned list."
+  (remove! (lambda (elem) (pred x elem)) lst))
+
 ;;; Association lists
 
 (define alist-cons acons)
