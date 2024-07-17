@@ -782,6 +782,27 @@ a common tail with @{list}."
                             (lp (cdr lst) (cdr lst) new-tail))))
                     (lp (cdr lst) last-kept tail))))))))
 
+(define (remove! pred lst)
+  "Return a list containing all elements from @var{list} which do not
+satisfy the predicate @var{pred}.  The elements in the result list have
+the same order as in @var{list}.  The order in which @var{pred} is
+applied to the list elements is not specified. @var{list} may be
+modified to build the return list."
+  (cond
+   ((null? lst) lst)
+   ((pred (car lst)) (remove! pred (cdr lst)))
+   (else
+    (let lp ((prev lst))
+      (let ((next (cdr prev)))
+        (if (null? next)
+            lst
+            (let ((x (car next)))
+              (if (pred x)
+                  (begin
+                    (set-cdr! prev (cdr next))
+                    (lp prev))
+                  (lp next)))))))))
+
 
 ;;; Searching
 
