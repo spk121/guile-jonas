@@ -143,41 +143,6 @@ SCM_DEFINE (scm_srfi1_append_reverse_x, "append-reverse!", 2, 0, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_srfi1_concatenate, "concatenate", 1, 0, 0,
-            (SCM lstlst),
-	    "Construct a list by appending all lists in @var{lstlst}.\n"
-	    "\n"
-	    "@code{concatenate} is the same as @code{(apply append\n"
-	    "@var{lstlst})}.  It exists because some Scheme implementations\n"
-	    "have a limit on the number of arguments a function takes, which\n"
-	    "the @code{apply} might exceed.  In Guile there is no such\n"
-	    "limit.")
-#define FUNC_NAME s_scm_srfi1_concatenate
-{
-  SCM_VALIDATE_LIST (SCM_ARG1, lstlst);
-  return scm_append (lstlst);
-}
-#undef FUNC_NAME
-
-
-SCM_DEFINE (scm_srfi1_concatenate_x, "concatenate!", 1, 0, 0,
-            (SCM lstlst),
-	    "Construct a list by appending all lists in @var{lstlst}.  Those\n"
-	    "lists may be modified to produce the result.\n"
-	    "\n"
-	    "@code{concatenate!} is the same as @code{(apply append!\n"
-	    "@var{lstlst})}.  It exists because some Scheme implementations\n"
-	    "have a limit on the number of arguments a function takes, which\n"
-	    "the @code{apply} might exceed.  In Guile there is no such\n"
-	    "limit.")
-#define FUNC_NAME s_scm_srfi1_concatenate_x
-{
-  SCM_VALIDATE_LIST (SCM_ARG1, lstlst);
-  return scm_append_x (lstlst);
-}
-#undef FUNC_NAME
-
-
 SCM_DEFINE (scm_srfi1_count, "count", 2, 0, 1,
             (SCM pred, SCM list1, SCM rest),
 	    "Return a count of the number of times @var{pred} returns true\n"

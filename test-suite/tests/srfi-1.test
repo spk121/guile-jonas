@@ -463,10 +463,10 @@
     (pass-if-exception "too many args" exception:wrong-num-args
       (concatenate-proc '() '()))
 
-    (pass-if-exception "number" exception:wrong-type-arg
+    (pass-if-exception "number" '(wrong-type-arg . "Apply to non-list")
       (concatenate-proc 123))
 
-    (pass-if-exception "vector" exception:wrong-type-arg
+    (pass-if-exception "vector" '(wrong-type-arg . "Apply to non-list")
       (concatenate-proc #(1 2 3)))
     
     (pass-if "no lists"

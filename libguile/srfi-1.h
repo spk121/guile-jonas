@@ -26,8 +26,6 @@
 
 SCM_INTERNAL SCM scm_srfi1_append_reverse (SCM revhead, SCM tail);
 SCM_INTERNAL SCM scm_srfi1_append_reverse_x (SCM revhead, SCM tail);
-SCM_INTERNAL SCM scm_srfi1_concatenate (SCM lstlst);
-SCM_INTERNAL SCM scm_srfi1_concatenate_x (SCM lstlst);
 SCM_INTERNAL SCM scm_srfi1_count (SCM pred, SCM list1, SCM rest);
 SCM_INTERNAL SCM scm_srfi1_delete_duplicates (SCM lst, SCM pred);
 SCM_INTERNAL SCM scm_srfi1_delete_duplicates_x (SCM lst, SCM pred);

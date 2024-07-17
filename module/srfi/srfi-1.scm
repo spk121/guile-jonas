@@ -445,6 +445,25 @@ a list of those after."
 
 ;;; Miscelleneous: length, append, concatenate, reverse, zip & count
 
+(define (concatenate lists)
+  "Construct a list by appending all lists in @var{lists}.
+
+@code{concatenate} is the same as @code{(apply append @var{lists})}.
+It exists because some Scheme implementations have a limit on the number
+of arguments a function takes, which the @code{apply} might exceed.  In
+Guile there is no such limit."
+  (apply append lists))
+
+(define (concatenate! lists)
+  "Construct a list by appending all lists in @var{lists}.  Those
+lists may be modified to produce the result.
+
+@code{concatenate!} is the same as @code{(apply append!  @var{lists})}.
+It exists because some Scheme implementations have a limit on the number
+of arguments a function takes, which the @code{apply} might exceed.  In
+Guile there is no such limit."
+  (apply append! lists))
+
 (define (zip clist1 . rest)
   (let lp ((l (cons clist1 rest)) (acc '()))
     (if (any null? l)
