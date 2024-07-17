@@ -86,31 +86,6 @@ list_copy_part (SCM lst, int count, SCM *dst)
 #undef FUNC_NAME
 
 
-SCM_DEFINE (scm_srfi1_append_reverse, "append-reverse", 2, 0, 0,
-            (SCM revhead, SCM tail),
-	    "Reverse @var{rev-head}, append @var{tail} to it, and return the\n"
-	    "result.  This is equivalent to @code{(append (reverse\n"
-	    "@var{rev-head}) @var{tail})}, but its implementation is more\n"
-	    "efficient.\n"
-	    "\n"
-	    "@example\n"
-	    "(append-reverse '(1 2 3) '(4 5 6)) @result{} (3 2 1 4 5 6)\n"
-	    "@end example")
-#define FUNC_NAME s_scm_srfi1_append_reverse
-{
-  while (scm_is_pair (revhead))
-    {
-      /* copy first element of revhead onto front of tail */
-      tail = scm_cons (SCM_CAR (revhead), tail);
-      revhead = SCM_CDR (revhead);
-    }
-  SCM_ASSERT_TYPE (SCM_NULL_OR_NIL_P (revhead), revhead, SCM_ARG1, FUNC_NAME,
-                   "list");
-  return tail;
-}
-#undef FUNC_NAME
-
-
 SCM_DEFINE (scm_srfi1_append_reverse_x, "append-reverse!", 2, 0, 0,
             (SCM revhead, SCM tail),
 	    "Reverse @var{rev-head}, append @var{tail} to it, and return the\n"

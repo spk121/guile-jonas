@@ -464,6 +464,23 @@ of arguments a function takes, which the @code{apply} might exceed.  In
 Guile there is no such limit."
   (apply append! lists))
 
+(define (append-reverse rev-head tail)
+  "Reverse @var{rev-head}, append @var{tail} to it, and return the
+result.  This is equivalent to @code{(append (reverse @var{rev-head})
+@var{tail})}, but its implementation is more efficient.
+
+@example
+(append-reverse '(1 2 3) '(4 5 6)) @result{} (3 2 1 4 5 6)
+@end example"
+  (let lp ((rh rev-head)
+           (result tail))
+    (if (pair? rh)
+        (lp (cdr rh) (cons (car rh) result))
+        (begin
+          (unless (null? rh)
+            (wrong-type-arg 'append-reverse rev-head))
+          result))))
+
 (define (zip clist1 . rest)
   (let lp ((l (cons clist1 rest)) (acc '()))
     (if (any null? l)
