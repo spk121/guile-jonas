@@ -841,6 +841,28 @@ the list returned."
 
 ;;; Filtering & partitioning
 
+(define (partition pred lst)
+  "Partition the elements of @var{list} with predicate @var{pred}.
+Return two values: the list of elements satisfying @var{pred} and the
+list of elements @emph{not} satisfying @var{pred}.  The order of the
+output lists follows the order of @var{list}.  @var{list} is not
+mutated.  One of the output lists may share memory with @var{list}."
+  (let ((matches (list #f))
+        (mismatches (list #f)))
+    (let lp ((lst lst)
+             (matches-end matches)
+             (mismatches-end mismatches))
+      (if (null? lst)
+          (values (cdr matches) (cdr mismatches))
+          (let ((x (car lst)))
+            (if (pred x)
+                (begin
+                  (set-cdr! matches-end (list x))
+                  (lp (cdr lst) (cdr matches-end) mismatches-end))
+                (begin
+                  (set-cdr! mismatches-end (list x))
+                  (lp (cdr lst) matches-end (cdr mismatches-end)))))))))
+
 (define (list-prefix-and-tail lst stop)
   (when (eq? lst stop)
     (error "Prefix cannot be empty"))

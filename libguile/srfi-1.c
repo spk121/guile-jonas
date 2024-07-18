@@ -331,48 +331,6 @@ SCM_DEFINE (scm_srfi1_lset_difference_x, "lset-difference!", 2, 0, 1,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_srfi1_partition, "partition", 2, 0, 0,
-	    (SCM pred, SCM list),
-	    "Partition the elements of @var{list} with predicate @var{pred}.\n"
-	    "Return two values: the list of elements satisfying @var{pred} and\n"
-	    "the list of elements @emph{not} satisfying @var{pred}.  The order\n"
-	    "of the output lists follows the order of @var{list}.  @var{list}\n"
-	    "is not mutated.  One of the output lists may share memory with @var{list}.\n")
-#define FUNC_NAME s_scm_srfi1_partition
-{
-  /* In this implementation, the output lists don't share memory with
-     list, because it's probably not worth the effort. */
-  SCM orig_list = list;
-  SCM kept = scm_cons(SCM_EOL, SCM_EOL);
-  SCM kept_tail = kept;
-  SCM dropped = scm_cons(SCM_EOL, SCM_EOL);
-  SCM dropped_tail = dropped;
-  
-  SCM_VALIDATE_PROC (SCM_ARG1, pred);
-  
-  for (; !SCM_NULL_OR_NIL_P (list); list = SCM_CDR(list)) {
-    SCM elt, new_tail;
-
-    /* Make sure LIST is not a dotted list.  */
-    SCM_ASSERT (scm_is_pair (list), orig_list, SCM_ARG2, FUNC_NAME);
-
-    elt = SCM_CAR (list);
-    new_tail = scm_cons (SCM_CAR (list), SCM_EOL);
-
-    if (scm_is_true (scm_call_1 (pred, elt))) {
-      SCM_SETCDR(kept_tail, new_tail);
-      kept_tail = new_tail;
-    }
-    else {
-      SCM_SETCDR(dropped_tail, new_tail);
-      dropped_tail = new_tail;
-    }
-  }
-  return scm_values_2 (SCM_CDR (kept), SCM_CDR (dropped));
-}
-#undef FUNC_NAME
-
-
 SCM_DEFINE (scm_srfi1_partition_x, "partition!", 2, 0, 0,
             (SCM pred, SCM lst),
 	    "Split @var{lst} into those elements which do and don't satisfy\n"
