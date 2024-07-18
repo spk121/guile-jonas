@@ -445,6 +445,30 @@ a list of those after."
 
 ;;; Miscelleneous: length, append, concatenate, reverse, zip & count
 
+(define (length+ lst)
+  "Return the length of @var{lst}, or @code{#f} if @var{lst} is circular."
+  (let lp ((tortoise lst)
+           (hare lst)
+           (i 0))
+    (if (not-pair? hare)
+        (if (null? hare)
+            i
+            (scm-error 'wrong-type-arg "length+"
+                       "Argument not a proper or circular list: ~s"
+                       (list lst) (list lst)))
+        (let ((hare (cdr hare)))
+          (if (not-pair? hare)
+              (if (null? hare)
+                  (1+ i)
+                  (scm-error 'wrong-type-arg "length+"
+                             "Argument not a proper or circular list: ~s"
+                             (list lst) (list lst)))
+              (let ((tortoise (cdr tortoise))
+                    (hare (cdr hare)))
+                (if (eq? hare tortoise)
+                    #f
+                    (lp tortoise hare (+ i 2)))))))))
+
 (define (concatenate lists)
   "Construct a list by appending all lists in @var{lists}.
 

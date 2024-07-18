@@ -371,49 +371,6 @@ SCM_DEFINE (scm_srfi1_delete_duplicates_x, "delete-duplicates!", 1, 1, 0,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_srfi1_length_plus, "length+", 1, 0, 0,
-            (SCM lst),
-	    "Return the length of @var{lst}, or @code{#f} if @var{lst} is\n"
-	    "circular.")
-#define FUNC_NAME s_scm_srfi1_length_plus
-{
-  size_t i = 0;
-  SCM tortoise = lst;
-  SCM hare = lst;
-
-  do
-    {
-      if (!scm_is_pair (hare))
-        {
-          if (SCM_NULL_OR_NIL_P (hare))
-            return scm_from_size_t (i);
-          else
-            scm_wrong_type_arg_msg (FUNC_NAME, 1, lst,
-                                    "proper or circular list");
-        }
-      hare = SCM_CDR (hare);
-      i++;
-      if (!scm_is_pair (hare))
-        {
-          if (SCM_NULL_OR_NIL_P (hare))
-            return scm_from_size_t (i);
-          else
-            scm_wrong_type_arg_msg (FUNC_NAME, 1, lst,
-                                    "proper or circular list");
-        }
-      hare = SCM_CDR (hare);
-      i++;
-      /* For every two steps the hare takes, the tortoise takes one.  */
-      tortoise = SCM_CDR (tortoise);
-    }
-  while (!scm_is_eq (hare, tortoise));
-
-  /* If the tortoise ever catches the hare, then the list must contain
-     a cycle.  */
-  return SCM_BOOL_F;
-}
-#undef FUNC_NAME
-
 SCM_DEFINE (scm_srfi1_lset_difference_x, "lset-difference!", 2, 0, 1,
             (SCM equal, SCM lst, SCM rest),
 	    "Return @var{lst} with any elements in the lists in @var{rest}\n"

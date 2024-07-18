@@ -21,6 +21,8 @@
   #:use-module (ice-9 copy-tree)
   #:use-module (srfi srfi-1))
 
+(define list+-bad-arg-exception
+  '(wrong-type-arg . "^Argument not a proper or circular list"))
 
 (define (ref-delete x lst . proc)
   "Reference implemenation of srfi-1 `delete'."
@@ -1188,18 +1190,18 @@
     (pass-if-exception "proc arg count 4" exception:wrong-num-args
       (fold (lambda (x y z prev) x) 1 '(1 2 3) '(1 2 3)))
 
-    (pass-if-exception "improper first 1" exception:wrong-type-arg
+    (pass-if-exception "improper first 1" list+-bad-arg-exception
       (fold + 1 1 '(1 2 3)))
-    (pass-if-exception "improper first 2" exception:wrong-type-arg
+    (pass-if-exception "improper first 2" list+-bad-arg-exception
       (fold + 1 '(1 . 2) '(1 2 3)))
-    (pass-if-exception "improper first 3" exception:wrong-type-arg
+    (pass-if-exception "improper first 3" list+-bad-arg-exception
       (fold + 1 '(1 2 . 3) '(1 2 3)))
 
-    (pass-if-exception "improper second 1" exception:wrong-type-arg
+    (pass-if-exception "improper second 1" list+-bad-arg-exception
       (fold + 1 '(1 2 3) 1))
-    (pass-if-exception "improper second 2" exception:wrong-type-arg
+    (pass-if-exception "improper second 2" list+-bad-arg-exception
       (fold + 1 '(1 2 3) '(1 . 2)))
-    (pass-if-exception "improper second 3" exception:wrong-type-arg
+    (pass-if-exception "improper second 3" list+-bad-arg-exception
       (fold + 1 '(1 2 3) '(1 2 . 3)))
 
     (pass-if (= 6 (fold + 1 '(2) '(3))))
@@ -1330,9 +1332,9 @@
     (length+))
   (pass-if-exception "too many args" exception:wrong-num-args
     (length+ 123 456))
-  (pass-if-exception "not a pair" exception:wrong-type-arg
+  (pass-if-exception "not a pair" list+-bad-arg-exception
     (length+ 'x))
-  (pass-if-exception "improper list" exception:wrong-type-arg
+  (pass-if-exception "improper list" list+-bad-arg-exception
     (length+ '(x y . z)))
   (pass-if (= 0 (length+ '())))
   (pass-if (= 1 (length+ '(x))))
