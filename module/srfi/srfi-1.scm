@@ -1350,6 +1350,30 @@ given REST parameters."
   (check-arg procedure? = lset-intersection!)
   (apply lset-intersection = list1 rest)) ; XXX:optimize
 
+(define (lset-difference! = lset . removals)
+  "Return @var{lst} with any elements in the lists in @var{removals}
+removed (ie.@: subtracted).  For only one @var{lst} argument, just that
+list is returned.
+
+The given @var{equal} procedure is used for comparing elements, called
+as @code{(@var{equal} elem1 elemN)}.  The first argument is from
+@var{lst} and the second from one of the subsequent lists.  But exactly
+which calls are made and in what order is unspecified.
+
+@example
+(lset-difference! eqv? (list 'x 'y))           @result{} (x y)
+(lset-difference! eqv? (list 1 2 3) '(3 1))    @result{} (2)
+(lset-difference! eqv? (list 1 2 3) '(3) '(2)) @result{} (1)
+@end example
+
+@code{lset-difference!} may modify @var{lst} to form its result."
+  (check-arg procedure? = lset-intersection!)
+  (cond
+   ((null? lset) lset)
+   ((null? removals) lset)
+   (else (remove! (lambda (x) (any (lambda (s) (member x s =)) removals))
+                  lset))))
+
 (define (lset-xor! = . rest)
   (check-arg procedure? = lset-xor!)
   (apply lset-xor = rest))		; XXX:optimize

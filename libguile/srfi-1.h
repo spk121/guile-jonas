@@ -26,7 +26,6 @@
 
 SCM_INTERNAL SCM scm_srfi1_delete_duplicates (SCM lst, SCM pred);
 SCM_INTERNAL SCM scm_srfi1_delete_duplicates_x (SCM lst, SCM pred);
-SCM_INTERNAL SCM scm_srfi1_lset_difference_x (SCM equal, SCM lst, SCM rest);
 
 SCM_INTERNAL void scm_register_srfi_1 (void);
 SCM_INTERNAL void scm_init_srfi_1 (void);
