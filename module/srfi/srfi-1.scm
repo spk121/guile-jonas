@@ -907,6 +907,27 @@ a common tail with @{list}."
                             (lp (cdr lst) (cdr lst) new-tail))))
                     (lp (cdr lst) last-kept tail))))))))
 
+(define (partition! pred lst)
+  "Partition the elements of @var{list} with predicate @var{pred}.
+Return two values: the list of elements satisfying @var{pred} and the
+list of elements @emph{not} satisfying @var{pred}.  The order of the
+output lists follows the order of @var{list}.  @var{list} is not
+mutated.  @var{lst} may be modified to construct the return lists."
+  (let ((matches (cons #f lst))
+        (mismatches (list #f)))
+    (let lp ((matches-next matches)
+             (mismatches-end mismatches))
+      (let ((next (cdr matches-next)))
+        (if (null? next)
+            (values (cdr matches) (cdr mismatches))
+            (let ((x (car next)))
+              (if (pred x)
+                  (lp (cdr matches-next) mismatches-end)
+                  (begin
+                    (set-cdr! matches-next (cdr next))
+                    (set-cdr! mismatches-end (list x))
+                    (lp matches-next (cdr mismatches-end))))))))))
+
 (define (remove! pred lst)
   "Return a list containing all elements from @var{list} which do not
 satisfy the predicate @var{pred}.  The elements in the result list have

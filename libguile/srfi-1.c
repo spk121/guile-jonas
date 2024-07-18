@@ -331,59 +331,6 @@ SCM_DEFINE (scm_srfi1_lset_difference_x, "lset-difference!", 2, 0, 1,
 }
 #undef FUNC_NAME
 
-SCM_DEFINE (scm_srfi1_partition_x, "partition!", 2, 0, 0,
-            (SCM pred, SCM lst),
-	    "Split @var{lst} into those elements which do and don't satisfy\n"
-	    "the predicate @var{pred}.\n"
-	    "\n"
-	    "The return is two values (@pxref{Multiple Values}), the first\n"
-	    "being a list of all elements from @var{lst} which satisfy\n"
-	    "@var{pred}, the second a list of those which do not.\n"
-	    "\n"
-	    "The elements in the result lists are in the same order as in\n"
-	    "@var{lst} but the order in which the calls @code{(@var{pred}\n"
-	    "elem)} are made on the list elements is unspecified.\n"
-	    "\n"
-	    "@var{lst} may be modified to construct the return lists.")
-#define FUNC_NAME s_scm_srfi1_partition_x
-{
-  SCM  tlst, flst, *tp, *fp;
-
-  SCM_ASSERT (scm_is_true (scm_procedure_p (pred)), pred, SCM_ARG1, FUNC_NAME);
-
-  /* tlst and flst are the lists of true and false elements.  tp and fp are
-     where to store to append to them, initially &tlst and &flst, then
-     SCM_CDRLOC of the last pair in the respective lists.  */
-
-  tlst = SCM_EOL;
-  flst = SCM_EOL;
-  tp = &tlst;
-  fp = &flst;
-
-  for ( ; scm_is_pair (lst); lst = SCM_CDR (lst))
-    {
-      if (scm_is_true (scm_call_1 (pred, SCM_CAR (lst))))
-        {
-          *tp = lst;
-          tp = SCM_CDRLOC (lst);
-        }
-      else
-        {
-          *fp = lst;
-          fp = SCM_CDRLOC (lst);
-        }
-    }
-
-  SCM_ASSERT_TYPE (SCM_NULL_OR_NIL_P (lst), lst, SCM_ARG2, FUNC_NAME, "list");
-
-  /* terminate whichever didn't get the last element(s) */
-  *tp = SCM_EOL;
-  *fp = SCM_EOL;
-
-  return scm_values_2 (tlst, flst);
-}
-#undef FUNC_NAME
-
 
 void
 scm_register_srfi_1 (void)
