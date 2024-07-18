@@ -546,6 +546,27 @@ result.  This is equivalent to @code{(append! (reverse!  @var{rev-head})
   (values (map first l) (map second l) (map third l) (map fourth l)
 	  (map fifth l)))
 
+(define count
+  (case-lambda
+    ((pred lst)
+     (let lp ((lst lst) (c 0))
+       (if (null? lst)
+           c
+           (lp (cdr lst) (if (pred (car lst)) (1+ c) c)))))
+    ((pred l1 l2)
+     (let lp ((l1 l1) (l2 l2) (c 0))
+       (if (or (null? l1) (null? l2))
+           c
+           (lp (cdr l1) (cdr l2)
+               (if (pred (car l1) (car l2)) (1+ c) c)))))
+    ((pred lst . lists)
+     (let lp ((lst lst) (lists lists) (c 0))
+       (if (or (null? lst) (any null? lists))
+           c
+           (lp (cdr lst)
+               (map cdr lists)
+               (if (apply pred (car lst) (map car lists)) (1+ c) c)))))))
+
 ;;; Fold, unfold & map
 
 (define fold
