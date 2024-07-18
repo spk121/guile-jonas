@@ -1147,6 +1147,13 @@ be deleted with @code{(delete 5 lst <)}.
 tail with @var{lst}."
   (remove (lambda (elem) (pred x elem)) lst))
 
+(define (member-before x lst stop =)
+  (cond
+   ((null? lst) #f)
+   ((eq? lst stop) #f)
+   ((= (car lst) x) #t)
+   (else (member-before x (cdr lst) stop =))))
+
 (define* (delete! x lst #:optional (pred equal?))
   "Return a list containing the elements of @var{lst} but with
 those equal to @var{x} deleted.  The returned elements will be in the
@@ -1162,6 +1169,38 @@ be deleted with @code{(delete 5 lst <)}.
 
 @var{lst} may be modified to construct the returned list."
   (remove! (lambda (elem) (pred x elem)) lst))
+
+(define* (delete-duplicates! lst #:optional (= equal?))
+  "Return a list containing the elements of @var{lst} but without
+duplicates.
+
+When elements are equal, only the first in @var{lst} is retained.  Equal
+elements can be anywhere in @var{lst}, they don't have to be adjacent.
+The returned list will have the retained elements in the same order as
+they were in @var{lst}.
+
+Equality is determined by @var{=}, or @code{equal?} if not given.
+Calls @code{(= x y)} are made with element @var{x} being before
+@var{y} in @var{lst}.  A call is made at most once for each combination,
+but the sequence of the calls across the elements is unspecified.
+
+@var{lst} is not modified, but the return might share a common tail with
+@var{lst}.
+
+In the worst case, this is an @math{O(N^2)} algorithm because it must
+check each element against all those preceding it.  For long lists it is
+more efficient to sort and then compare only adjacent elements."
+  (if (null? lst)
+      lst
+      (let lp ((tail lst))
+        (let ((next (cdr tail)))
+          (if (null? next)
+              lst
+              (if (member-before (car next) lst next =)
+                  (begin
+                    (set-cdr! tail (cdr next))
+                    (lp tail))
+                  (lp next)))))))
 
 ;;; Association lists
 
