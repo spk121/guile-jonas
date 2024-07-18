@@ -481,6 +481,28 @@ result.  This is equivalent to @code{(append (reverse @var{rev-head})
             (wrong-type-arg 'append-reverse rev-head))
           result))))
 
+(define (append-reverse! rev-head tail)
+  "Reverse @var{rev-head}, append @var{tail} to it, and return the
+result.  This is equivalent to @code{(append! (reverse!  @var{rev-head})
+@var{tail})}, but its implementation is more efficient.
+
+@example
+(append-reverse! (list 1 2 3) '(4 5 6)) @result{} (3 2 1 4 5 6)
+@end example
+
+@var{rev-head} may be modified in order to produce the result."
+  (let lp ((rh rev-head)
+           (result tail))
+    (if (pair? rh)
+        (let ((next rh)
+              (rh (cdr rh)))
+          (set-cdr! next result)
+          (lp rh next))
+        (begin
+          (unless (null? rh)
+            (wrong-type-arg 'append-reverse! rev-head))
+          result))))
+
 (define (zip clist1 . rest)
   (let lp ((l (cons clist1 rest)) (acc '()))
     (if (any null? l)
