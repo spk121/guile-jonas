@@ -224,11 +224,6 @@
 
 (cond-expand-provide (current-module) '(srfi-1))
 
-;; Load the compiled primitives from the shared library.
-;;
-(load-extension (string-append "libguile-" (effective-version))
-                "scm_init_srfi_1")
-
 
 ;;; Constructors
 
