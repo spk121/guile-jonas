@@ -1170,6 +1170,52 @@ be deleted with @code{(delete 5 lst <)}.
 @var{lst} may be modified to construct the returned list."
   (remove! (lambda (elem) (pred x elem)) lst))
 
+(define* (delete-duplicates lst #:optional (= equal?))
+  "Return a list containing the elements of @var{lst} but without
+duplicates.
+
+When elements are equal, only the first in @var{lst} is retained.  Equal
+elements can be anywhere in @var{lst}, they don't have to be adjacent.
+The returned list will have the retained elements in the same order as
+they were in @var{lst}.
+
+Equality is determined by @var{pred}, or @code{equal?} if not given.
+Calls @code{(pred x y)} are made with element @var{x} being before
+@var{y} in @var{lst}.  A call is made at most once for each combination,
+but the sequence of the calls across the elements is unspecified.
+
+@var{lst} is not modified, but the return might share a common tail with
+@var{lst}.
+
+In the worst case, this is an @math{O(N^2)} algorithm because it must
+check each element against all those preceding it.  For long lists it is
+more efficient to sort and then compare only adjacent elements."
+  ;; Same implementation as remove (see comments there), except that the
+  ;; predicate checks for duplicates in both last-seen and the pending
+  ;; result.
+  (if (null? lst)
+      lst
+      (let ((result (list #f)))
+        (let lp ((lst lst)
+                 (last-kept lst)
+                 (tail result))
+          (if (null? lst)
+              (begin
+                (set-cdr! tail last-kept)
+                (cdr result))
+              (let ((item (car lst)))
+                (if (or (member item (cdr result) (lambda (x y) (= y x)))
+                        (member-before item last-kept lst =))
+                    (if (eq? last-kept lst)
+                        (lp (cdr lst) (cdr lst) tail)
+                        (call-with-values
+                            (lambda () (list-prefix-and-tail last-kept lst))
+                          (lambda (prefix new-tail)
+                            (set-cdr! tail prefix)
+                            (lp (cdr lst) (cdr lst) new-tail))))
+                    ;; unique, keep
+                    (lp (cdr lst) last-kept tail))))))))
+
 (define* (delete-duplicates! lst #:optional (= equal?))
   "Return a list containing the elements of @var{lst} but without
 duplicates.
