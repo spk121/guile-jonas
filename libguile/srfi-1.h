@@ -37,7 +37,6 @@ SCM_INTERNAL SCM scm_srfi1_length_plus (SCM lst);
 SCM_INTERNAL SCM scm_srfi1_lset_difference_x (SCM equal, SCM lst, SCM rest);
 SCM_INTERNAL SCM scm_srfi1_partition (SCM pred, SCM list);
 SCM_INTERNAL SCM scm_srfi1_partition_x (SCM pred, SCM list);
-SCM_INTERNAL SCM scm_srfi1_remove (SCM pred, SCM list);
 SCM_INTERNAL SCM scm_srfi1_remove_x (SCM pred, SCM list);
 
 SCM_INTERNAL void scm_register_srfi_1 (void);

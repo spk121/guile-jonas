@@ -736,6 +736,53 @@ the list returned."
 	  (lp (map cdr l)))))))
 
 
+;;; Filtering & partitioning
+
+(define (list-prefix-and-tail lst stop)
+  (when (eq? lst stop)
+    (error "Prefix cannot be empty"))
+  (let ((rl (list (car lst))))
+    (let lp ((lst (cdr lst)) (tail rl))
+      (if (eq? lst stop)
+          (values rl tail)
+          (let ((new-tail (list (car lst))))
+            (set-cdr! tail new-tail)
+            (lp (cdr lst) new-tail))))))
+
+(define (remove pred lst)
+  "Return a list containing all elements from @var{list} which do not
+satisfy the predicate @var{pred}.  The elements in the result list have
+the same order as in @var{list}.  The order in which @var{pred} is
+applied to the list elements is not specified, and the result may share
+a common tail with @{list}."
+  ;; Traverse the lst, keeping the tail of it, in which we have yet to
+  ;; find a duplicate, in last-kept.  Share that tail with the result
+  ;; (possibly the entire original lst).  Build the result by
+  ;; destructively appending unique values to its tail, and henever we
+  ;; find a duplicate, copy the pending last-kept prefix into the result
+  ;; and move last-kept forward to the current position in lst.
+  (if (null? lst)
+      lst
+      (let ((result (list #f)))
+        (let lp ((lst lst)
+                 (last-kept lst)
+                 (tail result))
+          (if (null? lst)
+              (begin
+                (set-cdr! tail last-kept)
+                (cdr result))
+              (let ((item (car lst)))
+                (if (pred item)
+                    (if (eq? last-kept lst)
+                        (lp (cdr lst) (cdr lst) tail)
+                        (call-with-values
+                            (lambda () (list-prefix-and-tail last-kept lst))
+                          (lambda (prefix new-tail)
+                            (set-cdr! tail prefix)
+                            (lp (cdr lst) (cdr lst) new-tail))))
+                    (lp (cdr lst) last-kept tail))))))))
+
+
 ;;; Searching
 
 (define (find pred lst)
