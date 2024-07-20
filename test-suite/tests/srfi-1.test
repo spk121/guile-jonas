@@ -1449,7 +1449,14 @@
   (pass-if (equal? '(1 . 2)       (list-copy '(1 . 2))))
   (pass-if (equal? '(1 2 . 3)     (list-copy '(1 2 . 3))))
   (pass-if (equal? '(1 2 3 . 4)   (list-copy '(1 2 3 . 4))))
-  (pass-if (equal? '(1 2 3 4 . 5) (list-copy '(1 2 3 4 . 5)))))
+  (pass-if (equal? '(1 2 3 4 . 5) (list-copy '(1 2 3 4 . 5))))
+
+  (let ((src (list 1 2 3 4 5)))
+    (define (find-pair? p lst)
+      (let lp ((lst lst))
+        (and (pair? lst) (or (eq? p lst) (lp (cdr lst))))))
+    (pair-for-each (lambda (p) (pass-if (not (find-pair? p src))))
+                   (list-copy src))))
 
 ;;
 ;; list-index

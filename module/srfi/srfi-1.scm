@@ -262,6 +262,24 @@ INIT-PROC is applied to the indices is not specified."
         acc
         (lp (- n 1) (cons (init-proc (- n 1)) acc)))))
 
+(define (list-copy lst)
+  "Return a copy of the given list @var{lst}.
+@var{lst} can be a proper or improper list.  And if @var{lst} is not a
+pair then it's treated as the final tail of an improper list and simply
+returned."
+  ;; This routine differs from the core list-copy in allowing improper
+  ;; lists.  Maybe the core could allow them too.
+  (if (not (pair? lst))
+      lst
+      (let ((result (cons (car lst) (cdr lst))))
+        (let lp ((tail result))
+          (let ((next (cdr tail)))
+            (if (pair? next)
+                (begin
+                  (set-cdr! tail (cons (car next) (cdr next)))
+                  (lp next))
+                result))))))
+
 (define (circular-list elt1 . elts)
   (set! elts (cons elt1 elts))
   (set-cdr! (last-pair elts) elts)
