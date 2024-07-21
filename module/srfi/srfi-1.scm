@@ -1301,18 +1301,32 @@ given REST parameters."
 	(lp (cdr l) (cons (car l) acc))
 	(lp (cdr l) acc)))))
 
-(define (lset-difference = list1 . rest)
-  (check-arg procedure? = lset-difference)
-  (if (null? rest)
-    list1
-    (let lp ((l list1) (acc '()))
-      (if (null? l)
-	(reverse! acc)
-	(if (any (lambda (ll) (member (car l) ll =)) rest)
-	  (lp (cdr l) acc)
-	  (lp (cdr l) (cons (car l) acc)))))))
+(define (lset-difference = lset . removals)
+  "Return @var{lst} with any elements in the lists in @var{removals}
+removed (ie.@: subtracted).  For only one @var{lst} argument, just that
+list is returned.
 
-;(define (fold kons knil list1 . rest)
+The given @var{equal} procedure is used for comparing elements, called
+as @code{(@var{equal} elem1 elemN)}.  The first argument is from
+@var{lst} and the second from one of the subsequent lists.  But exactly
+which calls are made and in what order is unspecified.
+
+@example
+(lset-difference eqv? (list 'x 'y))           @result{} (x y)
+(lset-difference eqv? (list 1 2 3) '(3 1))    @result{} (2)
+(lset-difference eqv? (list 1 2 3) '(3) '(2)) @result{} (1)
+@end example
+
+The result may share a common tail with @var{lset}."
+  ;; REVIEW: if we think they're actually going to be sets, i.e. no
+  ;; duplicates, then might it be better to just reduce via per-set
+  ;; delete -- more transient allocation but maybe a lot less work?
+  (check-arg procedure? = lset-difference)
+  (cond
+   ((null? lset) lset)
+   ((null? removals) lset)
+   (else (remove (lambda (x) (any (lambda (s) (member x s =)) removals))
+                 lset))))
 
 (define (lset-xor = . rest)
   (check-arg procedure? = lset-xor)
