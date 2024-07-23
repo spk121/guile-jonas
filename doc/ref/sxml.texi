@@ -91,7 +91,8 @@ All namespaces in the XML document must be declared, via @code{xmlns}
 attributes.  SXML elements built from non-default namespaces will have
 their tags prefixed with their URI.  Users can specify custom prefixes
 for certain namespaces with the @code{#:namespaces} keyword argument to
-@code{xml->sxml}.
+@code{xml->sxml}.  A namespace can be removed by using a @code{#f} custom
+prefix.
 
 @example
 (xml->sxml "<foo xmlns=\"http://example.org/ns1\">text</foo>")
