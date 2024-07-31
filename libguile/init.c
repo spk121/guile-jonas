@@ -128,7 +128,6 @@
 #include "socket.h"
 #include "sort.h"
 #include "srcprop.h"
-#include "srfi-1.h"
 #include "srfi-13.h"
 #include "srfi-14.h"
 #include "srfi-4.h"
@@ -377,7 +376,6 @@ scm_i_init_guile (void *base)
   scm_register_fdes_finalizers ();
   scm_register_foreign ();
   scm_register_foreign_object ();
-  scm_register_srfi_1 ();
   scm_register_srfi_60 ();
   scm_register_poll ();
 

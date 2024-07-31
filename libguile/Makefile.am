@@ -210,7 +210,6 @@ libguile_@GUILE_EFFECTIVE_VERSION@_la_SOURCES =				\
 	smob.c					\
 	sort.c					\
 	srcprop.c				\
-	srfi-1.c				\
 	srfi-4.c				\
 	srfi-13.c				\
 	srfi-14.c				\
@@ -324,7 +323,6 @@ DOT_X_FILES =					\
 	smob.x					\
 	sort.x					\
 	srcprop.x				\
-	srfi-1.x				\
 	srfi-4.x				\
 	srfi-13.x				\
 	srfi-14.x				\
@@ -426,7 +424,6 @@ DOT_DOC_FILES = 				\
 	smob.doc				\
 	sort.doc				\
 	srcprop.doc				\
-	srfi-1.doc				\
 	srfi-4.doc				\
 	srfi-13.doc				\
 	srfi-14.doc				\
@@ -691,7 +688,6 @@ modinclude_HEADERS =				\
 	socket.h				\
 	sort.h					\
 	srcprop.h				\
-	srfi-1.h				\
 	srfi-4.h				\
 	srfi-13.h				\
 	srfi-14.h				\
