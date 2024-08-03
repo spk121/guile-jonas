@@ -2043,7 +2043,7 @@ SCM_DEFINE (scm_basename, "basename", 1, 1, 0,
 	    "@var{filename}, it is removed also.")
 #define FUNC_NAME s_scm_basename
 {
-  char *c_filename, *c_last_component;
+  char *c_filename;
   SCM res;
 
   scm_dynwind_begin (0);
@@ -2057,13 +2057,8 @@ SCM_DEFINE (scm_basename, "basename", 1, 1, 0,
        "/" and "//" are treated specially.  */
     res = scm_from_utf8_string ("/");
   else
-    {
-      c_last_component = last_component (c_filename);
-      if (!c_last_component)
-        res = filename;
-      else
-        res = scm_from_utf8_string (c_last_component);
-    }
+    res = scm_from_utf8_string (last_component (c_filename));
+
   scm_dynwind_end ();
 
   if (!SCM_UNBNDP (suffix) &&
