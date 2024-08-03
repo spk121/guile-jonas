@@ -15,6 +15,8 @@ Changes in 3.0.11 (since 3.0.10)
 
 * Bug fixes
 
+** `basename` now checks the suffix against the base name, not the full path
+   (<https://debbugs.gnu.org/69437>)
 ** test-hashing should now work on 32-bit systems
 ** GUILE-VERSION changes should propagate to .version and relevant Makefiles
    (<https://debbugs.gnu.org/72084>)

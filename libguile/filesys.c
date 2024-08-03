@@ -2037,10 +2037,10 @@ SCM_DEFINE (scm_dirname, "dirname", 1, 0, 0,
 
 SCM_DEFINE (scm_basename, "basename", 1, 1, 0, 
             (SCM filename, SCM suffix),
-	    "Return the base name of the file name @var{filename}. The\n"
-	    "base name is the file name without any directory components.\n"
-	    "If @var{suffix} is provided, and is equal to the end of\n"
-	    "@var{filename}, it is removed also.")
+            "Return the base name of @var{filename}. The base name is the\n"
+            "@var{filename} without any directory components.\n"
+            "If the @var{suffix} matches the end of the base name and is\n"
+            "shorter, then it is removed from the result.\n")
 #define FUNC_NAME s_scm_basename
 {
   char *c_filename;
@@ -2057,16 +2057,27 @@ SCM_DEFINE (scm_basename, "basename", 1, 1, 0,
        "/" and "//" are treated specially.  */
     res = scm_from_utf8_string ("/");
   else
-    res = scm_from_utf8_string (last_component (c_filename));
+    {
+      char *last = last_component (c_filename);
+      if (SCM_UNBNDP (suffix))
+        res = scm_from_utf8_string (last);
+      else
+        {
+          char * const c_suffix = scm_to_utf8_string (suffix);
+          scm_dynwind_free (c_suffix);
+          const size_t res_n = strlen (last);
+          const size_t suf_n = strlen (c_suffix);
+          if (suf_n < res_n)
+            {
+              const size_t prefix_n = res_n - suf_n;
+              if (strcmp (last + prefix_n, c_suffix) == 0)
+                last[prefix_n] = '\0';
+            }
+          res = scm_from_utf8_string (last);
+        }
+    }
 
   scm_dynwind_end ();
-
-  if (!SCM_UNBNDP (suffix) &&
-      scm_is_true (scm_string_suffix_p (suffix, filename,
-                                        SCM_UNDEFINED, SCM_UNDEFINED,
-                                        SCM_UNDEFINED, SCM_UNDEFINED)))
-    res = scm_c_substring
-      (res, 0, scm_c_string_length (res) - scm_c_string_length (suffix));
 
   return res;
 }
