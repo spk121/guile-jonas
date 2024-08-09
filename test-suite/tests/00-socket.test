@@ -25,6 +25,10 @@
   #:use-module (srfi srfi-26)
   #:use-module (test-suite lib))
 
+(define (skip-on-darwin)
+  (when (string-ci=? "darwin" (utsname:sysname (uname)))
+    (throw 'untested)))
+
 
 
 ;;;
@@ -336,6 +340,7 @@
         (set! path (string-append "\x00" path))
 
 	(pass-if "bind abstract"
+          (skip-on-darwin)
 	  (catch 'system-error
 	    (lambda ()
 	      (bind server-socket AF_UNIX path)
@@ -348,6 +353,7 @@
 		    (apply throw args))))))
 
 	(pass-if "listen abstract"
+          (skip-on-darwin)
 	  (if (not server-bound?)
 	      (throw 'unresolved)
 	      (begin
@@ -375,6 +381,7 @@
 	       #t))))
 
 	(pass-if "connect abstract"
+          (skip-on-darwin)
 	  (if (not server-pid)
 	      (throw 'unresolved)
 	      (let ((s (socket AF_UNIX SOCK_STREAM 0)))
@@ -383,6 +390,7 @@
 		#t)))
 
 	(pass-if "accept abstract"
+          (skip-on-darwin)
 	  (if (not server-pid)
 	      (throw 'unresolved)
               (begin
