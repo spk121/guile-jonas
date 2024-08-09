@@ -1192,14 +1192,23 @@ SCM_DEFINE (scm_symlinkat, "symlinkat", 3, 0, 0,
 #undef FUNC_NAME
 #endif /* HAVE_SYMLINKAT */
 
-/* Static helper function for choosing between readlink
+/* Static helper function for choosing between readlink, freadlink,
    and readlinkat. */
 static int
 do_readlink (int fd, const char *c_path, char *buf, size_t size)
 {
-#ifdef HAVE_READLINKAT
+/* Darwin does not accept empty c_path. */
+#if HAVE_READLINKAT && !__APPLE__
   if (fd != -1)
     return readlinkat (fd, c_path, buf, size);
+#elif HAVE_FREADLINK
+  /* There is no branch in s_scm_readlink that would lead to having both
+     FD and non-empty C_PATH.  Therefore if FD is set, we (on Darwin
+     only) use freadlink and ignore C_PATH.  On Linux this case is
+     already handled by readlinkat, but Darwin does not understand empty
+     C_PATH to mean "the fd itself" the way Linux does.  */
+  if (fd != -1)
+    return freadlink (fd, buf, size);
 #else
   (void) fd;
 #endif
