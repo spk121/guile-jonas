@@ -365,7 +365,8 @@
 
   (pass-if-equal "https://bugs.gnu.org/52835"
       "bong\n"
-    (let ((file (tmpnam)))
+    (let* ((port (mkstemp "T-XXXXXX"))
+           (file (port-filename port)))
       ;; Redirect stdout and stderr to FILE.
       (define status
         (call-with-output-file file
@@ -376,8 +377,9 @@
                   (lambda ()
                     (system* "sh" "-c" "echo bong >&2"))))))))
 
+      (delete-file file)
       (and (zero? (status:exit-val status))
-           (call-with-input-file file get-string-all))))
+           (get-string-all port))))
 
   (pass-if-equal "https://bugs.gnu.org/63024"
       0
