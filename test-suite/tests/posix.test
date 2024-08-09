@@ -22,6 +22,9 @@
   #:use-module (test-suite lib)
   #:use-module ((rnrs io ports) #:select (get-string-all)))
 
+(define (skip-on-darwin)
+  (when (string-ci=? "darwin" (utsname:sysname (uname)))
+    (throw 'untested)))
 
 ;; FIXME: The following exec tests are disabled since on an i386 debian with
 ;; glibc 2.3.2 they seem to interact badly with threads.test, the latter
@@ -475,6 +478,11 @@
 
   (pass-if-equal "file not found"
       ENOENT
+    ;; Actually "skip-if-posix_spawn-replaced" would be preferred, since the
+    ;; behavior below is not implemented in gnulib, but I do not know how to
+    ;; write such test.  However due to posix_spawnp being buggy on macOS it is
+    ;; always replaced, so whatever.
+    (skip-on-darwin)
     (catch 'system-error
       (lambda ()
         (spawn "this-does-not-exist" '("nope")
