@@ -34,6 +34,9 @@
 (define (test-directory2)
   (data-file-name "filesys-test-dir2.tmp"))
 
+(define (skip-on-darwin)
+  (when (string-ci=? "darwin" (utsname:sysname (uname)))
+    (throw 'untested)))
 
 ;;;
 ;;; copy-file
@@ -345,6 +348,8 @@
            (= (string-length name) 8)))))
 
   (pass-if-exception "invalid template" exception:system-error
+    ;; MacOS accepts any template and just does no replacements.
+    (skip-on-darwin)
     (if (not (defined? 'mkdtemp))
         (throw 'unresolved)
         (mkdtemp "T-AAAAAA")))
