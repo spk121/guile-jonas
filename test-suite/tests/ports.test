@@ -39,6 +39,10 @@
 (define (test-file)
   (data-file-name "ports-test.tmp"))
 
+(define (skip-on-darwin)
+  (when (string-ci=? "darwin" (utsname:sysname (uname)))
+    (throw 'untested)))
+
 
 ;;;; Some general utilities for testing ports.
 
@@ -185,6 +189,7 @@
     (close-port iport))
   (delete-file filename))
 
+;;; Note: Holes are weird on Darwin.
 (let* ((file (test-file))
        (port (open-output-file file)))
   (seek port 4096 SEEK_SET)
@@ -193,10 +198,15 @@
 
   (pass-if-equal "size of sparse file"
       4100
+    ;; XXX: On macOS, APFS does support sparse files, they do not behave
+    ;; like on Linux.  Skip these tests on macOS.
+    (skip-on-darwin)
+
     (stat:size (stat file)))
 
   (pass-if-equal "SEEK_DATA while on data"
       4096
+    (skip-on-darwin)
     (if (defined? 'SEEK_DATA)
         (call-with-input-file file
           (lambda (port)
@@ -209,6 +219,7 @@
 
   (pass-if-equal "SEEK_DATA while in hole"
       4096
+    (skip-on-darwin)
     (if (defined? 'SEEK_DATA)
         (call-with-input-file file
           (lambda (port)
@@ -221,6 +232,7 @@
 
   (pass-if-equal "SEEK_HOLE while in hole"
       10
+    (skip-on-darwin)
     (if (defined? 'SEEK_HOLE)
         (call-with-input-file file
           (lambda (port)
