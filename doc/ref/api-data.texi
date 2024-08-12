@@ -7665,7 +7665,7 @@ An additional array function is available in the module
 
 @deffn {Scheme Procedure} array-copy src
 Return a new array with the same elements, type and shape as
-@var{src}. However, the array increments may not be the same as those of
+@var{src}. However, the array increments may be different from those of
 @var{src}. In the current implementation, the returned array will be in
 row-major order, but that might change in the future. Use
 @code{array-copy!} on an array of known order if that is a concern.
@@ -7864,8 +7864,9 @@ indices into the original array are fixed) is.
 
 Before @w{version 2.0}, Guile had a feature called `enclosed arrays' to
 create special `array of arrays' objects.  The functions in this section
-do not need special types; instead, the frame rank is stated in each
-function call, either implicitly or explicitly.
+do not need special types; instead, the frame rank is given in the
+arguments, either implicitly (through the number of indices) or
+explicitly.
 
 @deffn {Scheme Procedure} array-cell-ref array idx @dots{}
 @deffnx {C Function} scm_array_cell_ref (array, idxlist)
@@ -7878,8 +7879,8 @@ is smaller than @math{n}, then return the @math{(n-k)}-cell of
 For example:
 
 @lisp
-(array-cell-ref #2((a b) (c d)) 0) @result{} #(a b)
-(array-cell-ref #2((a b) (c d)) 1) @result{} #(c d)
+(array-cell-ref #2((a b) (c d)) 0) @result{} #1(a b)
+(array-cell-ref #2((a b) (c d)) 1) @result{} #1(c d)
 (array-cell-ref #2((a b) (c d)) 1 1) @result{} d
 (array-cell-ref #2((a b) (c d))) @result{} #2((a b) (c d))
 @end lisp
@@ -7941,13 +7942,13 @@ This function returns the modified @var{array}.
 For example:
 
 @lisp
-(array-cell-set! (make-array 'a 2 2) b 1 1)
+(array-cell-set! (make-array 'a 2 2) 'b 1 1)
   @result{} #2((a a) (a b))
 (array-cell-set! (make-array 'a 2 2) #(x y) 1)
   @result{} #2((a a) (x y))
 @end lisp
 
-Note that @code{array-cell-set!} will expect elements, not arrays, when
+Note that @code{array-cell-set!} expects elements, not arrays, when
 the destination has rank 0. Use @code{array-slice} for the opposite
 behavior.
 
@@ -7986,7 +7987,7 @@ manually. The slices passed to @var{op} are always shared arrays of
 
 This function returns an unspecified value.
 
-For example, to sort the rows of rank-2 array @code{a}:
+For example, to sort each row of rank-2 array @code{a}:
 
 @lisp
 (array-slice-for-each 1 (lambda (x) (sort! x <)) a)
