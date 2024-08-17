@@ -1671,7 +1671,7 @@ scm_foo (SCM s1, SCM s2)
 
   scm_dynwind_end ();
 
-  return scm_take_locale_string (res);
+  return scm_take_locale_string (c_res);
 @}
 @end example
 
