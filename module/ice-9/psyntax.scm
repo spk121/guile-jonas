@@ -1,25 +1,23 @@
 ;;;; -*-scheme-*-
 ;;;;
-;;;; Copyright (C) 2001, 2003, 2006, 2009, 2010-2022
+;;;; Copyright (C) 1997-1998,2000-2003,2005-2006,2008-2013,2015-2022,2024
 ;;;;   Free Software Foundation, Inc.
 ;;;;
-;;;; This library is free software; you can redistribute it and/or
-;;;; modify it under the terms of the GNU Lesser General Public
-;;;; License as published by the Free Software Foundation; either
-;;;; version 3 of the License, or (at your option) any later version.
-;;;; 
-;;;; This library is distributed in the hope that it will be useful,
-;;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;; This library is free software: you can redistribute it and/or modify
+;;;; it under the terms of the GNU Lesser General Public License as
+;;;; published by the Free Software Foundation, either version 3 of the
+;;;; License, or (at your option) any later version.
+;;;;
+;;;; This library is distributed in the hope that it will be useful, but
+;;;; WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;;;; Lesser General Public License for more details.
-;;;; 
+;;;;
 ;;;; You should have received a copy of the GNU Lesser General Public
-;;;; License along with this library; if not, write to the Free Software
-;;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-;;;; 
+;;;; License along with this program.  If not, see
+;;;; <http://www.gnu.org/licenses/>.
 
 
-;;; Portable implementation of syntax-case
 ;;; Originally extracted from Chez Scheme Version 5.9f
 ;;; Authors: R. Kent Dybvig, Oscar Waddell, Bob Hieb, Carl Bruggeman
 
@@ -34,64 +32,16 @@
 ;;; AUTHORS BE LIABLE FOR CONSEQUENTIAL OR INCIDENTAL DAMAGES OF ANY
 ;;; NATURE WHATSOEVER.
 
-;;; Modified by Mikael Djurfeldt <djurfeldt@nada.kth.se> according
-;;; to the ChangeLog distributed in the same directory as this file:
-;;; 1997-08-19, 1997-09-03, 1997-09-10, 2000-08-13, 2000-08-24,
-;;; 2000-09-12, 2001-03-08
-
-;;; Modified by Andy Wingo <wingo@pobox.com> according to the Git
-;;; revision control logs corresponding to this file: 2009, 2010.
-
-;;; Modified by Mark H Weaver <mhw@netris.org> according to the Git
-;;; revision control logs corresponding to this file: 2012, 2013.
-
-
 ;;; This code is based on "Syntax Abstraction in Scheme"
 ;;; by R. Kent Dybvig, Robert Hieb, and Carl Bruggeman.
 ;;; Lisp and Symbolic Computation 5:4, 295-326, 1992.
 ;;; <http://www.cs.indiana.edu/~dyb/pubs/LaSC-5-4-pp295-326.pdf>
 
 
-;;; This file defines the syntax-case expander, macroexpand, and a set
-;;; of associated syntactic forms and procedures.  Of these, the
-;;; following are documented in The Scheme Programming Language,
-;;; Fourth Edition (R. Kent Dybvig, MIT Press, 2009), and in the 
-;;; R6RS:
-;;;
-;;;   bound-identifier=?
-;;;   datum->syntax
-;;;   define-syntax
-;;;   syntax-parameterize
-;;;   free-identifier=?
-;;;   generate-temporaries
-;;;   identifier?
-;;;   identifier-syntax
-;;;   let-syntax
-;;;   letrec-syntax
-;;;   syntax
-;;;   syntax-case
-;;;   syntax->datum
-;;;   syntax-rules
-;;;   with-syntax
-;;;
-;;; Additionally, the expander provides definitions for a number of core
-;;; Scheme syntactic bindings, such as `let', `lambda', and the like.
-
-;;; The remaining exports are listed below:
-;;;
-;;;   (macroexpand datum)
-;;;      if datum represents a valid expression, macroexpand returns an
-;;;      expanded version of datum in a core language that includes no
-;;;      syntactic abstractions.  The core language includes begin,
-;;;      define, if, lambda, letrec, quote, and set!.
-;;;   (eval-when situations expr ...)
-;;;      conditionally evaluates expr ... at compile-time or run-time
-;;;      depending upon situations (see the Chez Scheme System Manual,
-;;;      Revision 3, for a complete description)
-;;;   (syntax-violation who message form [subform])
-;;;      used to report errors found during expansion
-;;;   ($sc-dispatch e p)
-;;;      used by expanded code to handle syntax-case matching
+;;; This file defines Guile's syntax expander and a set of associated
+;;; syntactic forms and procedures.  For more documentation, see The
+;;; Scheme Programming Language, Fourth Edition (R. Kent Dybvig, MIT
+;;; Press, 2009), or the R6RS.
 
 ;;; This file is shipped along with an expanded version of itself,
 ;;; psyntax-pp.scm, which is loaded when psyntax.scm has not yet been
@@ -110,29 +60,11 @@
 ;;; lexically are assumed to be global variables.
 
 ;;; Top-level definitions of macro-introduced identifiers are allowed.
-;;; This may not be appropriate for implementations in which the
-;;; model is that bindings are created by definitions, as opposed to
-;;; one in which initial values are assigned by definitions.
-
-;;; Identifiers and syntax objects are implemented as vectors for
-;;; portability.  As a result, it is possible to "forge" syntax objects.
-
-;;; The implementation of generate-temporaries assumes that it is
-;;; possible to generate globally unique symbols (gensyms).
-
-;;; The source location associated with incoming expressions is tracked
-;;; via the source-properties mechanism, a weak map from expression to
-;;; source information. At times the source is separated from the
-;;; expression; see the note below about "efficiency and confusion".
-
-
-;;; Bootstrapping:
 
 ;;; When changing syntax representations, it is necessary to support
 ;;; both old and new syntax representations in id-var-name.  It
 ;;; should be sufficient to recognize old representations and treat
 ;;; them as not lexically bound.
-
 
 
 (eval-when (compile)
