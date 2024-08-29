@@ -1,6 +1,6 @@
 ;;; Making lexically-bound procedures well-known
 
-;; Copyright (C) 2020 Free Software Foundation, Inc.
+;; Copyright (C) 2020, 2024 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -78,7 +78,7 @@
     (define (maybe-add-proc! gensym val)
       (match val
         (($ <lambda> src1 meta
-            ($ <lambda-case> src2 req #f rest #f () syms body #f))
+            ($ <lambda-case> src2 req () rest #f () syms body #f))
          (hashq-set! proc-infos gensym (proc-info val)))
         (_ #f)))
     (tree-il-for-each
@@ -127,7 +127,7 @@
          (match (hashq-ref to-expand sym)
            (#f #f)
            (($ <lambda> src1 meta
-               ($ <lambda-case> src2 req #f rest #f () syms body #f))
+               ($ <lambda-case> src2 req () rest #f () syms body #f))
             (let* ((syms (map gensym (map symbol->string syms)))
                    (args (map (lambda (req sym) (make-lexical-ref src2 req sym))
                               (if rest (append req (list rest)) req)
@@ -136,19 +136,19 @@
                              (make-primcall src 'apply (cons lexical args))
                              (make-call src lexical args))))
               (make-lambda src1 meta
-                           (make-lambda-case src2 req #f rest #f '() syms
+                           (make-lambda-case src2 req '() rest #f '() syms
                                              body #f))))))))
     (define (eta-reduce proc)
       (match proc
         (($ <lambda> _ meta
-            ($ <lambda-case> _ req #f #f #f () syms
+            ($ <lambda-case> _ req () #f #f () syms
                ($ <call> src ($ <lexical-ref> _ name sym)
                   (($ <lexical-ref> _ _ arg) ...))
                #f))
          (and (equal? arg syms)
               (make-lexical-ref src name sym)))
         (($ <lambda> _ meta
-            ($ <lambda-case> _ req #f (not #f) #f () syms
+            ($ <lambda-case> _ req () (not #f) #f () syms
                ($ <primcall> src 'apply 
                   (($ <lexical-ref> _ name sym) ($ <lexical-ref> _ _ arg) ...))
                #f))

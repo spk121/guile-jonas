@@ -136,7 +136,7 @@
         (fold (lambda (name sym res)
                 (vhash-consq sym (make-var name sym 0 #f) res))
               res
-              (append req (or opt '()) (if rest (list rest) '())
+              (append req opt (if rest (list rest) '())
                       (match kw
                         ((aok? (kw name sym) ...) name)
                         (_ '())))
@@ -176,7 +176,7 @@ referenced multiple times."
      (match exp
        (($ <lambda-case> src req opt rest kw init gensyms body alt)
         (fold maybe-add-var table
-              (append req (or opt '()) (if rest (list rest) '())
+              (append req opt (if rest (list rest) '())
                       (match kw
                         ((aok? (kw name sym) ...) name)
                         (_ '())))
@@ -536,7 +536,7 @@ top-level bindings from ENV and return the resulting expression."
        (record-new-temporary! 'vals vals 1)
        (make-lambda-case
         #f
-        '() #f 'vals #f '() (list vals)
+        '() '() 'vals #f '() (list vals)
         (make-seq
          src
          second
@@ -1066,7 +1066,7 @@ top-level bindings from ENV and return the resulting expression."
        ;; reconstruct the let-values, pevaling the consumer.
        (let ((producer (for-values producer)))
          (or (match consumer
-               ((and ($ <lambda-case> src () #f rest #f () (rest-sym) body #f)
+               ((and ($ <lambda-case> src () () rest #f () (rest-sym) body #f)
                      (? (lambda _ (singly-valued-expression? producer))))
                 (let ((tmp (gensym "tmp ")))
                   (record-new-temporary! 'tmp tmp 1)
@@ -1081,7 +1081,7 @@ top-level bindings from ENV and return the resulting expression."
                      body)))))
                (($ <lambda-case> src req opt rest #f inits gensyms body #f)
                 (let* ((nmin (length req))
-                       (nmax (and (not rest) (+ nmin (if opt (length opt) 0)))))
+                       (nmax (and (not rest) (+ nmin (length opt)))))
                   (cond
                    ((inline-values lv-src producer nmin nmax consumer)
                     => for-tail)
@@ -1170,7 +1170,7 @@ top-level bindings from ENV and return the resulting expression."
                (list
                 (make-lambda
                  #f '()
-                 (make-lambda-case #f '() #f #f #f '() '() exp #f)))
+                 (make-lambda-case #f '() '() #f #f '() '() exp #f)))
                (proc (make-call #f (make-lexical-ref #f 'failure t)
                                 '())))))))
        (define (simplify-conditional c)
@@ -1252,7 +1252,7 @@ top-level bindings from ENV and return the resulting expression."
               (and consumer
                    ;; No optional or kwargs.
                    ($ <lambda-case>
-                      _ req #f rest #f () gensyms body #f)))))
+                      _ req () rest #f () gensyms body #f)))))
        (for-tail (make-let-values src (make-call src producer '())
                                   consumer)))
       (($ <primcall> src 'dynamic-wind (w thunk u))
@@ -1863,7 +1863,7 @@ top-level bindings from ENV and return the resulting expression."
                 (make-lambda src meta (and body (for-values body)))))))
       (($ <lambda-case> src req opt rest kw inits gensyms body alt)
        (define (lift-applied-lambda body gensyms)
-         (and (not opt) rest (not kw)
+         (and (null? opt) rest (not kw)
               (match body
                 (($ <primcall> _ 'apply
                     (($ <lambda> _ _ (and lcase ($ <lambda-case> _ req1)))

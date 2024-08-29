@@ -1,6 +1,6 @@
 ;;; Diagnostic warnings for Tree-IL
 
-;; Copyright (C) 2001,2008-2014,2016,2018-2023 Free Software Foundation, Inc.
+;; Copyright (C) 2001,2008-2014,2016,2018-2024 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -129,7 +129,7 @@ given `tree-il' element."
           (make-binding-info vars (vhash-consq gensym #t refs)))
          (($ <lambda-case> src req opt rest kw inits gensyms body alt)
           (let ((names `(,@req
-                         ,@(or opt '())
+                         ,@opt
                          ,@(if rest (list rest) '())
                          ,@(if kw (map cadr (cdr kw)) '()))))
             (make-binding-info (extend gensyms names) refs)))
@@ -885,10 +885,6 @@ given `tree-il' element."
   (define (arities proc)
     ;; Return the arities of PROC, which can be either a tree-il or a
     ;; procedure.
-    (define (len x)
-      (or (and (or (null? x) (pair? x))
-               (length x))
-          0))
     (cond ((program? proc)
            (values (procedure-name proc)
                    (map (lambda (a)
@@ -916,7 +912,7 @@ given `tree-il' element."
                  (match proc
                    (($ <lambda-case> src req opt rest kw inits gensyms body alt)
                     (loop name alt
-                          (cons (list (len req) (len opt) rest
+                          (cons (list (length req) (length opt) rest
                                       (and (pair? kw) (map car (cdr kw)))
                                       (and (pair? kw) (car kw)))
                                 arities)))

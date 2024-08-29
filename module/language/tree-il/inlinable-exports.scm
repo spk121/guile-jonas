@@ -213,14 +213,14 @@
           ;; Also record lexical for eta-expanded bindings.
           (match val
             (($ <lambda> _ _
-                ($ <lambda-case> _ req #f #f #f () (arg ...)
+                ($ <lambda-case> _ req () #f #f () (arg ...)
                    ($ <call> _
                       (and eta ($ <lexical-ref> _ _ var))
                       (($ <lexical-ref> _ _ arg) ...))
                    #f))
              (add-binding-lexical! var mod name))
             (($ <lambda> _ _
-                ($ <lambda-case> _ req #f (not #f) #f () (arg ...)
+                ($ <lambda-case> _ req () (not #f) #f () (arg ...)
                    ($ <primcall> _ 'apply
                       ((and eta ($ <lexical-ref> _ _ var))
                        ($ <lexical-ref> _ _ arg) ...))
@@ -339,13 +339,13 @@
       ;; Undo the result of eta-expansion pass.
       (match exp
         (($ <lambda> _ _
-            ($ <lambda-case> _ req #f #f #f () (sym ...)
+            ($ <lambda-case> _ req () #f #f () (sym ...)
                ($ <call> _
                   (and eta ($ <lexical-ref>)) (($ <lexical-ref> _ _ sym) ...))
                #f))
          eta)
         (($ <lambda> _ _
-            ($ <lambda-case> _ req #f (not #f) #f () (sym ...)
+            ($ <lambda-case> _ req () (not #f) #f () (sym ...)
                ($ <primcall> _ 'apply 
                   ((and eta ($ <lexical-ref>)) ($ <lexical-ref> _ _ sym) ...))
                #f))

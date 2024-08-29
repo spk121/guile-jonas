@@ -1,6 +1,6 @@
 ;;; Lightweight compiler directly from Tree-IL to bytecode
 
-;; Copyright (C) 2020-2021,2023 Free Software Foundation, Inc.
+;; Copyright (C) 2020-2021,2023,2024 Free Software Foundation, Inc.
 
 ;;; This library is free software; you can redistribute it and/or modify it
 ;;; under the terms of the GNU Lesser General Public License as published by
@@ -469,7 +469,7 @@
        (($ <lambda> src meta #f)
         (make-lambda src meta
                      (make-lambda-case
-                      src '() #f #f #f '() '()
+                      src '() '() #f #f '() '()
                       (make-primcall
                        src 'throw
                        (list (make-const src 'wrong-number-of-args)
@@ -606,7 +606,7 @@
        (define x-thunk
          (let ((src (tree-il-srcv exp)))
            (make-lambda src '()
-                        (make-lambda-case src '() #f #f #f '() '() exp #f))))
+                        (make-lambda-case src '() '() #f #f '() '() exp #f))))
        (values (cons (make-closure 'init x-thunk #f '())
                      (reverse closures))
                assigned)))
@@ -656,7 +656,7 @@ in the frame with for the lambda-case clause @var{clause}."
 
       (($ <prompt> src escape-only? tag body
           ($ <lambda> hsrc hmeta
-              ($ <lambda-case> _ hreq #f hrest #f () hsyms hbody #f)))
+              ($ <lambda-case> _ hreq () hrest #f () hsyms hbody #f)))
        (max (visit tag)
             (visit body)
             (+ (length hsyms) (visit hbody))))
@@ -678,7 +678,7 @@ in the frame with for the lambda-case clause @var{clause}."
        (+ (length funs) (visit body)))
 
       (($ <let-values> src exp
-          ($ <lambda-case> lsrc req #f rest #f () syms body #f))
+          ($ <lambda-case> lsrc req () rest #f () syms body #f))
        (max (visit exp)
             (+ (length syms) (visit body))))))
 
@@ -826,7 +826,7 @@ in the frame with for the lambda-case clause @var{clause}."
       (match exp
         (($ <prompt> src escape-only? tag body
             ($ <lambda> hsrc hmeta
-               ($ <lambda-case> _ hreq #f hrest #f () hsyms hbody #f)))
+               ($ <lambda-case> _ hreq () hrest #f () hsyms hbody #f)))
          (maybe-emit-source src)
          (let ((tag (env-idx (for-value tag env)))
                (proc-slot (stack-height env))
@@ -935,7 +935,7 @@ in the frame with for the lambda-case clause @var{clause}."
     (define (visit-let-values exp env ctx)
       (match exp
         (($ <let-values> src exp
-            ($ <lambda-case> lsrc req #f rest #f () syms body #f))
+            ($ <lambda-case> lsrc req () rest #f () syms body #f))
          (maybe-emit-source src)
          (for-values exp env)
          (visit-values-handler lsrc req rest syms body env ctx))))
@@ -1307,15 +1307,15 @@ in the frame with for the lambda-case clause @var{clause}."
     (match clause
       (($ <lambda-case> src req opt rest kw inits syms body alt)
        (let ((names (append req
-                            (or opt '())
+                            opt
                             (if rest (list rest) '())
                             (match kw
                               ((aok? (key name sym) ...) name)
                               (#f '()))))
              (inits (append (make-list (length req) #f)
-                            (list-head inits (if opt (length opt) 0))
+                            (list-head inits (length opt))
                             (if rest '(#f) '())
-                            (list-tail inits (if opt (length opt) 0)))))
+                            (list-tail inits (length opt)))))
          (unless (= (length names) (length syms) (length inits))
            (error "unexpected args" names syms inits))
          (maybe-emit-source src)
@@ -1340,7 +1340,7 @@ in the frame with for the lambda-case clause @var{clause}."
                                  kw)))))
              (lambda (allow-other-keys? kw-indices)
                (when label (emit-label asm label))
-               (let ((has-closure? #t) (opt (or opt '())))
+               (let ((has-closure? #t))
                  (emit-begin-kw-arity asm has-closure? req opt rest kw-indices
                                       allow-other-keys? frame-size alt-label))
                (compile-body clause module-scope free frame-size)

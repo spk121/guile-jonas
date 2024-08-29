@@ -42,7 +42,7 @@
      (call-with-values (lambda () (demux-clause func-name alternate))
        (lambda (bindings alternate)
          (define simple-req
-           (append req (or opt '()) (if rest (list rest) '())
+           (append req opt (if rest (list rest) '())
                    (match kw
                      ((aok? (kw name sym) ...) name)
                      (#f '()))))

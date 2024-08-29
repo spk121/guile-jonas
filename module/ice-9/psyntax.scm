@@ -284,7 +284,7 @@
                      ;; hah, a case in which kwargs would be nice.
                      (make-lambda-case
                       ;; src req opt rest kw inits vars body else
-                      src req #f rest #f '() vars exp #f))))
+                      src req '() rest #f '() vars exp #f))))
 
     (define build-case-lambda
       (lambda (src meta body)
@@ -292,7 +292,7 @@
 
     (define build-lambda-case
       ;; req := (name ...)
-      ;; opt := (name ...) | #f
+      ;; opt := (name ...)
       ;; rest := name | #f
       ;; kw := (allow-other-keys? (keyword name var) ...) | #f
       ;; inits: (init ...)
@@ -1749,7 +1749,7 @@
         (define (check req rest)
           (cond
            ((distinct-bound-ids? (if rest (cons rest req) req))
-            (values req #f rest #f))
+            (values req '() rest #f))
            (else
             (syntax-violation 'lambda "duplicate identifier in argument list"
                               orig-args))))
@@ -1876,14 +1876,14 @@
                    (l (gen-labels (list v)))
                    (r* (extend-var-env l (list v) r*))
                    (w* (make-binding-wrap (list rest) l w*)))
-              (parse-kw req (if (pair? out) (reverse out) #f)
+              (parse-kw req (reverse out)
                         (syntax->datum rest)
                         (if (pair? kw) (cdr kw) kw)
                         body (cons v vars) r* w* 
                         (if (pair? kw) (car kw) #f)
                         '() inits)))
            (else
-            (parse-kw req (if (pair? out) (reverse out) #f) #f
+            (parse-kw req (reverse out) #f
                       (if (pair? kw) (cdr kw) kw)
                       body vars r* w*
                       (if (pair? kw) (car kw) #f)

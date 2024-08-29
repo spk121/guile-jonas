@@ -1,6 +1,6 @@
 ;;; Guile VM code converters
 
-;; Copyright (C) 2001, 2009, 2012, 2013 Free Software Foundation, Inc.
+;; Copyright (C) 2001, 2009, 2012, 2013, 2024 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -281,10 +281,10 @@
         ((<lambda-case> req opt rest kw inits gensyms body alternate)
          (let ((names (map output-name gensyms)))
            (cond
-            ((and (not opt) (not kw) (not alternate))
+            ((and (null? opt) (not kw) (not alternate))
              `(lambda ,(if rest (apply cons* names) names)
                 ,@(recurse-body body)))
-            ((and (not opt) (not kw))
+            ((and (null? opt) (not kw))
              (let ((alt-expansion (recurse alternate))
                    (formals (if rest (apply cons* names) names)))
                (case (car alt-expansion)
@@ -303,16 +303,16 @@
             (else
              (let* ((alt-expansion (and alternate (recurse alternate)))
                     (nreq (length req))
-                    (nopt (if opt (length opt) 0))
+                    (nopt (length opt))
                     (restargs (if rest (list-ref names (+ nreq nopt)) '()))
                     (reqargs (list-head names nreq))
-                    (optargs (if opt
+                    (optargs (if (zero? nopt)
+                                 '()
                                  `(#:optional
                                    ,@(map list
                                           (list-head (list-tail names nreq) nopt)
                                           (map recurse
-                                               (list-head inits nopt))))
-                                 '()))
+                                               (list-head inits nopt))))))
                     (kwargs (if kw
                                 `(#:key
                                   ,@(map list
@@ -694,13 +694,13 @@
 
             ((<lambda-case> req opt rest kw inits gensyms body alternate)
              (primitive 'lambda)
-             (cond ((or opt kw alternate)
+             (cond ((or (pair? opt) kw alternate)
                     (primitive 'lambda*)
                     (primitive 'case-lambda)
                     (primitive 'case-lambda*)))
              (primitive 'let)
              (if use-derived-syntax? (primitive 'let*))
-             (let* ((names (append req (or opt '()) (if rest (list rest) '())
+             (let* ((names (append req opt (if rest (list rest) '())
                                    (map cadr (if kw (cdr kw) '()))))
                     (base-names (map base-name names))
                     (body-bindings

@@ -425,7 +425,7 @@
 (seq
   (define forty-two
     (lambda ((name . forty-two))
-            (lambda-case ((() #f #f #f () ()) (const 42)))))
+            (lambda-case ((() () #f #f () ()) (const 42)))))
   (toplevel forty-two))")
         (bytecode #f)
         (proc #f))

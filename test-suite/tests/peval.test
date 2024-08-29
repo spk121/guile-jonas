@@ -280,7 +280,7 @@
       (define +
         (lambda (_)
           (lambda-case
-           (((x y) #f #f #f () (_ _))
+           (((x y) () #f #f () (_ _))
             (call (toplevel pk) (lexical x _) (lexical y _))))))
       (call (toplevel +) (const 1) (const 2))))
 
@@ -307,7 +307,7 @@
     (define foo
       (lambda (_)
         (lambda-case
-         (((x) #f #f #f () (_))
+         (((x) () #f #f () (_))
           (primcall + (lexical x _) (const 9)))))))
 
   (pass-if-peval
@@ -366,7 +366,7 @@
             'never-reached)))
     (lambda ()
       (lambda-case
-       (((x) #f #f #f () (_))
+       (((x) () #f #f () (_))
         (call (toplevel display) (lexical x _))))))
 
   (pass-if-peval
@@ -551,11 +551,11 @@
                    (primitive zero?)
                    (lambda ()
                      (lambda-case
-                      (((x1) #f #f #f () (_))
+                      (((x1) () #f #f () (_))
                        (lexical x1 _))))
                    (lambda ()
                      (lambda-case
-                      (((x2) #f #f #f () (_))
+                      (((x2) () #f #f () (_))
                        (primcall - (lexical x2 _) (const 1))))))))
 
   (pass-if "inlined lambdas are alpha-renamed"
@@ -578,13 +578,13 @@
       ((primcall cons
                  (lambda ()
                    (lambda-case
-                    (((y) #f #f #f () (,gensym1))
+                    (((y) () #f #f () (,gensym1))
                      (primcall +
                                (const 1)
                                (lexical y ,ref1)))))
                  (lambda ()
                    (lambda-case
-                    (((y) #f #f #f () (,gensym2))
+                    (((y) () #f #f () (,gensym2))
                      (primcall +
                                (const 2)
                                (lexical y ,ref2))))))
@@ -667,7 +667,7 @@
          ((primcall make-vector (const 6) (const #f)))
          (lambda ()
            (lambda-case
-            (((n) #f #f #f () (_))
+            (((n) () #f #f () (_))
              (primcall vector-set!
                        (lexical v _) (lexical n _) (lexical n _)))))))
 
@@ -680,7 +680,7 @@
          ((primcall vector (const 1) (const 2) (const 3)))
          (lambda ()
            (lambda-case
-            ((() #f #f #f () ())
+            ((() () #f #f () ())
              (lexical v _))))))
 
   (pass-if-peval
@@ -784,7 +784,7 @@
       (if (< x 0) x (loop (1- x))))
     (fix (loop) (_) ((lambda (_)
                        (lambda-case
-                        (((x) #f #f #f () (_))
+                        (((x) () #f #f () (_))
                          (if _ _
                              (call (lexical loop _)
                                    (primcall - (lexical x _)
@@ -813,7 +813,7 @@
               (loop (1+ x) (1+ y)))))
     (fix (loop) (_) ((lambda (_)
                        (lambda-case
-                        (((x y) #f #f #f () (_ _))
+                        (((x y) () #f #f () (_ _))
                          (if (primcall >
                                        (lexical y _) (const 0))
                              _ _)))))
@@ -882,12 +882,12 @@
    (fix (a) (_)
         ((lambda _
            (lambda-case
-            ((() #f #f #f () ())
+            ((() () #f #f () ())
              (call (lexical a _))))))
         (fix (b) (_)
              ((lambda _
                 (lambda-case
-                 ((() #f #f #f () ())
+                 ((() () #f #f () ())
                   (call (lexical a _))))))
              (call (toplevel foo) (lexical b _)))))
 
@@ -901,11 +901,11 @@
    (call (toplevel foo)
          (lambda _
            (lambda-case
-            (((x) #f #f #f () (_))
+            (((x) () #f #f () (_))
              (call (toplevel top) (lexical x _)))))
          (lambda _
            (lambda-case
-            (((x) #f #f #f () (_))
+            (((x) () #f #f () (_))
              (call (toplevel top) (lexical x _)))))))
   
   (pass-if-peval
@@ -949,7 +949,7 @@
           (primcall apply
                     (lambda ()
                       (lambda-case
-                       (((x y z w) #f #f #f () (_ _ _ _))
+                       (((x y z w) () #f #f () (_ _ _ _))
                         (primcall list
                                   (lexical x _) (lexical y _)
                                   (lexical z _) (lexical w _)))))
@@ -985,7 +985,7 @@
            args))))
     (lambda ()
       (lambda-case
-       (((bv offset n) #f #f #f () (_ _ _))
+       (((bv offset n) () #f #f () (_ _ _))
         (let (x y) (_ _) ((primcall bytevector-ieee-single-native-ref
                                     (lexical bv _)
                                     (primcall +
@@ -1019,7 +1019,7 @@
          args)))
     (lambda ()
       (lambda-case
-       ((() #f #f #f () ())
+       ((() () #f #f () ())
         (let (_) (_) ((call (toplevel foo!)))
              (let (z) (_) ((toplevel z))
                   (primcall 'list
@@ -1038,7 +1038,7 @@
          args)))
     (lambda ()
       (lambda-case
-       ((() #f #f #f () ())
+       ((() () #f #f () ())
         (let (args) (_)
              ((primcall list (const foo)))
              (seq
@@ -1158,10 +1158,10 @@
              (primcall wind
                        (lambda ()
                          (lambda-case
-                          ((() #f #f #f () ()) (toplevel foo))))
+                          ((() () #f #f () ()) (toplevel foo))))
                        (lambda ()
                          (lambda-case
-                          ((() #f #f #f () ()) (toplevel baz))))))
+                          ((() () #f #f () ()) (toplevel baz))))))
         (let (tmp) (_) ((toplevel bar))
              (seq (seq (primcall unwind)
                        (toplevel baz))
@@ -1175,13 +1175,13 @@
              (primcall wind
                        (lambda ()
                          (lambda-case
-                          ((() #f #f #f () ()) (toplevel foo))))
+                          ((() () #f #f () ()) (toplevel foo))))
                        (lambda ()
                          (lambda-case
-                          ((() #f #f #f () ()) (toplevel baz))))))
+                          ((() () #f #f () ()) (toplevel baz))))))
         (let-values (call (toplevel bar))
           (lambda-case
-           ((() #f vals #f () (_))
+           ((() () vals #f () (_))
             (seq (seq (primcall unwind)
                       (toplevel baz))
                  (primcall apply (primitive values) (lexical vals _))))))))
@@ -1212,7 +1212,7 @@
            (const 1)
            (lambda _
              (lambda-case
-              (((k x) #f #f #f () (_ _))
+              (((k x) () #f #f () (_ _))
                (lexical x _))))))
 
   ;; Handler toplevel not inlined
@@ -1226,11 +1226,11 @@
                      (toplevel tag)
                      (lambda _
                        (lambda-case
-                        ((() #f #f #f () ())
+                        ((() () #f #f () ())
                          (const 1))))
                      (lambda _
                        (lambda-case
-                        ((() #f args #f () (_))
+                        ((() () args #f () (_))
                          (primcall apply
                                    (lexical handler _)
                                    (lexical args _))))))
@@ -1249,11 +1249,11 @@
         (fix (lp) (_)
              ((lambda _
                 (lambda-case
-                 ((() #f #f #f () ())
+                 ((() () #f #f () ())
                   (fix (loop) (_)
                        ((lambda _
                           (lambda-case
-                           ((() #f #f #f () ())
+                           ((() () #f #f () ())
                             (call (lexical loop _))))))
                        (call (lexical loop _)))))))
              (call (lexical lp _)))))
@@ -1264,7 +1264,7 @@
             a rest))
    (lambda _
      (lambda-case
-      (((x y) #f #f #f () (_ _))
+      (((x y) () #f #f () (_ _))
        _))))
 
   (pass-if-peval
@@ -1296,7 +1296,7 @@
                 (qux x))))
     (let (failure) (_) ((lambda _
                           (lambda-case
-                           ((() #f #f #f () ())
+                           ((() () #f #f () ())
                             (call (toplevel qux) (toplevel x))))))
          (if (primcall struct? (toplevel x))
              (if (primcall eq?
@@ -1325,7 +1325,7 @@
                 (qux x))))
     (let (failure) (_) ((lambda _
                           (lambda-case
-                           ((() #f #f #f () ())
+                           ((() () #f #f () ())
                             (call (toplevel qux) (toplevel x))))))
          (if (primcall struct? (toplevel x))
              (if (primcall eq?
@@ -1371,7 +1371,7 @@
       (call-with-values foo (lambda (x) (bar x)))
     (let-values (call (toplevel foo))
       (lambda-case
-       (((x) #f #f #f () (_))
+       (((x) () #f #f () (_))
         (call (toplevel bar) (lexical x _))))))
 
   (pass-if-peval
@@ -1411,12 +1411,12 @@
             (if (eq? x x*) x* (lp x*)))))
     (lambda ()
       (lambda-case
-       (((f x) #f #f #f () (_ _))
+       (((f x) () #f #f () (_ _))
         (fix (lp)
              (_)
              ((lambda ((name . lp))
                 (lambda-case
-                 (((x) #f #f #f () (_))
+                 (((x) () #f #f () (_))
                   (let (x*)
                     (_)
                     ((call (lexical f _) (lexical x _)))
@@ -1436,12 +1436,12 @@
         (add1 1 2))
     (lambda ()
       (lambda-case
-       ((() #f #f #f () ())
+       ((() () #f #f () ())
         (fix (add1)
              (_)
              ((lambda ((name . add1))
                 (lambda-case
-                 (((n) #f #f #f () (_))
+                 (((n) () #f #f () (_))
                   (primcall + (const 1) (lexical n _))))))
              (call (lexical add1 _)
                    (const 1)

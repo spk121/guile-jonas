@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2013-2015,2017-2021,2023 Free Software Foundation, Inc.
+;; Copyright (C) 2013-2015,2017-2021,2023,2024 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -1709,7 +1709,7 @@ use as the proc slot."
          (match body
            (#f (values cps #f))
            (($ <lambda-case> src req opt rest kw inits gensyms body alternate)
-            (let* ((arity (make-$arity req (or opt '()) rest
+            (let* ((arity (make-$arity req opt rest
                                        (map (match-lambda
                                               ((kw name sym) 
                                                (list kw name (bound-var sym))))
@@ -1937,7 +1937,7 @@ use as the proc slot."
     ;; Prompts with inline handlers.
     (($ <prompt> src escape-only? tag body
         ($ <lambda> hsrc hmeta
-           ($ <lambda-case> _ hreq #f hrest #f () hsyms hbody #f)))
+           ($ <lambda-case> _ hreq () hrest #f () hsyms hbody #f)))
      ;; Handler:
      ;;   khargs: check args returned to handler, -> khbody
      ;;   khbody: the handler, -> k
@@ -2145,7 +2145,7 @@ use as the proc slot."
              ($ (capture-toplevel-scope src scope-id kscope))))))
 
     (($ <let-values> src exp
-        ($ <lambda-case> lsrc req #f rest #f () syms body #f))
+        ($ <lambda-case> lsrc req () rest #f () syms body #f))
      (let ((names (append req (if rest (list rest) '())))
            (bound-vars (map bound-var syms)))
        (with-cps cps
@@ -2187,7 +2187,7 @@ integer."
                                          (list (fresh-var) (fresh-var) #f)
                                          (fresh-var))))
                        #f
-                       (make-$arity req (or opt '()) rest
+                       (make-$arity req opt rest
                                     (if kw (cdr kw) '()) (and kw (car kw)))
                        gensyms
                        inits))
@@ -2402,7 +2402,7 @@ integer."
 
        (($ <prompt> src escape-only? tag body
            ($ <lambda> hsrc hmeta
-              ($ <lambda-case> _ hreq #f hrest #f () hsyms hbody #f)))
+              ($ <lambda-case> _ hreq () hrest #f () hsyms hbody #f)))
         exp)
 
        (($ <primcall> src 'ash (a b))

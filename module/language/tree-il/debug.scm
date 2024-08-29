@@ -1,6 +1,6 @@
 ;;; Tree-IL verifier
 
-;; Copyright (C) 2011,2013,2019,2023 Free Software Foundation, Inc.
+;; Copyright (C) 2011,2013,2019,2023,2024 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -43,10 +43,10 @@
        (cond
         ((not (and (list? req) (and-map symbol? req)))
          (error "bad required args (should be list of symbols)" exp))
-        ((and opt (not (and (list? opt) (and-map symbol? opt))))
-         (error "bad optionals (should be #f or list of symbols)" exp))
+        ((not (and (list? opt) (and-map symbol? opt)))
+         (error "bad optional args (should be list of symbols)" exp))
         ((and rest (not (symbol? rest)))
-         (error "bad required args (should be #f or symbol)" exp))
+         (error "bad rest arg (should be #f or symbol)" exp))
         ((and kw (not (match kw
                         ((aok . kwlist)
                          (and (list? kwlist)
@@ -65,7 +65,7 @@
          (error "bad gensyms (should be list of symbols)" exp))
         ((not (= (length gensyms) 
                  (+ (length req)
-                    (if opt (length opt) 0)
+                    (length opt)
                     ;; FIXME: technically possible for kw gensyms to
                     ;; alias other gensyms
                     (if rest 1 0)
@@ -73,7 +73,7 @@
          (error "unexpected gensyms length" exp))
         (else
          (let lp ((env (add-env (take gensyms (length req)) env))
-                  (nopt (if opt (length opt) 0))
+                  (nopt (length opt))
                   (inits inits)
                   (tail (drop gensyms (length req))))
            (if (zero? nopt)

@@ -1,6 +1,6 @@
 ;;; Effects analysis on Tree-IL
 
-;; Copyright (C) 2011, 2012, 2013, 2021, 2023 Free Software Foundation, Inc.
+;; Copyright (C) 2011, 2012, 2013, 2021, 2023, 2024 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -560,7 +560,7 @@ of an expression."
           (($ <call> _ ($ <lambda> _ _ body) args)
            (logior (accumulate-effects args)
                    (match body
-                     (($ <lambda-case> _ req #f #f #f () syms body #f)
+                     (($ <lambda-case> _ req () #f #f () syms body #f)
                       (logior (compute-effects body)
                               (if (= (length req) (length args))
                                   0

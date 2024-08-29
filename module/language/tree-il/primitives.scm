@@ -1,6 +1,6 @@
 ;;; open-coding primitive procedures
 
-;; Copyright (C) 2009-2015, 2017-2023 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2015, 2017-2024 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -711,7 +711,7 @@
   (case-lambda
    ((src tag thunk handler)
     (match handler
-      (($ <lambda> _ _ ($ <lambda-case> _ _ #f _ #f () _ _ #f))
+      (($ <lambda> _ _ ($ <lambda-case> _ _ () _ #f () _ _ #f))
        (make-prompt src #f tag thunk handler))
       (_
        ;; Eta-convert prompts without inline handlers.
@@ -730,7 +730,7 @@
              (make-lambda
               src '()
               (make-lambda-case
-               src '() #f 'args #f '() (list args)
+               src '() '() 'args #f '() (list args)
                (primcall apply handler (make-lexical-ref #f 'args args))
                #f)))
             (primcall raise-type-error

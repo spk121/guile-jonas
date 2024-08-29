@@ -106,7 +106,7 @@
                (make-toplevel-define sourcev (and mod (cdr mod)) var exp)))
             (build-simple-lambda
              (lambda (src req rest vars meta exp)
-               (make-lambda src meta (make-lambda-case src req #f rest #f '() vars exp #f))))
+               (make-lambda src meta (make-lambda-case src req '() rest #f '() vars exp #f))))
             (build-case-lambda (lambda (src meta body) (make-lambda src meta body)))
             (build-lambda-case
              (lambda (src req opt rest kw inits vars body else-case)
@@ -1205,7 +1205,7 @@
                                            (w* (make-binding-wrap (list rest) l w*)))
                                       (parse-kw
                                        req
-                                       (and (pair? out) (reverse out))
+                                       (reverse out)
                                        (syntax->datum rest)
                                        (if (pair? kw) (cdr kw) kw)
                                        body
@@ -1217,7 +1217,7 @@
                                        inits)))
                               (else (parse-kw
                                      req
-                                     (and (pair? out) (reverse out))
+                                     (reverse out)
                                      #f
                                      (if (pair? kw) (cdr kw) kw)
                                      body

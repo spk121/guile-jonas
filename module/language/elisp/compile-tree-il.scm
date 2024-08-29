@@ -1,6 +1,6 @@
 ;;; Guile Emacs Lisp
 
-;; Copyright (C) 2009-2011, 2013, 2018 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2011, 2013, 2018, 2024 Free Software Foundation, Inc.
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -314,7 +314,7 @@
                                      (make-lambda
                                       src '()
                                       (make-lambda-case
-                                       src '() #f #f #f '() '()
+                                       src '() '() #f #f '() '()
                                        (lp (cdr f) (cdr v))
                                        #f))))))))))
 
