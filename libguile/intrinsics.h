@@ -24,7 +24,11 @@
 #error intrinsics.h is private and uninstalled
 #endif
 
+#ifndef _WIN64
 #include <setjmp.h>
+#else
+#include "libguile/setjump-win.h"
+#endif
 
 #include <libguile/scm.h>
 

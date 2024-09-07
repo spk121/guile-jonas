@@ -678,6 +678,7 @@ modinclude_HEADERS =				\
 	rw.h					\
 	scmsigs.h				\
 	script.h				\
+	setjump-win.h                           \
 	simpos.h				\
 	smob.h					\
 	snarf.h					\
