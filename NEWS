@@ -20,6 +20,13 @@ downright unusable (e.g., <https://bugs.gnu.org/72378>), non-conforming
 (e.g., <https://bugs.gnu.org/72383>), or buggy (e.g.,
 <https://bugs.gnu.org/72372>).
 
+* New interfaces and functionality
+
+** PEG parser
+
+PEG grammar parser in (ice-9 peg string-peg) has been rewritten to cover
+all the functionality defined in <https://bford.info/pub/lang/peg.pdf>.
+
 ** GOOPS: Introduce new forms method* and define-method*
 
 The module (oop goops) now exports method* and define-method* which are

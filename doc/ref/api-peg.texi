@@ -17,6 +17,10 @@ Wikipedia has a clear and concise introduction to PEGs if you want to
 familiarize yourself with the syntax:
 @url{http://en.wikipedia.org/wiki/Parsing_expression_grammar}.
 
+The paper that introduced PEG contains a more detailed description of how PEG
+works, and describes its syntax in detail:
+@url{https://bford.info/pub/lang/peg.pdf}
+
 The @code{(ice-9 peg)} module works by compiling PEGs down to lambda
 expressions.  These can either be stored in variables at compile-time by
 the define macros (@code{define-peg-pattern} and
@@ -216,8 +220,8 @@ should propagate up the parse tree.  The normal @code{<-} propagates the
 matched text up the parse tree, @code{<--} propagates the matched text
 up the parse tree tagged with the name of the nonterminal, and @code{<}
 discards that matched text and propagates nothing up the parse tree.
-Also, nonterminals may consist of any alphanumeric character or a ``-''
-character (in normal PEGs nonterminals can only be alphabetic).
+Also, nonterminals may include ``-'' character, while in normal PEG it is not
+allowed.
 
 For example, if we:
 @lisp

@@ -28,17 +28,25 @@
 ;; the nonterminals defined in the PEG parser written with
 ;; S-expressions.
 (define grammar-mapping
-  '((grammar peg-grammar)
-    (pattern peg-pattern)
-    (alternative peg-alternative)
-    (suffix peg-suffix)
-    (primary peg-primary)
-    (literal peg-literal)
-    (charclass peg-charclass)
-    (CCrange charclass-range)
-    (CCsingle charclass-single)
-    (nonterminal peg-nonterminal)
-    (sp peg-sp)))
+  '((Grammar Grammar)
+    (Definition Definition)
+    (Expression Expression)
+    (Sequence Sequence)
+    (Prefix Prefix)
+    (Suffix Suffix)
+    (Primary Primary)
+    (Identifier Identifier)
+    (Literal Literal)
+    (Class Class)
+    (Range Range)
+    (Char Char)
+    (LEFTARROW LEFTARROW)
+    (AND AND)
+    (NOT NOT)
+    (QUESTION QUESTION)
+    (STAR STAR)
+    (PLUS PLUS)
+    (DOT DOT)))
 
 ;; Transforms the nonterminals defined in the PEG parser written as a PEG to the nonterminals defined in the PEG parser written with S-expressions.
 (define (grammar-transform x)
@@ -69,7 +77,7 @@
     (peg:tree (match-pattern (@@ (ice-9 peg) peg-grammar) (@@ (ice-9 peg) peg-as-peg)))
     (tree-map
      grammar-transform
-     (peg:tree (match-pattern grammar (@@ (ice-9 peg) peg-as-peg)))))))
+     (peg:tree (match-pattern Grammar (@@ (ice-9 peg) peg-as-peg)))))))
 
 ;; A grammar for pascal-style comments from Wikipedia.
 (define comment-grammar
