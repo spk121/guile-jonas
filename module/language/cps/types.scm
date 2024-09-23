@@ -1,5 +1,5 @@
 ;;; Type analysis on CPS
-;;; Copyright (C) 2014-2021, 2023 Free Software Foundation, Inc.
+;;; Copyright (C) 2014-2021,2023-2024 Free Software Foundation, Inc.
 ;;;
 ;;; This library is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU Lesser General Public License as
@@ -1653,11 +1653,8 @@ where (A0 <= A <= A1) and (B0 <= B <= B1)."
       (define-exact-integer! result min max))))
 
 (define-type-inferrer (ulogand a b result)
-  (restrict! a &u64 0 &u64-max)
-  (restrict! b &u64 0 &u64-max)
   (define! result &u64 0 (min (&max/u64 a) (&max/u64 b))))
 (define-type-inferrer/param (ulogand/immediate param a result)
-  (restrict! a &u64 0 &u64-max)
   (call-with-values (lambda ()
                       (logand-bounds (&min a) (&max a) param param))
     (lambda (min max)
@@ -1682,8 +1679,6 @@ i.e. (logand A (lognot B)), where (A0 <= A <= A1) and (B0 <= B <= B1)."
       (define-exact-integer! result min max))))
 
 (define-type-inferrer (ulogsub a b result)
-  (restrict! a &u64 0 &u64-max)
-  (restrict! b &u64 0 &u64-max)
   (define! result &u64 0 (&max/u64 a)))
 
 (define (logior-bounds a0 a1 b0 b1)
@@ -1729,8 +1724,6 @@ where (A0 <= A <= A1) and (B0 <= B <= B1)."
       (define-exact-integer! result min max))))
 
 (define-type-inferrer (ulogior a b result)
-  (restrict! a &u64 0 &u64-max)
-  (restrict! b &u64 0 &u64-max)
   (define! result &u64
     (max (&min/0 a) (&min/0 b))
     (saturate+ (&max/u64 a) (&max/u64 b))))
@@ -1786,8 +1779,6 @@ where (A0 <= A <= A1) and (B0 <= B <= B1)."
       (define! result &exact-integer min max))))
 
 (define-type-inferrer (ulogxor a b result)
-  (restrict! a &u64 0 &u64-max)
-  (restrict! b &u64 0 &u64-max)
   (define! result &u64 0 (saturate+ (&max/u64 a) (&max/u64 b))))
 
 (define-simple-type-checker (lognot &exact-integer))
