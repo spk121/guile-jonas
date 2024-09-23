@@ -1,6 +1,6 @@
 ;;; Continuation-passing style (CPS) intermediate language (IL)
 
-;; Copyright (C) 2015-2021, 2023 Free Software Foundation, Inc.
+;; Copyright (C) 2015-2021,2023-2024 Free Software Foundation, Inc.
 
 ;;;; This library is free software; you can redistribute it and/or
 ;;;; modify it under the terms of the GNU Lesser General Public
@@ -561,9 +561,11 @@ BITS indicating the significant bits needed for a variable.  BITS may be
               (specialize-unop cps k src op param a
                                (unbox-u64 a) (box-u64 result))))
 
-           (('logand/immediate (? u64-result? ) param (? u64-operand? a))
+           (('logand/immediate (? u64-result?) param (? u64-operand? a))
             (specialize-unop cps k src 'ulogand/immediate
-                             (logand param (1- (ash 1 64)))
+                             (logand param
+                                     (or (intmap-ref sigbits result) -1)
+                                     (1- (ash 1 64)))
                              a
                              (unbox-u64 a) (box-u64 result)))
 
