@@ -1008,10 +1008,12 @@ minimum, and maximum."
   (define! result &u64 param param))
 
 (define-type-checker (scm->u64/truncate scm)
-  (check-type scm &exact-integer &range-min &range-max))
+  (check-type scm &exact-integer -inf.0 +inf.0))
 (define-type-inferrer (scm->u64/truncate scm result)
-  (restrict! scm &exact-integer &range-min &range-max)
-  (define! result &u64 0 &u64-max))
+  (restrict! scm &exact-integer -inf.0 +inf.0)
+  (if (<= 0 (&min scm) (&max scm) &u64-max)
+      (define! result &u64 (&min scm) (&max scm))
+      (define! result &u64 0 &u64-max)))
 
 (define-type-checker (u64->scm u64)
   #t)
