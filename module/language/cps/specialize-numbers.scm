@@ -115,6 +115,13 @@
     (letk ks64 ($kargs ('s64) (s64) ,tag-body))
     (build-term
       ($continue ks64 src ($primcall 'u64->s64 #f (u64))))))
+(define (u64->fixnum/truncate cps k src u64 bits)
+  (with-cps cps
+    (letv truncated)
+    (let$ tag-body (u64->fixnum k src truncated))
+    (letk ku64 ($kargs ('truncated) (truncated) ,tag-body))
+    (build-term
+      ($continue ku64 src ($primcall 'ulogand/immediate bits (u64))))))
 (define-simple-primcall scm->u64)
 (define-simple-primcall scm->u64/truncate)
 (define-simple-primcall u64->scm)
@@ -473,7 +480,19 @@ BITS indicating the significant bits needed for a variable.  BITS may be
     (define (box-s64 result)
       (if (fixnum-result? result) tag-fixnum s64->scm))
     (define (box-u64 result)
-      (if (fixnum-result? result) u64->fixnum u64->scm))
+      (call-with-values
+          (lambda ()
+            (lookup-post-type types label result 0))
+        (lambda (type min max)
+          (cond
+           ((and (type<=? type &exact-integer)
+                 (<= 0 min max (target-most-positive-fixnum)))
+            u64->fixnum)
+           ((only-fixnum-bits-used? result)
+            (lambda (cps k src u64)
+              (u64->fixnum/truncate cps k src u64 (intmap-ref sigbits result))))
+           (else
+            u64->scm)))))
     (define (box-f64 result)
       f64->scm)
 
