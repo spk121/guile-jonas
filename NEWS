@@ -20,6 +20,10 @@ Changes in 3.0.11 (since 3.0.10)
 ** test-hashing should now work on 32-bit systems
 ** GUILE-VERSION changes should propagate to .version and relevant Makefiles
    (<https://debbugs.gnu.org/72084>)
+** Compiler no longer crashes when building Guile on 32-bit platforms
+   (<https://bugs.gnu.org/71891>)
+** Compiler no longer crashes when inlining 3.0.9 procedure with kw args
+   (<https://bugs.gnu.org/72936>)
 
 
 Changes in 3.0.10 (since 3.0.9)
