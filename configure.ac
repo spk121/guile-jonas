@@ -62,6 +62,30 @@ AC_PROG_INSTALL
 AC_PROG_CC
 gl_EARLY
 
+AC_MSG_CHECKING([whether the compiler supports -fexcess-precision=standard])
+old_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fexcess-precision=standard"
+fexcess_precision=''
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([int foo;], [])], [fexcess_precision=1]])
+CFLAGS="$old_CFLAGS"
+if test -n "$fexcess_precision"; then
+  AC_MSG_RESULT([yes])
+else
+  AC_MSG_RESULT([no])
+fi
+AC_MSG_CHECKING([whether we want -fexcess-precision=standard for $target_cpu])
+case "$target_cpu" in
+    i[[3456]]86)
+        AC_MSG_RESULT([yes])
+        if test -n "$fexcess_precision"; then
+          CFLAGS="$CFLAGS -fexcess-precision=standard"
+        else
+          AC_MSG_WARN([floating-point precision may exceed C99 rules])
+        fi
+        ;;
+    *) AC_MSG_RESULT([no]) ;;
+esac
+
 AC_MSG_CHECKING([whether the compiler supports -flto])
 old_CFLAGS="$CFLAGS"
 LTO_CFLAGS="-flto"
