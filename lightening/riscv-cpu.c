@@ -2461,6 +2461,7 @@ static void
 mfence(jit_state_t *_jit)
 {
   // TODO: we may need it for atomic operations?
+  em_wp(_jit, _FENCE(0xFF));
 }
 
 static void
