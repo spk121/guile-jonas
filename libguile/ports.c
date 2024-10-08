@@ -511,7 +511,7 @@ scm_set_current_input_port (SCM port)
 
 SCM
 scm_set_current_output_port (SCM port)
-#define FUNC_NAME "scm-set-current-output-port"
+#define FUNC_NAME "set-current-output-port"
 {
   SCM ooutp = scm_fluid_ref (cur_outport_fluid);
   port = SCM_COERCE_OUTPORT (port);
