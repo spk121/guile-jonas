@@ -30,10 +30,10 @@
             %port-property
             %set-port-property!
             current-input-port current-output-port
-            current-error-port current-warning-port
+            current-error-port current-warning-port current-info-port
             current-load-port
             set-current-input-port set-current-output-port
-            set-current-error-port
+            set-current-error-port set-current-info-port
             port-mode
             port?
             input-port?
@@ -144,7 +144,8 @@
                               call-with-output-string
                               close-port
                               current-error-port
-                              current-warning-port))
+                              current-warning-port
+                              current-info-port))
 
 (load-extension (string-append "libguile-" (effective-version))
                 "scm_init_ice_9_ports")
@@ -290,6 +291,13 @@ interpret its input and output."
                         (error "expected an output port" x))
                       x)))
 
+(define current-info-port
+  (fluid->parameter %current-info-port-fluid
+                    (lambda (x)
+                      (unless (output-port? x)
+                        (error "expected an output port" x))
+                      x)))
+
 
 
 
@@ -395,6 +403,10 @@ interpret its input and output."
 (define (set-current-error-port port)
   "Set the current default error port to @var{port}."
   (current-error-port port))
+
+(define (set-current-info-port port)
+  "Set the current default info port to @var{port}."
+  (current-info-port port))
 
 
 ;;;; high level routines
