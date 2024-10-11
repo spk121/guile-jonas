@@ -147,6 +147,14 @@ Parses any character falling between @var{a} and @var{z}.
 @code{(range #\a #\z)}
 @end deftp
 
+@deftp {PEG Pattern} {inverse range of characters} a z
+Parses any character not falling between @var{a} and @var{z}.
+
+@code{"[^a-z]"}
+
+@code{(not-in-range #\a #\z)}
+@end deftp
+
 Example:
 
 @example

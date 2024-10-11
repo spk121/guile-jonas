@@ -54,7 +54,7 @@ Prefix <-- (AND / NOT)? Suffix
 Suffix <-- Primary (QUESTION / STAR / PLUS)?
 Primary <-- Identifier !LEFTARROW
            / OPEN Expression CLOSE
-           / Literal / Class / DOT
+           / Literal / Class / NotInClass / DOT
 
 # Lexical syntax
 Identifier <-- IdentStart IdentCont* Spacing
@@ -64,6 +64,7 @@ IdentCont <- IdentStart / [0-9]
 
 Literal <-- SQUOTE (!SQUOTE Char)* SQUOTE Spacing
         / DQUOTE (!DQUOTE Char)* DQUOTE Spacing
+NotInClass <-- OPENBRACKET NOTIN  (!CLOSEBRACKET Range)* CLOSEBRACKET Spacing
 Class <-- OPENBRACKET !NOTIN  (!CLOSEBRACKET Range)* CLOSEBRACKET Spacing
 Range <-- Char DASH Char / Char
 Char <-- '\\\\' [nrt'\"\\[\\]\\\\]
@@ -78,6 +79,7 @@ DQUOTE < [\"]
 DASH < '-'
 OPENBRACKET < '['
 CLOSEBRACKET < ']'
+NOTIN < '^'
 SLASH < '/' Spacing
 AND <-- '&' Spacing
 NOT <-- '!' Spacing
@@ -122,6 +124,7 @@ EndOfFile < !.
       (and OPEN Expression CLOSE)
       Literal
       Class
+      NotInClass
       DOT))
 (define-sexp-parser Identifier all
   (and IdentStart (* IdentCont) Spacing))
@@ -133,7 +136,11 @@ EndOfFile < !.
   (or (and SQUOTE (* (and (not-followed-by SQUOTE) Char)) SQUOTE Spacing)
       (and DQUOTE (* (and (not-followed-by DQUOTE) Char)) DQUOTE Spacing)))
 (define-sexp-parser Class all
-  (and OPENBRACKET (* (and (not-followed-by CLOSEBRACKET) Range)) CLOSEBRACKET Spacing))
+  (and OPENBRACKET (not-followed-by NOTIN)
+       (* (and (not-followed-by CLOSEBRACKET) Range)) CLOSEBRACKET Spacing))
+(define-sexp-parser NotInClass all
+  (and OPENBRACKET NOTIN
+       (* (and (not-followed-by CLOSEBRACKET) Range)) CLOSEBRACKET Spacing))
 (define-sexp-parser Range all
   (or (and Char DASH Char) Char))
 (define-sexp-parser Char all
@@ -143,6 +150,8 @@ EndOfFile < !.
       (and (not-followed-by "\\") peg-any)))
 (define-sexp-parser LEFTARROW body
   (and (or "<--" "<-" "<") Spacing)) ; NOTE: <-- and < are extensions
+(define-sexp-parser NOTIN none
+  (and "^"))
 (define-sexp-parser SLASH none
   (and "/" Spacing))
 (define-sexp-parser AND all
@@ -279,6 +288,7 @@ EndOfFile < !.
       ('Identifier (Identifier->defn value for-syntax))
       ('Expression (Expression->defn value for-syntax))
       ('Literal    (Literal->defn value for-syntax))
+      ('NotInClass (NotInClass->defn value for-syntax))
       ('Class      (Class->defn value for-syntax)))))
 
 ;; (Identifier "hello")
@@ -291,12 +301,34 @@ EndOfFile < !.
 (define (Literal->defn lst for-syntax)
   (apply string (map (lambda (x) (Char->defn x for-syntax)) (cdr lst))))
 
-;; TODO: empty Class can happen: `[]`, but what does it represent?
+;; (NotInClass ...)
+;;  `-> (and ...)
+(define (NotInClass->defn lst for-syntax)
+  #`(and #,@(map (lambda (x) (NotInRange->defn x for-syntax))
+                 (cdr lst))))
+
 ;; (Class ...)
 ;;  `-> (or ...)
 (define (Class->defn lst for-syntax)
   #`(or #,@(map (lambda (x) (Range->defn x for-syntax))
                 (cdr lst))))
+
+;; NOTE: It's coming from NotInClass.
+;; For one character:
+;; (Range (Char "a"))
+;;  `-> (not-in-range #\a #\a)
+;; Or for a range:
+;; (Range (Char "a") (Char "b"))
+;;  `-> (not-in-range #\a #\b)
+(define (NotInRange->defn lst for-syntax)
+  (match lst
+    (('Range c)
+     (let ((ch (Char->defn c for-syntax)))
+       #`(not-in-range #,ch #,ch)))
+    (('Range range-beginning range-end)
+     #`(not-in-range
+         #,(Char->defn range-beginning for-syntax)
+         #,(Char->defn range-end       for-syntax)))))
 
 ;; For one character:
 ;; (Range (Char "a"))

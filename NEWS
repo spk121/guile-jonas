@@ -27,6 +27,9 @@ downright unusable (e.g., <https://bugs.gnu.org/72378>), non-conforming
 PEG grammar parser in (ice-9 peg string-peg) has been rewritten to cover
 all the functionality defined in <https://bford.info/pub/lang/peg.pdf>.
 
+The 'not-in-range' pattern was also added to (ice-9 peg); it is
+available from PEG strings via '[^...]'.
+
 ** GOOPS: Introduce new forms method* and define-method*
 
 The module (oop goops) now exports method* and define-method* which are

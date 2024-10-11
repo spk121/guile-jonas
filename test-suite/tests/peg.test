@@ -38,6 +38,7 @@
     (Identifier Identifier)
     (Literal Literal)
     (Class Class)
+    (NotInClass NotInClass)
     (Range Range)
     (Char Char)
     (LEFTARROW LEFTARROW)
@@ -85,7 +86,7 @@
 End <-- '*)'
 C <- Begin N* End
 N <- C / (!Begin !End Z)
-Z <- .")
+Z <- [^X-Z]") ;; Forbid some characters to test not-in-range
 
 ;; A short /etc/passwd file.
 (define *etc-passwd*
@@ -125,6 +126,9 @@ SLASH < '/'")
     (match-pattern C "(*blah*)")
     (make-prec 0 8 "(*blah*)"
 	       '((Begin "(*") "blah" (End "*)")))))
+  (pass-if
+   "simple comment with forbidden char"
+   (not (match-pattern C "(*blYh*)")))
   (pass-if
    "simple comment padded"
    (equal?
