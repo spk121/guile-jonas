@@ -383,7 +383,7 @@ If FILE begins with `-' the -s switch is mandatory.
             (parse args
                    (cons '(install-r7rs!) out)))
 
-           ((string=? arg "-I")   ; silence diagostics
+           ((string=? arg "-I")   ; silence diagnostics
             (parse args (cons `(current-info-port (%make-void-port "w")) out)))
 
            ((string=? arg "--listen")   ; start a repl server
