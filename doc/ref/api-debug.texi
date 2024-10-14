@@ -1,26 +1,124 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Guile Reference Manual.
-@c Copyright (C)  1996, 1997, 2000, 2001, 2002, 2003, 2004, 2007, 2010, 2011, 2012, 2013, 2014, 2018, 2021
+@c Copyright (C)  1996-1997, 2000-2004, 2007, 2010-2014, 2018, 2021, 2024
 @c   Free Software Foundation, Inc.
 @c See the file guile.texi for copying conditions.
 
 @node Debugging
 @section Debugging Infrastructure
 
-@cindex Debugging
-In order to understand Guile's debugging facilities, you first need to
-understand a little about how Guile represents the Scheme control stack.
-With that in place we explain the low level trap calls that the virtual
-machine can be configured to make, and the trap and breakpoint
-infrastructure that builds on top of those calls.
+@cindex debugging
+Guile provides facilities for simple print-based debugging as well as
+more advanced debugging features. In order to understand Guile's
+advanced debugging facilities, one first must understand a little about
+how Guile represents the Scheme control stack. With that in place, we
+can explain the low level trap calls that the virtual machine can be
+configured to make, and the trap and breakpoint infrastructure that
+builds on top of those calls.
 
 @menu
-* Evaluation Model::            Evaluation and the Scheme stack.
-* Source Properties::           From expressions to source locations.
+* Simple Debugging::             Print-based debugging.
+* Evaluation Model::             Evaluation and the Scheme stack.
+* Source Properties::            From expressions to source locations.
 * Programmatic Error Handling::  Debugging when an error occurs.
-* Traps::                       Breakpoints, tracepoints, oh my!
-* GDB Support::                 C-level debugging with GDB.
+* Traps::                        Breakpoints, tracepoints, oh my!
+* GDB Support::                  C-level debugging with GDB.
 @end menu
+
+
+@node Simple Debugging
+@subsection Simple Debugging
+
+Guile offers powerful tools for introspection and debugging at the REPL,
+covered in the rest of this section and elsewhere in this manual
+(@pxref{Interactive Debugging}).  Here we deal with a more primitive
+approach, commonly called ``print debugging,'' which is a quick way to
+diagnose simple errors by printing values during a program's execution.
+Guile provides the @code{peek} procedure, more commonly known as
+@code{pk} (pronounced by naming the letters), as a convenient and
+powerful tool for this kind of debugging.
+
+@deffn {Scheme Procedure} peek stuff @dots{}
+@deffnx {Scheme Procedure} pk stuff @dots{}
+Print @var{stuff} to the current output port using @code{write}.  Return
+the last argument.
+@end deffn
+
+@code{pk} improves on using @code{write} directly because it enables
+inspection of the state of code as it runs without breaking the normal
+code flow.  It is also sometimes more practical than a full debugger
+because it does not require the program to be stopped for inspection.
+Here is a basic example:
+
+@lisp
+(define fire 'burns)
+
+(pk fire)
+@result{}
+
+;;; (burns)
+burns
+@end lisp
+
+Here is an example of inspecting a value in the midst of code flow:
+
+@lisp
+(map (lambda (v)
+       (if (number? v)
+           (pk 'number->string (number->string v))
+           v))
+     '(1 "2" "3" 4))
+@result{}
+
+;;; ("1")
+
+;;; ("4")
+("1" "2" "3" "4")
+@end lisp
+
+A common technique when using @code{pk} is to label values with symbols
+to keep track of where they're coming from.  There's no reason these
+labels need to be symbols; symbols are just convenient.  Here's a
+slightly more complex example demonstrating that pattern:
+
+@lisp
+(define (pk-identity x)
+  (pk 'arg-to-identity x))
+
+(pk-identity 42)
+@result{}
+
+;;; (arg-to-identity 42)
+42
+@end lisp
+
+@code{pk} has one small quirk of note.  Currently, it only returns the
+first value returned from any multi-value returns.  So for example:
+
+@lisp
+(pk 'vals (values 1 2 3))
+@result{}
+
+;;; (vals 1)
+1
+@end lisp
+
+The way to get around this limitation is to bind such multi-value
+returns then inspect the results.  Still, @code{pk} can only return a
+single value:
+
+@lisp
+(use-modules (srfi srfi-11))
+
+(let-values (((x y z)
+              (values 1 2 3)))
+  (pk 'vals x y z))
+@result{}
+
+;;; (vals 1 2 3)
+3
+@end lisp
+
 
 @node Evaluation Model
 @subsection Evaluation and the Scheme Stack
