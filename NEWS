@@ -39,6 +39,8 @@ downright unusable (e.g., <https://bugs.gnu.org/72378>), non-conforming
    (<https://bugs.gnu.org/73167>)
 ** Fix portability issues for macOS
    (<https://bugs.gnu.org/72547>)
+** Fix compilation with GCC 14 and musl on 32-bit systems
+   (<https://bugs.gnu.org/73835>)
 
 
 Changes in 3.0.10 (since 3.0.9)
