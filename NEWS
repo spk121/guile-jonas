@@ -11,21 +11,34 @@ Changes in 3.0.11 (since 3.0.10)
 
 ** R7RS `cond-expand` now supports `else` (<https://debbugs.gnu.org/71304>)
 
+** The SRFI-64 module for test suites has been rewritten
+
+A new, backward-compatible implementation of (srfi srfi-64) has been
+contributed by Tomas Wolf.  The reference implementation, which was used
+so far, had a number of issues on Guile that made some of its interface
+downright unusable (e.g., <https://bugs.gnu.org/72378>), non-conforming
+(e.g., <https://bugs.gnu.org/72383>), or buggy (e.g.,
+<https://bugs.gnu.org/72372>).
+
 * Changes to the distribution
 
 * Bug fixes
 
 ** `basename` now checks the suffix against the base name, not the full path
-   (<https://debbugs.gnu.org/69437>)
+   (<https://bugs.gnu.org/69437>)
 ** test-hashing should now work on 32-bit systems
 ** GUILE-VERSION changes should propagate to .version and relevant Makefiles
-   (<https://debbugs.gnu.org/72084>)
+   (<https://bugs.gnu.org/72084>)
 ** Compiler no longer crashes when building Guile on 32-bit platforms
    (<https://bugs.gnu.org/71891>)
 ** Compiler no longer crashes when inlining 3.0.9 procedure with kw args
    (<https://bugs.gnu.org/72936>)
 ** Guile is compiled with -fexcess-precision=standard for i[3456]86 when possible
-   (<https://debbugs.gnu.org/43262>)
+   (<https://bugs.gnu.org/43262>)
+** Fix setjmp/longjmp-related crashes on Windows
+   (<https://bugs.gnu.org/73167>)
+** Fix portability issues for macOS
+   (<https://bugs.gnu.org/72547>)
 
 
 Changes in 3.0.10 (since 3.0.9)
