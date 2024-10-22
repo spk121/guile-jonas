@@ -1038,6 +1038,8 @@ return the result.  This is equivalent to
 core does the same thing.
 @end deffn
 
+@rnindex alist-copy
+@anchor{x-alist-copy}
 @deffn {Scheme Procedure} alist-copy alist
 Return a newly allocated copy of @var{alist}, that means that the
 spine of the list as well as the pairs are copied.
@@ -2136,7 +2138,7 @@ a SRFI-18 mutex, and a Guile thread is not a SRFI-18 thread, and so on.
 Guile provides a set of primitives and SRFI-18 is one of the systems built in terms of those primitives.
 
 @menu
-* SRFI-18 Threads::             Executing code 
+* SRFI-18 Threads::             Executing code
 * SRFI-18 Mutexes::             Mutual exclusion devices
 * SRFI-18 Condition variables:: Synchronizing of groups of threads
 * SRFI-18 Time::                Representation of times and durations
@@ -2146,11 +2148,11 @@ Guile provides a set of primitives and SRFI-18 is one of the systems built in te
 @node SRFI-18 Threads
 @subsubsection SRFI-18 Threads
 
-Threads created by SRFI-18 differ in two ways from threads created by 
+Threads created by SRFI-18 differ in two ways from threads created by
 Guile's built-in thread functions.  First, a thread created by SRFI-18
-@code{make-thread} begins in a blocked state and will not start 
+@code{make-thread} begins in a blocked state and will not start
 execution until @code{thread-start!} is called on it.  Second, SRFI-18
-threads are constructed with a top-level exception handler that 
+threads are constructed with a top-level exception handler that
 captures any exceptions that are thrown on thread exit.
 
 SRFI-18 threads are disjoint from Guile's primitive threads.
@@ -2164,7 +2166,7 @@ procedure as the same-named built-in procedure @code{current-thread}
 
 @defun thread? obj
 Returns @code{#t} if @var{obj} is a thread, @code{#f} otherwise.  This
-is the same procedure as the same-named built-in procedure 
+is the same procedure as the same-named built-in procedure
 @code{thread?} (@pxref{Threads}).
 @end defun
 
@@ -2173,9 +2175,9 @@ Call @code{thunk} in a new thread and with a new dynamic state,
 returning the new thread and optionally assigning it the object name
 @var{name}, which may be any Scheme object.
 
-Note that the name @code{make-thread} conflicts with the 
-@code{(ice-9 threads)} function @code{make-thread}.  Applications 
-wanting to use both of these functions will need to refer to them by 
+Note that the name @code{make-thread} conflicts with the
+@code{(ice-9 threads)} function @code{make-thread}.  Applications
+wanting to use both of these functions will need to refer to them by
 different names.
 @end defun
 
@@ -2197,49 +2199,49 @@ done so already.
 @end defun
 
 @defun thread-yield!
-If one or more threads are waiting to execute, calling 
+If one or more threads are waiting to execute, calling
 @code{thread-yield!} forces an immediate context switch to one of them.
-Otherwise, @code{thread-yield!} has no effect.  @code{thread-yield!} 
+Otherwise, @code{thread-yield!} has no effect.  @code{thread-yield!}
 behaves identically to the Guile built-in function @code{yield}.
 @end defun
 
 @defun thread-sleep! timeout
 The current thread waits until the point specified by the time object
-@var{timeout} is reached (@pxref{SRFI-18 Time}).  This blocks the 
-thread only if @var{timeout} represents a point in the future.  it is 
+@var{timeout} is reached (@pxref{SRFI-18 Time}).  This blocks the
+thread only if @var{timeout} represents a point in the future.  it is
 an error for @var{timeout} to be @code{#f}.
 @end defun
 
 @defun thread-terminate! thread
 Causes an abnormal termination of @var{thread}.  If @var{thread} is
 not already terminated, all mutexes owned by @var{thread} become
-unlocked/abandoned.  If @var{thread} is the current thread, 
-@code{thread-terminate!} does not return.  Otherwise 
+unlocked/abandoned.  If @var{thread} is the current thread,
+@code{thread-terminate!} does not return.  Otherwise
 @code{thread-terminate!} returns an unspecified value; the termination
-of @var{thread} will occur before @code{thread-terminate!} returns.  
-Subsequent attempts to join on @var{thread} will cause a ``terminated 
+of @var{thread} will occur before @code{thread-terminate!} returns.
+Subsequent attempts to join on @var{thread} will cause a ``terminated
 thread exception'' to be raised.
 
 @code{thread-terminate!} is compatible with the thread cancellation
-procedures in the core threads API (@pxref{Threads}) in that if a 
-cleanup handler has been installed for the target thread, it will be 
+procedures in the core threads API (@pxref{Threads}) in that if a
+cleanup handler has been installed for the target thread, it will be
 called before the thread exits and its return value (or exception, if
-any) will be stored for later retrieval via a call to 
+any) will be stored for later retrieval via a call to
 @code{thread-join!}.
 @end defun
 
 @defun thread-join! thread [timeout [timeout-val]]
-Wait for @var{thread} to terminate and return its exit value.  When a 
+Wait for @var{thread} to terminate and return its exit value.  When a
 time value @var{timeout} is given, it specifies a point in time where
-the waiting should be aborted.  When the waiting is aborted, 
+the waiting should be aborted.  When the waiting is aborted,
 @var{timeout-val} is returned if it is specified; otherwise, a
-@code{join-timeout-exception} exception is raised 
-(@pxref{SRFI-18 Exceptions}).  Exceptions may also be raised if the 
-thread was terminated by a call to @code{thread-terminate!} 
-(@code{terminated-thread-exception} will be raised) or if the thread 
-exited by raising an exception that was handled by the top-level 
-exception handler (@code{uncaught-exception} will be raised; the 
-original exception can be retrieved using 
+@code{join-timeout-exception} exception is raised
+(@pxref{SRFI-18 Exceptions}).  Exceptions may also be raised if the
+thread was terminated by a call to @code{thread-terminate!}
+(@code{terminated-thread-exception} will be raised) or if the thread
+exited by raising an exception that was handled by the top-level
+exception handler (@code{uncaught-exception} will be raised; the
+original exception can be retrieved using
 @code{uncaught-exception-reason}).
 @end defun
 
@@ -2272,19 +2274,19 @@ Set the ``object-specific'' property of @var{mutex}.
 @end defun
 
 @defun mutex-state mutex
-Returns information about the state of @var{mutex}.  Possible values 
+Returns information about the state of @var{mutex}.  Possible values
 are:
 @itemize @bullet
 @item
 thread @var{t}: the mutex is in the locked/owned state and thread
 @var{t} is the owner of the mutex
-@item 
+@item
 symbol @code{not-owned}: the mutex is in the locked/not-owned state
 @item
 symbol @code{abandoned}: the mutex is in the unlocked/abandoned state
 @item
-symbol @code{not-abandoned}: the mutex is in the 
-unlocked/not-abandoned state 
+symbol @code{not-abandoned}: the mutex is in the
+unlocked/not-abandoned state
 @end itemize
 @end defun
 
@@ -2348,14 +2350,14 @@ for it, in the case of @code{condition-variable-broadcast!}.
 @node SRFI-18 Time
 @subsubsection SRFI-18 Time
 
-The SRFI-18 time functions manipulate time in two formats: a 
-``time object'' type that represents an absolute point in time in some 
-implementation-specific way; and the number of seconds since some 
+The SRFI-18 time functions manipulate time in two formats: a
+``time object'' type that represents an absolute point in time in some
+implementation-specific way; and the number of seconds since some
 unspecified ``epoch''.  In Guile's implementation, the epoch is the
 Unix epoch, 00:00:00 UTC, January 1, 1970.
 
 @defun current-time
-Return the current time as a time object.  This procedure replaces 
+Return the current time as a time object.  This procedure replaces
 the procedure of the same name in the core library, which returns the
 current time in seconds since the epoch.
 @end defun
@@ -2367,10 +2369,10 @@ Returns @code{#t} if @var{obj} is a time object, @code{#f} otherwise.
 @defun time->seconds time
 @defunx seconds->time seconds
 Convert between time objects and numerical values representing the
-number of seconds since the epoch.  When converting from a time object 
-to seconds, the return value is the number of seconds between 
-@var{time} and the epoch.  When converting from seconds to a time 
-object, the return value is a time object that represents a time 
+number of seconds since the epoch.  When converting from a time object
+to seconds, the return value is the number of seconds between
+@var{time} and the epoch.  When converting from seconds to a time
+object, the return value is a time object that represents a time
 @var{seconds} seconds after the epoch.
 @end defun
 
@@ -2378,8 +2380,8 @@ object, the return value is a time object that represents a time
 @node SRFI-18 Exceptions
 @subsubsection SRFI-18 Exceptions
 
-SRFI-18 exceptions are identical to the exceptions provided by 
-Guile's implementation of SRFI-34.  The behavior of exception 
+SRFI-18 exceptions are identical to the exceptions provided by
+Guile's implementation of SRFI-34.  The behavior of exception
 handlers invoked to handle exceptions thrown from SRFI-18 functions,
 however, differs from the conventional behavior of SRFI-34 in that
 the continuation of the handler is the same as that of the call to
@@ -2392,9 +2394,9 @@ Returns the current exception handler.
 
 @defun with-exception-handler handler thunk
 Installs @var{handler} as the current exception handler and calls the
-procedure @var{thunk} with no arguments, returning its value as the 
+procedure @var{thunk} with no arguments, returning its value as the
 value of the exception.  @var{handler} must be a procedure that accepts
-a single argument. The current exception handler at the time this 
+a single argument. The current exception handler at the time this
 procedure is called will be restored after the call returns.
 @end defun
 
@@ -2404,7 +2406,7 @@ same-named procedure defined in SRFI 34.
 @end defun
 
 @defun join-timeout-exception? obj
-Returns @code{#t} if @var{obj} is an exception raised as the result of 
+Returns @code{#t} if @var{obj} is an exception raised as the result of
 performing a timed join on a thread that does not exit within the
 specified timeout, @code{#f} otherwise.
 @end defun
@@ -2416,23 +2418,23 @@ attempting to lock a mutex that has been abandoned by its owner thread,
 @end defun
 
 @defun terminated-thread-exception? obj
-Returns @code{#t} if @var{obj} is an exception raised as the result of 
+Returns @code{#t} if @var{obj} is an exception raised as the result of
 joining on a thread that exited as the result of a call to
 @code{thread-terminate!}.
 @end defun
 
 @defun uncaught-exception? obj
 @defunx uncaught-exception-reason exc
-@code{uncaught-exception?} returns @code{#t} if @var{obj} is an 
+@code{uncaught-exception?} returns @code{#t} if @var{obj} is an
 exception thrown as the result of joining a thread that exited by
 raising an exception that was handled by the top-level exception
-handler installed by @code{make-thread}.  When this occurs, the 
+handler installed by @code{make-thread}.  When this occurs, the
 original exception is preserved as part of the exception thrown by
-@code{thread-join!} and can be accessed by calling 
+@code{thread-join!} and can be accessed by calling
 @code{uncaught-exception-reason} on that exception.  Note that
 because this exception-preservation mechanism is a side-effect of
 @code{make-thread}, joining on threads that exited as described above
-but were created by other means will not raise this 
+but were created by other means will not raise this
 @code{uncaught-exception} error.
 @end defun
 
@@ -2451,12 +2453,12 @@ functions and variables described here are provided by
 @end example
 
 @menu
-* SRFI-19 Introduction::        
-* SRFI-19 Time::                
-* SRFI-19 Date::                
-* SRFI-19 Time/Date conversions::  
-* SRFI-19 Date to string::      
-* SRFI-19 String to date::      
+* SRFI-19 Introduction::
+* SRFI-19 Time::
+* SRFI-19 Date::
+* SRFI-19 Time/Date conversions::
+* SRFI-19 Date to string::
+* SRFI-19 String to date::
 @end menu
 
 @node SRFI-19 Introduction
@@ -2590,7 +2592,7 @@ Return the current time of the given @var{type}.  The default
 
 Note that the name @code{current-time} conflicts with the Guile core
 @code{current-time} function (@pxref{Time}) as well as the SRFI-18
-@code{current-time} function (@pxref{SRFI-18 Time}).  Applications 
+@code{current-time} function (@pxref{SRFI-18 Time}).  Applications
 wanting to use more than one of these functions will need to refer to
 them by different names.
 @end defun
@@ -3130,9 +3132,9 @@ functional programming style or just with @code{map}, @code{for-each}
 or similar is typical.
 
 @example
-(map (cut * 2 <>) '(1 2 3 4))         
+(map (cut * 2 <>) '(1 2 3 4))
 
-(for-each (cut write <> my-port) my-list)  
+(for-each (cut write <> my-port) my-list)
 @end example
 @end deffn
 
@@ -3262,7 +3264,7 @@ random source @var{source}, a call to any of these generators advances
 the state of @var{source}.  Hence, the generators do not produce the
 same sequence of random integers each but rather share a state. This
 also holds for all other types of generators derived from a fixed random
-sources.  
+sources.
 
 While the SRFI text specifies that ``Implementations that support
 concurrency make sure that the state of a generator is properly
@@ -3711,7 +3713,7 @@ external representation for data written and read with @code{write} and
 production
 
 @example
-<datum> --> <simple datum> | <compound datum> 
+<datum> --> <simple datum> | <compound datum>
 @end example
 
 is replaced by the following five productions:
@@ -3720,7 +3722,7 @@ is replaced by the following five productions:
 <datum> --> <defining datum> | <nondefining datum> | <defined datum>
 <defining datum> -->  #<indexnum>=<nondefining datum>
 <defined datum> --> #<indexnum>#
-<nondefining datum> --> <simple datum> | <compound datum> 
+<nondefining datum> --> <simple datum> | <compound datum>
 <indexnum> --> <digit 10>+
 @end example
 
@@ -5085,7 +5087,7 @@ In other words, we
 @itemize @bullet
 @item
 wrap all constructors (e.g., @code{'()}, @code{cons}) with @code{delay},
-@item 
+@item
 apply @code{force} to arguments of deconstructors (e.g., @code{car},
 @code{cdr} and @code{null?}),
 @item
@@ -5258,7 +5260,7 @@ and the first list element is the most significant of those bits.  If
 (integer->list 1 4) @result{} (#f #f #f #t)
 @end example
 @end defun
-   
+
 @defun list->integer lst
 @defunx booleans->integer bool@dots{}
 Return an integer formed bitwise from the given @var{lst} list of
@@ -5323,10 +5325,10 @@ Access it with:
 @end lisp
 
 @menu
-* SRFI-69 Creating hash tables::  
-* SRFI-69 Accessing table items::  
-* SRFI-69 Table properties::    
-* SRFI-69 Hash table algorithms::  
+* SRFI-69 Creating hash tables::
+* SRFI-69 Accessing table items::
+* SRFI-69 Table properties::
+* SRFI-69 Hash table algorithms::
 @end menu
 
 @node SRFI-69 Creating hash tables
@@ -5574,13 +5576,13 @@ Return the keyword object whose name is @var{str}.
 @cindex SRFI-98
 @cindex environment variables
 
-This is a portable wrapper around Guile's built-in support for 
+This is a portable wrapper around Guile's built-in support for
 interacting with the current environment, @xref{Runtime Environment}.
 
 @deffn {Scheme Procedure} get-environment-variable name
-Returns a string containing the value of the environment variable 
-given by the string @code{name}, or @code{#f} if the named 
-environment variable is not found.  This is equivalent to 
+Returns a string containing the value of the environment variable
+given by the string @code{name}, or @code{#f} if the named
+environment variable is not found.  This is equivalent to
 @code{(getenv name)}.
 @end deffn
 

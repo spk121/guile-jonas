@@ -9513,6 +9513,8 @@ independent from the list that results from modification by
 use @code{list-copy} to copy the old association list before modifying
 it.
 
+@rnindex acons
+@anchor{x-acons}
 @deffn {Scheme Procedure} acons key value alist
 @deffnx {C Function} scm_acons (key, value, alist)
 Add a new key-value pair to @var{alist}.  A new pair is
@@ -9719,13 +9721,34 @@ Recommended only for use in Guile internals.
 @node Alist Example
 @subsubsection Alist Example
 
-Here is a longer example of how alists may be used in practice.
+The following example shows how alists may be used in practice.
 
 @lisp
-(define capitals '(("New York" . "Albany")
-                   ("Oregon"   . "Salem")
-                   ("Florida"  . "Miami")))
+(define capitals (list (cons "New York" "Albany")
+                       (cons "Oregon"   "Salem")
+                       (cons "Florida"  "Miami")))
+@end lisp
 
+Other ways to create an alist are
+@lisp
+(define capitals (@ref{x-acons,@code{acons}} "New York" "Albany"
+                        (acons "Oregon" "Salem"
+                               (acons "Florida"  "Miami" '()))))
+@end lisp
+or
+@lisp
+(use-modules (srfi srfi-1)) ; for alist-copy
+(define capitals (@ref{x-alist-copy,@code{alist-copy}}
+                   '(("New York" . "Albany")
+                     ("Oregon"   . "Salem")
+                     ("Florida"  . "Miami"))))
+@end lisp
+
+Here @code{alist-copy} is necessary if we intend to modify the alist, because a literal like @code{'(("New York" . "Albany") ...)} cannot be modified.
+
+We can now operate on the alist.
+
+@lisp
 ;; What's the capital of Oregon?
 (assoc "Oregon" capitals)       @result{} ("Oregon" . "Salem")
 (assoc-ref capitals "Oregon")   @result{} "Salem"
