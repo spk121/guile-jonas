@@ -522,7 +522,10 @@ returning new test runner.  Defaults to @code{test-runner-simple}.")
                                (1+ (group-executed-count group)))))))
 
 (define* (test-begin suite-name #:optional count)
-  "Enter a new test group."
+  "Enter a new test group.
+
+As implementation extension, in addition to strings, symbols are also
+supported as @var{suite-name}."
   (let* ((r (test-runner-current))
          (r install? (if r
                          (values r                    #f)
@@ -544,6 +547,14 @@ returning new test runner.  Defaults to @code{test-runner-simple}.")
 
     ((test-runner-on-group-begin r) r suite-name count)))
 
+(define (%cmp-group-name a b)
+  (match (list a b)
+    (((? string?) (? string?))
+     (string=? a b))
+    (((? symbol?) (? symbol?))
+     (eq? a b))
+    (_ #f)))
+
 (define* (test-end #:optional suite-name)
   "Leave the current test group."
   (let* ((r (test-runner-current))
@@ -551,7 +562,7 @@ returning new test runner.  Defaults to @code{test-runner-simple}.")
 
     (let ((begin-name (car (test-runner-group-stack r)))
           (end-name   suite-name))
-      (when (and end-name (not (string=? begin-name end-name)))
+      (when (and end-name (not (%cmp-group-name begin-name end-name)))
         ((test-runner-on-bad-end-name r) r begin-name end-name)
         (raise-exception (make-bad-end-name begin-name end-name))))
 
