@@ -160,7 +160,7 @@ bless_function_pointer(void *ptr)
 /*
  * Veneers
  */
-struct veneer{
+struct __attribute__((packed)) veneer{
   instr_t auipc;
   instr_t load;        // `ld` in RV64 and `lw` in RV32
   instr_t jalr;
