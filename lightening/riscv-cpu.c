@@ -454,7 +454,7 @@ static void comr(jit_state_t *_jit, int32_t r0, int32_t r1);
 static void movr(jit_state_t *_jit, int32_t r0, int32_t r1);
 static void movi(jit_state_t *_jit, int32_t r0, jit_word_t i0);
 
-static uint64_t patch_load_from_pool(uint64_t instrs, uint32_t off);
+static uint64_t patch_load_from_pool(uint64_t instrs, int32_t off);
 static jit_reloc_t emit_load_from_pool(jit_state_t *_jit, uint64_t insts);
 static jit_reloc_t mov_addr(jit_state_t *_jit, int32_t r0);
 static jit_reloc_t movi_from_pool(jit_state_t *_jit, int32_t r0);

@@ -317,9 +317,7 @@ static void
 patch_load_from_pool_offset(uint32_t *loc, int32_t v)
 {
   load_from_pool_t *i = (load_from_pool_t *) loc;
-  int32_t hi20 = v >>12;
-  i->inst.auipc.U.imm31_12 = hi20;
-  i->inst.load.I.imm11_0   = v - (hi20<<12);
+  i->l = patch_load_from_pool(i->l, v);
 }
 static int32_t
 read_load_from_pool_offset(uint32_t *loc)
