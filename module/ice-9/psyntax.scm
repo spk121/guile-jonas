@@ -186,13 +186,11 @@
       (define-syntax fx= (identifier-syntax =))
       (define-syntax fx< (identifier-syntax <))
 
-      (define top-level-eval-hook
-        (lambda (x mod)
-          (primitive-eval x)))
+      (define (top-level-eval x mod)
+        (primitive-eval x))
 
-      (define local-eval-hook
-        (lambda (x mod)
-          (primitive-eval x)))
+      (define (local-eval x mod)
+        (primitive-eval x))
     
       ;; Capture syntax-session-id before we shove it off into a module.
       (define session-id
@@ -1101,7 +1099,7 @@
                      (list
                       (if (eq? m 'c&e)
                           (let ((x (build-global-definition s mod var (expand e r w mod))))
-                            (top-level-eval-hook x mod)
+                            (top-level-eval x mod)
                             (lambda () x))
                           (call-with-values
                               (lambda () (resolve-identifier id empty-wrap r mod #t))
@@ -1109,9 +1107,9 @@
                               ;; If the identifier to be bound is currently bound to a
                               ;; macro, then immediately discard that binding.
                               (if (eq? type* 'macro)
-                                  (top-level-eval-hook (build-global-definition
-                                                        s mod var (build-void s))
-                                                       mod))
+                                  (top-level-eval (build-global-definition
+                                                   s mod var (build-void s))
+                                                  mod))
                               (lambda ()
                                 (build-global-definition s mod var (expand e r w mod)))))))))
                   ((define-syntax-form define-syntax-parameter-form)
@@ -1125,7 +1123,7 @@
                         (cond
                          ((memq 'compile esew)
                           (let ((e (expand-install-global mod var type (expand e r w mod))))
-                            (top-level-eval-hook e mod)
+                            (top-level-eval e mod)
                             (if (memq 'load esew)
                                 (list (lambda () e))
                                 '())))
@@ -1135,11 +1133,11 @@
                          (else '())))
                        ((c&e)
                         (let ((e (expand-install-global mod var type (expand e r w mod))))
-                          (top-level-eval-hook e mod)
+                          (top-level-eval e mod)
                           (list (lambda () e))))
                        (else
                         (if (memq 'eval esew)
-                            (top-level-eval-hook
+                            (top-level-eval
                              (expand-install-global mod var type (expand e r w mod))
                              mod))
                         '()))))
@@ -1165,7 +1163,7 @@
                                        '(eval))
                               (begin
                                 (if (memq 'expand when-list)
-                                    (top-level-eval-hook
+                                    (top-level-eval
                                      (expand-top-sequence body r w s 'e '(eval) mod)
                                      mod))
                                 '())))
@@ -1180,7 +1178,7 @@
                          ((or (memq 'compile when-list)
                               (memq 'expand when-list)
                               (and (eq? m 'c&e) (memq 'eval when-list)))
-                          (top-level-eval-hook
+                          (top-level-eval
                            (expand-top-sequence body r w s 'e '(eval) mod)
                            mod)
                           '())
@@ -1190,7 +1188,7 @@
                    (list
                     (if (eq? m 'c&e)
                         (let ((x (expand-expr type value form e r w s mod)))
-                          (top-level-eval-hook x mod)
+                          (top-level-eval x mod)
                           (lambda () x))
                         (lambda ()
                           (expand-expr type value form e r w s mod)))))))))
@@ -1727,7 +1725,7 @@
 
     (define eval-local-transformer
       (lambda (expanded mod)
-        (let ((p (local-eval-hook expanded mod)))
+        (let ((p (local-eval expanded mod)))
           (if (procedure? p)
               p
               (syntax-violation #f "nonprocedure transformer" p)))))

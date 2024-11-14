@@ -45,8 +45,8 @@
             (lambda? (lambda (x) (and (struct? x) (eq? (struct-vtable x) (vector-ref %expanded-vtables 14)))))
             (lambda-meta (lambda (x) (struct-ref x 1)))
             (set-lambda-meta! (lambda (x v) (struct-set! x 1 v)))
-            (top-level-eval-hook (lambda (x mod) (primitive-eval x)))
-            (local-eval-hook (lambda (x mod) (primitive-eval x)))
+            (top-level-eval (lambda (x mod) (primitive-eval x)))
+            (local-eval (lambda (x mod) (primitive-eval x)))
             (session-id
              (let ((v (module-variable (current-module) 'syntax-session-id))) (lambda () ((variable-ref v)))))
             (sourcev-filename (lambda (s) (vector-ref s 0)))
@@ -467,13 +467,13 @@
                                           (record-definition! id var)
                                           (list (if (eq? m 'c&e)
                                                     (let ((x (build-global-definition s mod var (expand e r w mod))))
-                                                      (top-level-eval-hook x mod)
+                                                      (top-level-eval x mod)
                                                       (lambda () x))
                                                     (call-with-values
                                                      (lambda () (resolve-identifier id '(()) r mod #t))
                                                      (lambda (type* value* mod*)
                                                        (if (eq? type* 'macro)
-                                                           (top-level-eval-hook
+                                                           (top-level-eval
                                                             (build-global-definition s mod var (build-void s))
                                                             mod))
                                                        (lambda ()
@@ -490,7 +490,7 @@
                                                (cond
                                                  ((memq 'compile esew)
                                                   (let ((e (expand-install-global mod var type (expand e r w mod))))
-                                                    (top-level-eval-hook e mod)
+                                                    (top-level-eval e mod)
                                                     (if (memq 'load esew) (list (lambda () e)) '())))
                                                  ((memq 'load esew)
                                                   (list (lambda ()
@@ -498,10 +498,10 @@
                                                  (else '())))
                                               ((memv key '(c&e))
                                                (let ((e (expand-install-global mod var type (expand e r w mod))))
-                                                 (top-level-eval-hook e mod)
+                                                 (top-level-eval e mod)
                                                  (list (lambda () e))))
                                               (else (if (memq 'eval esew)
-                                                        (top-level-eval-hook
+                                                        (top-level-eval
                                                          (expand-install-global mod var type (expand e r w mod))
                                                          mod))
                                                     '())))))
@@ -537,7 +537,7 @@
                                                                    '(eval))
                                                                   (begin
                                                                     (if (memq 'expand when-list)
-                                                                        (top-level-eval-hook
+                                                                        (top-level-eval
                                                                          (expand-top-sequence body r w s 'e '(eval) mod)
                                                                          mod))
                                                                     '())))
@@ -552,7 +552,7 @@
                                                              ((or (memq 'compile when-list)
                                                                   (memq 'expand when-list)
                                                                   (and (eq? m 'c&e) (memq 'eval when-list)))
-                                                              (top-level-eval-hook
+                                                              (top-level-eval
                                                                (expand-top-sequence body r w s 'e '(eval) mod)
                                                                mod)
                                                               '())
@@ -564,7 +564,7 @@
                                                tmp-1))))
                                        (else (list (if (eq? m 'c&e)
                                                        (let ((x (expand-expr type value form e r w s mod)))
-                                                         (top-level-eval-hook x mod)
+                                                         (top-level-eval x mod)
                                                          (lambda () x))
                                                        (lambda () (expand-expr type value form e r w s mod)))))))))))))
                    (let ((exps (map (lambda (x) (x)) (reverse (parse body r w s m esew mod)))))
@@ -955,7 +955,7 @@
                      (syntax-violation #f "bad local syntax definition" (source-wrap e w s mod))))))
             (eval-local-transformer
              (lambda (expanded mod)
-               (let ((p (local-eval-hook expanded mod)))
+               (let ((p (local-eval expanded mod)))
                  (if (procedure? p) p (syntax-violation #f "nonprocedure transformer" p)))))
             (expand-void (lambda () (build-void #f)))
             (ellipsis?
