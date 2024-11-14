@@ -100,29 +100,28 @@
     (lambda (x)
       (syntax-case x ()
         ((_ stem field ...)
-         (let lp ((n 0))
-           (let ((vtable (vector-ref %expanded-vtables n))
-                 (stem (syntax->datum #'stem)))
-             (if (eq? (struct-ref vtable (+ vtable-offset-user 0)) stem)
-                 #`(begin
-                     (define (#,(datum->syntax x (symbol-append stem '?)) x)
-                       (and (struct? x)
-                            (eq? (struct-vtable x)
-                                 (vector-ref %expanded-vtables #,n))))
-                     #,@(map
-                         (lambda (f)
-                           (let ((get (datum->syntax x (symbol-append stem '- f)))
-                                 (set (datum->syntax x (symbol-append 'set- stem '- f '!)))
-                                 (idx (list-index (struct-ref vtable
-                                                              (+ vtable-offset-user 2))
-                                                  f)))
-                             #`(begin
-                                 (define (#,get x)
-                                   (struct-ref x #,idx))
-                                 (define (#,set x v)
-                                   (struct-set! x #,idx v)))))
-                         (syntax->datum #'(field ...))))
-                 (lp (1+ n)))))))))
+         (let ((stem (syntax->datum #'stem))
+               (fields (map syntax->datum #'(field ...))))
+           (let lp ((n 0))
+             (let ((vtable (vector-ref %expanded-vtables n)))
+               (if (eq? (struct-ref vtable (+ vtable-offset-user 0)) stem)
+                   (let ((pred (datum->syntax x (symbol-append stem '?)))
+                         (all-fields (struct-ref vtable (+ vtable-offset-user 2))))
+                     #`(begin
+                         (define (#,pred x)
+                           (and (struct? x)
+                                (eq? (struct-vtable x)
+                                     (vector-ref %expanded-vtables #,n))))
+                         #,@(map
+                             (lambda (f)
+                               (define get
+                                 (datum->syntax x (symbol-append stem '- f)))
+                               (define idx
+                                 (list-index all-fields f))
+                               #`(define (#,get x)
+                                   (struct-ref x #,idx)))
+                             fields)))
+                   (lp (1+ n))))))))))
 
   (define-syntax define-structure
     (lambda (x)
@@ -177,7 +176,7 @@
 
   (let ()
     (define-expansion-constructors)
-    (define-expansion-accessors lambda meta)
+    (define-expansion-accessors lambda src meta body)
 
     (define (top-level-eval x mod)
       (primitive-eval x))
@@ -195,11 +194,15 @@
                         `((line . ,(sourcev-line sourcev))
                           (column . ,(sourcev-column sourcev))))))
 
-    (define (maybe-name-value! name val)
+    (define (maybe-name-value name val)
       (if (lambda? val)
           (let ((meta (lambda-meta val)))
-            (if (not (assq 'name meta))
-                (set-lambda-meta! val (acons 'name name meta))))))
+            (if (assq 'name meta)
+                val
+                (make-lambda (lambda-src val)
+                             (acons 'name name meta)
+                             (lambda-body val))))
+          val))
 
     ;; output constructors
     (define build-void
@@ -220,8 +223,7 @@
   
     (define build-lexical-assignment
       (lambda (sourcev name var exp)
-        (maybe-name-value! name exp)
-        (make-lexical-set sourcev name var exp)))
+        (make-lexical-set sourcev name var (maybe-name-value name exp))))
   
     (define (analyze-variable mod var modref-cont bare-cont)
       (if (not mod)
@@ -249,18 +251,18 @@
 
     (define build-global-assignment
       (lambda (sourcev var exp mod)
-        (maybe-name-value! var exp)
-        (analyze-variable
-         mod var
-         (lambda (mod var public?) 
-           (make-module-set sourcev mod var public? exp))
-         (lambda (mod var)
-           (make-toplevel-set sourcev mod var exp)))))
+        (let ((exp (maybe-name-value var exp)))
+          (analyze-variable
+           mod var
+           (lambda (mod var public?) 
+             (make-module-set sourcev mod var public? exp))
+           (lambda (mod var)
+             (make-toplevel-set sourcev mod var exp))))))
 
     (define build-global-definition
       (lambda (sourcev mod var exp)
-        (maybe-name-value! var exp)
-        (make-toplevel-define sourcev (and mod (cdr mod)) var exp)))
+        (make-toplevel-define sourcev (and mod (cdr mod)) var
+                              (maybe-name-value var exp))))
 
     (define build-simple-lambda
       (lambda (src req rest vars meta exp)
@@ -308,10 +310,10 @@
 
     (define build-let
       (lambda (src ids vars val-exps body-exp)
-        (for-each maybe-name-value! ids val-exps)
-        (if (null? vars)
-            body-exp
-            (make-let src ids vars val-exps body-exp))))
+        (let ((val-exps (map maybe-name-value ids val-exps)))
+          (if (null? vars)
+              body-exp
+              (make-let src ids vars val-exps body-exp)))))
 
     (define build-named-let
       (lambda (src ids vars val-exps body-exp)
@@ -320,21 +322,19 @@
               (vars (cdr vars))
               (ids (cdr ids)))
           (let ((proc (build-simple-lambda src ids #f vars '() body-exp)))
-            (maybe-name-value! f-name proc)
-            (for-each maybe-name-value! ids val-exps)
             (make-letrec
              src #f
-             (list f-name) (list f) (list proc)
+             (list f-name) (list f) (list (maybe-name-value f-name proc))
              (build-call src (build-lexical-reference 'fun src f-name f)
-                         val-exps))))))
+                         (map maybe-name-value ids val-exps)))))))
 
     (define build-letrec
       (lambda (src in-order? ids vars val-exps body-exp)
         (if (null? vars)
             body-exp
-            (begin
-              (for-each maybe-name-value! ids val-exps)
-              (make-letrec src in-order? ids vars val-exps body-exp)))))
+            (make-letrec src in-order? ids vars
+                         (map maybe-name-value ids val-exps)
+                         body-exp))))
 
 
     (define (gen-lexical id)
