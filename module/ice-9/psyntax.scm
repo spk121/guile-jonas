@@ -1077,7 +1077,6 @@
                 (case type
                   ((define-form)
                    (let* ((id (wrap value w mod))
-                          (label (gen-label))
                           (var (if (macro-introduced-identifier? id)
                                    (fresh-derived-name id x)
                                    (syntax-expression id))))
@@ -1100,7 +1099,6 @@
                                 (build-global-definition s mod var (expand e r w mod)))))))))
                   ((define-syntax-form define-syntax-parameter-form)
                    (let* ((id (wrap value w mod))
-                          (label (gen-label))
                           (var (if (macro-introduced-identifier? id)
                                    (fresh-derived-name id x)
                                    (syntax-expression id))))
@@ -1586,7 +1584,7 @@
                     (let ((var-ids (map (lambda (id)
                                           (if id (syntax->datum id) '_))
                                         (reverse var-ids)))
-                          (vars (map (lambda (var) (or var (gen-label)))
+                          (vars (map (lambda (var) (or var (gen-lexical '_)))
                                      (reverse vars)))
                           (vals (map (lambda (expand-expr id)
                                        (if id
