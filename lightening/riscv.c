@@ -247,7 +247,7 @@ offset_in_jcc_range(ptrdiff_t offset, int flags)
   if(offset & 1)
     return 0;
   else
-    return simm12_p(offset);
+    return simm12_p(offset >> 1);
 }
 
 /*
@@ -271,7 +271,7 @@ offset_in_jmp_range(ptrdiff_t offset, int flags)
   if(offset & 1)
     return 0;
   else
-    return simm20_p(offset);
+    return simm20_p(offset >> 1);
 }
 
 static void
