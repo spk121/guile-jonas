@@ -536,10 +536,29 @@
     (define-syntax wrap-marks (identifier-syntax car))
     (define-syntax wrap-subst (identifier-syntax cdr))
 
+    (define* (gen-unique #:optional (module (current-module)))
+      ;; Generate a unique value, used as a mark to identify a scope, or
+      ;; as a label to associate an identifier with a lexical.  They
+      ;; need to be readable and writable, and because of they way they
+      ;; are used as labels and marks, distinct from pairs, syntax, and
+      ;; the symbol `top'.  Unique values from different separately
+      ;; compiled modules can coexist, for example if a macro defined in
+      ;; module A is used in a separately-compiled module B; however we
+      ;; assume that generally a module corresponds to a compilation
+      ;; unit, so there is no need to be unique across
+      ;; separately-compiled instances of the same module, and that
+      ;; therefore we can use a deterministic per-module counter instead
+      ;; of, say, a random number of a long enough length.
+      (if module
+          (vector (module-name module) (module-generate-unique-id! module))
+          (vector '(guile) (gensym "id"))))
+
     ;; labels must be comparable with "eq?", have read-write invariance,
-    ;; and distinct from symbols.
+    ;; and distinct from symbols.  Pair labels are used for top-level
+    ;; definition placeholders.  These labels are used for proper
+    ;; lexicals.
     (define (gen-label)
-      (symbol->string (module-gensym "l")))
+      (gen-unique))
 
     (define gen-labels
       (lambda (ls)
@@ -563,8 +582,8 @@
         (make-wrap (cons the-anti-mark (wrap-marks w))
                    (cons 'shift (wrap-subst w)))))
 
-    (define-syntax-rule (new-mark)
-      (module-gensym "m"))
+    (define (new-mark)
+      (gen-unique))
 
     ;; make-empty-ribcage and extend-ribcage maintain list-based ribcages for
     ;; internal definitions, in which the ribcages are built incrementally
@@ -860,12 +879,10 @@
           (resolve-global n (or (and (syntax? id)
                                      (syntax-module id))
                                 mod)))
-         ((string? n)
+         (else
           (resolve-lexical n (or (and (syntax? id)
                                       (syntax-module id))
-                                 mod)))
-         (else
-          (error "unexpected id-var-name" id w n)))))
+                                 mod))))))
 
     (define transformer-environment
       (make-fluid
