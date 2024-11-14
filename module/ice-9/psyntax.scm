@@ -352,9 +352,17 @@
               (make-letrec src in-order? ids vars val-exps body-exp)))))
 
 
-    (define-syntax-rule (build-lexical-var src id)
-      ;; Use a per-module counter instead of the global counter of
-      ;; 'gensym' so that the generated identifier is reproducible.
+    (define (gen-lexical id)
+      ;; Generate a unique symbol for a lexical variable.  These need to
+      ;; be symbols as they are embedded in Tree-IL.  Lexicals from
+      ;; different separately compiled modules can coexist, for example
+      ;; if a macro defined in module A is used in a separately-compiled
+      ;; module B, so they do need to be unique.  However we assume that
+      ;; generally a module corresponds to a compilation unit, so there
+      ;; is no need to be unique across separately-compiled instances of
+      ;; the same module, and that therefore we can use a deterministic
+      ;; per-module counter instead of the global counter of 'gensym' so
+      ;; that the generated identifier is reproducible.
       (module-gensym (symbol->string id)))
 
     (define-syntax no-source (identifier-syntax #f))
@@ -414,7 +422,7 @@
     ;;               (ellipsis . <identifier>)       custom ellipsis
     ;;               (displaced-lexical)             displaced lexicals
     ;; <level>   ::= <non-negative integer>
-    ;; <var>     ::= variable returned by build-lexical-var
+    ;; <var>     ::= symbol returned by gen-lexical
 
     ;; a macro is a user-defined syntactic-form.  a core is a
     ;; system-defined syntactic form.  begin, define, define-syntax,
@@ -1965,7 +1973,7 @@
     (define gen-var
       (lambda (id)
         (let ((id (if (syntax? id) (syntax-expression id) id)))
-          (build-lexical-var no-source id))))
+          (gen-lexical id))))
 
     ;; appears to return a reversed list
     (define lambda-var-list
@@ -2747,7 +2755,7 @@
             (arg-check list? ls 'generate-temporaries)
             (let ((mod (cons 'hygiene (module-name (current-module)))))
               (map (lambda (x)
-                     (wrap (module-gensym "t") top-wrap mod))
+                     (wrap (gen-var 't) top-wrap mod))
                    ls))))
 
     (set! free-identifier=?
