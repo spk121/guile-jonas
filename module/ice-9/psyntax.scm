@@ -179,24 +179,11 @@
     (define-expansion-constructors)
     (define-expansion-accessors lambda meta)
 
-    ;; hooks to nonportable run-time helpers
-    (begin
-      (define-syntax fx+ (identifier-syntax +))
-      (define-syntax fx- (identifier-syntax -))
-      (define-syntax fx= (identifier-syntax =))
-      (define-syntax fx< (identifier-syntax <))
+    (define (top-level-eval x mod)
+      (primitive-eval x))
 
-      (define (top-level-eval x mod)
-        (primitive-eval x))
-
-      (define (local-eval x mod)
-        (primitive-eval x))
-    
-      ;; Capture syntax-session-id before we shove it off into a module.
-      (define session-id
-        (let ((v (module-variable (current-module) 'syntax-session-id)))
-          (lambda ()
-            ((variable-ref v))))))
+    (define (local-eval x mod)
+      (primitive-eval x))
 
     (define (sourcev-filename s) (vector-ref s 0))
     (define (sourcev-line s) (vector-ref s 1))
@@ -618,7 +605,7 @@
                             (lambda (symname marks)
                               (vector-set! symnamevec i symname)
                               (vector-set! marksvec i marks)
-                              (f (cdr ids) (fx+ i 1))))))
+                              (f (cdr ids) (1+ i))))))
                     (make-ribcage symnamevec marksvec labelvec))))
               (wrap-subst w))))))
 
@@ -713,16 +700,16 @@
             (let ((n (vector-length symnames)))
               (let f ((i 0))
                 (cond
-                 ((fx= i n) (search sym (cdr subst) marks mod))
+                 ((= i n) (search sym (cdr subst) marks mod))
                  ((and (eq? (vector-ref symnames i) sym)
                        (same-marks? marks (vector-ref (ribcage-marks ribcage) i)))
                   (let ((n (vector-ref (ribcage-labels ribcage) i)))
                     (if (pair? n)
                         (if (equal? mod (car n))
                             (values (cdr n) marks)
-                            (f (fx+ i 1)))
+                            (f (1+ i)))
                         (values n marks))))
-                 (else (f (fx+ i 1))))))))
+                 (else (f (1+ i))))))))
         (cond
          ((symbol? id)
           (or (first (search id (wrap-subst w) (wrap-marks w) mod)) id))
@@ -778,9 +765,9 @@
           (lambda (subst symnames marks results)
             (let ((n (vector-length symnames)))
               (let f ((i 0) (results results))
-                (if (fx= i n)
+                (if (= i n)
                     (scan (cdr subst) results)
-                    (f (fx+ i 1)
+                    (f (1+ i)
                        (cons (wrap (vector-ref symnames i)
                                    (anti-mark (make-wrap (vector-ref marks i) subst))
                                    mod)
@@ -1515,8 +1502,8 @@
                   ((vector? x)
                    (let* ((n (vector-length x))
                           (v (make-vector n)))
-                     (do ((i 0 (fx+ i 1)))
-                         ((fx= i n) v)
+                     (do ((i 0 (1+ i)))
+                         ((= i n) v)
                        (vector-set! v i
                                     (rebuild-macro-output (vector-ref x i) m)))
                      (decorate-source v)))
@@ -2138,12 +2125,12 @@
 
        (define gen-ref
          (lambda (src var level maps)
-           (if (fx= level 0)
+           (if (= level 0)
                (values var maps)
                (if (null? maps)
                    (syntax-violation 'syntax "missing ellipsis" src)
                    (call-with-values
-                       (lambda () (gen-ref src var (fx- level 1) (cdr maps)))
+                       (lambda () (gen-ref src var (1- level) (cdr maps)))
                      (lambda (outer-var outer-maps)
                        (let ((b (assq outer-var (car maps))))
                          (if b
@@ -2467,8 +2454,8 @@
                                  (syntax-sourcev x)))
                                ((vector? x)
                                 (let* ((n (vector-length x)) (v (make-vector n)))
-                                  (do ((i 0 (fx+ i 1)))
-                                      ((fx= i n) v)
+                                  (do ((i 0 (1+ i)))
+                                      ((= i n) v)
                                     (vector-set! v i (remodulate (vector-ref x i) mod)))))
                                (else x))))
                      (syntax-case e (@@ primitive)
@@ -2563,7 +2550,7 @@
                                    ((x dots)
                                     (ellipsis? (syntax dots))
                                     (call-with-values
-                                        (lambda () (cvt (syntax x) (fx+ n 1) ids))
+                                        (lambda () (cvt (syntax x) (1+ n) ids))
                                       (lambda (p ids)
                                         (values (if (eq? p 'any) 'each-any (vector 'each p))
                                                 ids))))
