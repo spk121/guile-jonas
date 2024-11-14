@@ -299,7 +299,7 @@ patch_veneer_jmp_offset(uint32_t *loc, ptrdiff_t offset)
 static void
 patch_jmp_without_veneer(jit_state_t *_jit, uint32_t *loc)
 {
-  patch_jmp_offset(loc, _jit->pc.ui - loc);
+  patch_jmp_offset(loc, _jit->pc.uw - (uintptr_t)loc);
 }
 static uint32_t*
 jmp_without_veneer(jit_state_t *_jit)
