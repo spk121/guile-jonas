@@ -160,11 +160,12 @@ bless_function_pointer(void *ptr)
 /*
  * Veneers
  */
-struct __attribute__((packed)) veneer{
+struct veneer{
   instr_t auipc;
   instr_t load;        // `ld` in RV64 and `lw` in RV32
   instr_t jalr;
 #if __WORDSIZE == 64
+  uint32_t padding;
   uint64_t address;
 #elif __WORDSIZE == 32
   uint32_t address;
@@ -174,21 +175,25 @@ struct __attribute__((packed)) veneer{
 static void
 emit_veneer(jit_state_t *_jit, jit_pointer_t target)
 {
-  // We need to generate something like this (RV64):
+  // We need to generate something like this:
   // ----------------------------------------------
-  // auipc t0, 0
-  // ld t0, 12(t0)
-  // jalr zero, 0(t0)
-  // ADDRESS_LITERAL
+  // 32 bits:             |  64 bits:
+  // auipc t0, 0          |  auipc t0, 0
+  // ld t0, 12(t0)        |  ld t0, 16(t0)
+  // jalr zero, 0(t0)     |  jalr zero, 0(t0)
+  // ADDRESS_LITERAL      |  .byte 0x00, 0x00, 0x00, 0x00 (padding)
+  //                      |  ADDRESS_LITERAL
+  //
   jit_gpr_t t0 = get_temp_gpr(_jit);
   emit_u32(_jit, _AUIPC(jit_gpr_regno(t0), 0));
 #if __WORDSIZE == 64
-  emit_u32(_jit, _LD(jit_gpr_regno(t0), jit_gpr_regno(t0), 12));
+  emit_u32(_jit, _LD(jit_gpr_regno(t0), jit_gpr_regno(t0), 16));
 #elif __WORDSIZE == 32
   emit_u32(_jit, _LW(jit_gpr_regno(t0), jit_gpr_regno(t0), 12));
 #endif
   emit_u32(_jit, _JALR(jit_gpr_regno(_ZERO), jit_gpr_regno(t0), 0));
 #if __WORDSIZE == 64
+  emit_u32(_jit, 0); // Padding
   emit_u64(_jit, (uint64_t) target);
 #elif __WORDSIZE == 32
   emit_u32(_jit, (uint32_t) target);
