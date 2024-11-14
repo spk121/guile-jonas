@@ -2067,7 +2067,7 @@ static void
 ldxi_c(jit_state_t *_jit, int32_t r0, int32_t r1, jit_word_t i0)
 {
   if (simm12_p(i0))
-    em_wp(_jit, _LD(r0, r1, i0));
+    em_wp(_jit, _LB(r0, r1, i0));
   else {
     jit_gpr_t t0 = get_temp_gpr(_jit);
     addi(_jit, jit_gpr_regno(t0), r1, i0);
@@ -2079,7 +2079,7 @@ static void
 ldxi_uc(jit_state_t *_jit, int32_t r0, int32_t r1, jit_word_t i0)
 {
   if (simm12_p(i0))
-    em_wp(_jit, _LD(r0, r1, i0));
+    em_wp(_jit, _LBU(r0, r1, i0));
   else {
     jit_gpr_t t0 = get_temp_gpr(_jit);
     addi(_jit, jit_gpr_regno(t0), r1, i0);
@@ -2091,7 +2091,7 @@ static void
 ldxi_us(jit_state_t *_jit, int32_t r0, int32_t r1, jit_word_t i0)
 {
   if (simm12_p(i0))
-    em_wp(_jit, _LD(r0, r1, i0));
+    em_wp(_jit, _LHU(r0, r1, i0));
   else {
     jit_gpr_t t0 = get_temp_gpr(_jit);
     addi(_jit, jit_gpr_regno(t0), r1, i0);
@@ -2103,7 +2103,7 @@ static void
 ldxi_s(jit_state_t *_jit, int32_t r0, int32_t r1, jit_word_t i0)
 {
   if (simm12_p(i0))
-    em_wp(_jit, _LD(r0, r1, i0));
+    em_wp(_jit, _LH(r0, r1, i0));
   else {
     jit_gpr_t t0 = get_temp_gpr(_jit);
     addi(_jit, jit_gpr_regno(t0), r1, i0);
@@ -2115,7 +2115,7 @@ static void
 ldxi_i(jit_state_t *_jit, int32_t r0, int32_t r1, jit_word_t i0)
 {
   if (simm12_p(i0))
-    em_wp(_jit, _LD(r0, r1, i0));
+    em_wp(_jit, _LW(r0, r1, i0));
   else {
     jit_gpr_t t0 = get_temp_gpr(_jit);
     addi(_jit, jit_gpr_regno(t0), r1, i0);
@@ -2128,7 +2128,7 @@ static void
 ldxi_ui(jit_state_t *_jit, int32_t r0, int32_t r1, jit_word_t i0)
 {
   if (simm12_p(i0))
-    em_wp(_jit, _LD(r0, r1, i0));
+    em_wp(_jit, _LWU(r0, r1, i0));
   else {
     jit_gpr_t t0 = get_temp_gpr(_jit);
     addi(_jit, jit_gpr_regno(t0), r1, i0);
