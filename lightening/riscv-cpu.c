@@ -205,7 +205,9 @@ Btype(int32_t op, int32_t fct, int32_t rs1, int32_t rs2, int32_t imm)
   assert(!(fct & ~0x07));
   assert(!(rs1 & ~0x1f));
   assert(!(rs2 & ~0x1f));
-  assert(!(imm & 1) && simm12_p(imm));
+  assert(!(imm & 1));
+  assert(simm12_p(imm >> 1));
+
   i.B.opcode  = op;
   i.B.imm11   = (imm >> 11) & 0x1;
   i.B.imm4_1  = (imm >>  1) & 0xf;
@@ -236,7 +238,9 @@ Jtype(int32_t op, int32_t rd, int32_t imm)
   instr_t     i;
   assert(!(op & ~0x7f));
   assert(!(rd & ~0x1f));
-  assert(!(imm & 1) && imm <= 1048575 && imm >= -1048576);
+  assert(!(imm & 1));
+  assert(simm20_p(imm >> 1));
+
   i.J.opcode  = op;
   i.J.rd      = rd;
   i.J.imm19_12= (imm >> 12) &  0xff;
@@ -1102,11 +1106,7 @@ static uint32_t
 patch_cc_jump(uint32_t inst, int32_t offset){
   instr_t i;
   i.w = inst;
-  i.B.imm11   = (offset >> 11) & 0x1;
-  i.B.imm4_1  = (offset >>  1) & 0xf;
-  i.B.imm10_5 = (offset >>  5) & 0x3f;
-  i.B.imm12   = (offset >> 12) & 0x1;
-  return i.w;
+  return Btype(i.B.opcode, i.B.funct3, i.B.rs1, i.B.rs2, offset);
 }
 
 static jit_reloc_t
@@ -2250,11 +2250,7 @@ patch_jump(uint32_t inst, int32_t offset)
 {
   instr_t i;
   i.w = inst;
-  i.J.imm20   = (offset >> 20) &   0x1;
-  i.J.imm19_12= (offset >> 12) &  0xff;
-  i.J.imm11   = (offset >> 11) &   0x1;
-  i.J.imm10_1 = (offset >>  1) & 0x3ff;
-  return i.w;
+  return Jtype(i.J.opcode, i.J.rd, offset);
 }
 static jit_reloc_t
 emit_jump(jit_state_t *_jit, uint32_t inst)

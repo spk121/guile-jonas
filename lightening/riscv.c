@@ -219,12 +219,8 @@ patch_veneer(uint32_t *loc, jit_pointer_t addr)
 static void
 patch_jcc_offset(uint32_t *loc, ptrdiff_t v)
 {
-
   instr_t *i =  (instr_t *) loc;
-  i->B.imm11   = (v >> 11) & 0x1;
-  i->B.imm4_1  = (v >>  1) & 0xf;
-  i->B.imm10_5 = (v >>  5) & 0x3f;
-  i->B.imm12   = (v >> 12) & 0x1;
+  i->w = patch_cc_jump(i->w, v);
 }
 static void
 patch_veneer_jcc_offset(uint32_t *loc, ptrdiff_t offset){
@@ -251,7 +247,7 @@ offset_in_jcc_range(ptrdiff_t offset, int flags)
   if(offset & 1)
     return 0;
   else
-    return -0x1000 <= offset && offset <= 0xFFF;
+    return simm12_p(offset);
 }
 
 /*
@@ -275,17 +271,14 @@ offset_in_jmp_range(ptrdiff_t offset, int flags)
   if(offset & 1)
     return 0;
   else
-    return -0x100000 <= offset && offset <= 0xFFFFF;
+    return simm20_p(offset);
 }
 
 static void
 patch_jmp_offset(uint32_t *loc, ptrdiff_t v)
 {
   instr_t *i =  (instr_t *) loc;
-  i->J.imm20   = (v >> 20) &   0x1;
-  i->J.imm19_12= (v >> 12) &  0xff;
-  i->J.imm11   = (v >> 11) &   0x1;
-  i->J.imm10_1 = (v >>  1) & 0x3ff;
+  i->w = patch_jump(i->w, v);
 }
 
 static void
