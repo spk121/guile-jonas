@@ -124,7 +124,7 @@ next_abi_arg(struct abi_arg_iterator *iter, jit_operand_t *arg)
   }
   *arg = jit_operand_mem (abi, JIT_SP, iter->stack_size);
 #if __WORDSIZE == 32
-  iter->stack_size += 4;
+  iter->stack_size += 4 + (abi == JIT_OPERAND_ABI_DOUBLE ? 4 : 0);
 #elif __WORDSIZE == 64
   iter->stack_size += 8;
 #endif
@@ -141,7 +141,7 @@ jit_flush(void *fptr, void *tptr)
 static inline size_t
 jit_stack_alignment(void)
 {
-  return 8;
+  return 16;
   // NOTE: See: https://github.com/riscv/riscv-gcc/issues/61
 }
 
