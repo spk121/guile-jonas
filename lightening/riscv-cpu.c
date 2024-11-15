@@ -1588,10 +1588,10 @@ static void
 movi(jit_state_t *_jit, int32_t r0, jit_word_t i0)
 {
   int32_t srcreg = jit_gpr_regno(_ZERO);
-  if (simm32_p(i0)){
 
-    int64_t hi = (((i0 + 0x800) >> 12) & 0xFFFFF) << 44 >> 44;
-    int64_t lo = (int32_t)i0<<20>>20;
+  if (simm32_p(i0)){
+    int32_t hi = (int32_t)(((i0 + 0x800) >> 12) & 0xFFFFF) << 12 >> 12;
+    int32_t lo = (int32_t)i0<<20>>20;
 
     if(hi){
       em_wp(_jit, _LUI(r0, hi));
@@ -1632,14 +1632,15 @@ static uint64_t
 patch_load_from_pool(uint64_t instrs, int32_t off){
 
   load_from_pool_t out, in;
-  int32_t hi20 = off >>12;
+  int32_t hi = (int32_t)(((off + 0x800) >> 12) & 0xFFFFF) << 12 >> 12;
+  int32_t lo = (int32_t)off<<20>>20;
   in.l = instrs;
-  out.inst.auipc.w = _AUIPC(in.inst.auipc.U.rd, hi20);
+  out.inst.auipc.w = _AUIPC(in.inst.auipc.U.rd, hi);
   out.inst.load.w  = Itype(in.inst.load.I.opcode, // `ld` or `lw`
                            in.inst.load.I.rd,
                            in.inst.load.I.funct3,
                            in.inst.load.I.rs1,
-                           off - (hi20<<12));
+                           lo);
   return out.l;
 }
 
