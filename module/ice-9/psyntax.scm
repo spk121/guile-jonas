@@ -123,57 +123,6 @@
                              fields)))
                    (lp (1+ n))))))))))
 
-  (define-syntax define-structure
-    (lambda (x)
-      (define construct-name
-        (lambda (template-identifier . args)
-          (datum->syntax
-           template-identifier
-           (string->symbol
-            (apply string-append
-                   (map (lambda (x)
-                          (if (string? x)
-                              x
-                              (symbol->string (syntax->datum x))))
-                        args))))))
-      (syntax-case x ()
-        ((_ (name id1 ...))
-         (and-map identifier? #'(name id1 ...))
-         (with-syntax
-             ((constructor (construct-name #'name "make-" #'name))
-              (predicate (construct-name #'name #'name "?"))
-              ((access ...)
-               (map (lambda (x) (construct-name x #'name "-" x))
-                    #'(id1 ...)))
-              ((assign ...)
-               (map (lambda (x)
-                      (construct-name x "set-" #'name "-" x "!"))
-                    #'(id1 ...)))
-              (structure-length
-               (+ (length #'(id1 ...)) 1))
-              ((index ...)
-               (let f ((i 1) (ids #'(id1 ...)))
-                 (if (null? ids)
-                     '()
-                     (cons i (f (+ i 1) (cdr ids)))))))
-           #'(begin
-               (define constructor
-                 (lambda (id1 ...)
-                   (vector 'name id1 ... )))
-               (define predicate
-                 (lambda (x)
-                   (and (vector? x)
-                        (= (vector-length x) structure-length)
-                        (eq? (vector-ref x 0) 'name))))
-               (define access
-                 (lambda (x)
-                   (vector-ref x index)))
-               ...
-               (define assign
-                 (lambda (x update)
-                   (vector-set! x index update)))
-               ...))))))
-
   (let ()
     (define-expansion-constructors)
     (define-expansion-accessors lambda src meta body)
@@ -545,13 +494,19 @@
     (define (gen-label)
       (gen-unique))
 
-    (define gen-labels
-      (lambda (ls)
-        (if (null? ls)
-            '()
-            (cons (gen-label) (gen-labels (cdr ls))))))
+    (define (gen-labels ls)
+      (if (null? ls)
+          '()
+          (cons (gen-label) (gen-labels (cdr ls)))))
 
-    (define-structure (ribcage symnames marks labels))
+    (define (make-ribcage symnames marks labels)
+      (vector 'ribcage symnames marks labels))
+    (define (ribcage-symnames ribcage) (vector-ref ribcage 1))
+    (define (ribcage-marks ribcage) (vector-ref ribcage 2))
+    (define (ribcage-labels ribcage) (vector-ref ribcage 3))
+    (define (set-ribcage-symnames! ribcage x) (vector-set! ribcage 1 x))
+    (define (set-ribcage-marks! ribcage x) (vector-set! ribcage 2 x))
+    (define (set-ribcage-labels! ribcage x) (vector-set! ribcage 3 x))
 
     (define-syntax empty-wrap (identifier-syntax '(())))
     (define-syntax top-wrap (identifier-syntax '((top))))
