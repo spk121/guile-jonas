@@ -1585,7 +1585,11 @@ movi(jit_state_t *_jit, int32_t r0, jit_word_t i0)
     }
 
     if(lo || hi == 0){
+#if __WORDSIZE == 64
+      em_wp(_jit, _ADDIW(r0, srcreg, lo));
+#elif __WORDSIZE == 32
       em_wp(_jit, _ADDI(r0, srcreg, lo));
+#endif
     }
 
   } else {
