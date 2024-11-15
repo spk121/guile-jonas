@@ -221,19 +221,16 @@
     (make-lexical-set sourcev name var (maybe-name-value name exp)))
   
   (define (analyze-variable mod var modref-cont bare-cont)
-    (if (not mod)
-        (bare-cont #f var)
-        (let ((kind (car mod))
-              (mod (cdr mod)))
-          (case kind
-            ((public) (modref-cont mod var #t))
-            ((private hygiene) (if (equal? mod (module-name (current-module)))
-                                   (bare-cont mod var)
-                                   (modref-cont mod var #f)))
-            ((bare) (bare-cont var))
-            ((primitive)
-             (syntax-violation #f "primitive not in operator position" var))
-            (else (syntax-violation #f "bad module kind" var mod))))))
+    (match mod
+      (#f (bare-cont #f var))
+      (('public . mod) (modref-cont mod var #t))
+      (((or 'private hygiene) . mod)
+       (if (equal? mod (module-name (current-module)))
+           (bare-cont mod var)
+           (modref-cont mod var #f)))
+      (('bare . _) (bare-cont var))
+      (('primitive. _)
+       (syntax-violation #f "primitive not in operator position" var))))
 
   (define (build-global-reference sourcev var mod)
     (analyze-variable
@@ -290,35 +287,32 @@
     (make-const src exp))
 
   (define (build-sequence src exps)
-    (if (null? (cdr exps))
-        (car exps)
-        (make-seq src (car exps) (build-sequence #f (cdr exps)))))
+    (match exps
+      ((tail) tail)
+      ((head . tail)
+       (make-seq src head (build-sequence #f tail)))))
 
   (define (build-let src ids vars val-exps body-exp)
-    (let ((val-exps (map maybe-name-value ids val-exps)))
-      (if (null? vars)
-          body-exp
-          (make-let src ids vars val-exps body-exp))))
+    (match (map maybe-name-value ids val-exps)
+      (() body-exp)
+      (val-exps (make-let src ids vars val-exps body-exp))))
 
   (define (build-named-let src ids vars val-exps body-exp)
-    (let ((f (car vars))
-          (f-name (car ids))
-          (vars (cdr vars))
-          (ids (cdr ids)))
-      (let ((proc (build-simple-lambda src ids #f vars '() body-exp)))
-        (make-letrec
-         src #f
-         (list f-name) (list f) (list (maybe-name-value f-name proc))
-         (build-call src (build-lexical-reference 'fun src f-name f)
-                     (map maybe-name-value ids val-exps))))))
+    (match vars
+      ((f . vars)
+       (match ids
+         ((f-name . ids)
+          (let ((proc (build-simple-lambda src ids #f vars '() body-exp)))
+            (make-letrec
+             src #f
+             (list f-name) (list f) (list (maybe-name-value f-name proc))
+             (build-call src (build-lexical-reference 'fun src f-name f)
+                         (map maybe-name-value ids val-exps)))))))))
 
   (define (build-letrec src in-order? ids vars val-exps body-exp)
-    (if (null? vars)
-        body-exp
-        (make-letrec src in-order? ids vars
-                     (map maybe-name-value ids val-exps)
-                     body-exp)))
-
+    (match (map maybe-name-value ids val-exps)
+      (() body-exp)
+      (val-exps (make-letrec src in-order? ids vars val-exps body-exp))))
 
   (define (gen-lexical id)
     ;; Generate a unique symbol for a lexical variable.  These need to
