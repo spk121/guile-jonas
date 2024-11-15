@@ -1570,6 +1570,20 @@ movr(jit_state_t *_jit, int32_t r0, int32_t r1)
     em_wp(_jit, _MV(r0, r1));
 }
 
+
+static int
+count_trailing_zeros(uint64_t x)
+{
+  if(x == 0)
+    return 64;
+  int count = 0;
+  while((x & 0x1) == 0){
+    x >>= 1;
+    count++;
+  }
+  return count;
+}
+
 static void
 movi(jit_state_t *_jit, int32_t r0, jit_word_t i0)
 {
@@ -1594,27 +1608,15 @@ movi(jit_state_t *_jit, int32_t r0, jit_word_t i0)
 
   } else {
     // 64 bits: load in various steps
-    // lui, addi, slli, addi, slli, addi, slli, addi
-    int64_t hh = (i0>>44);
-    int64_t hl = (i0>>33) - (hh<<11);
-    int64_t lh = (i0>>22) - ((hh<<22) + (hl<<11));
-    int64_t lm = (i0>>11) - ((hh<<33) + (hl<<22) + (lh<<11));
-    int64_t ll = i0       - ((hh<<44) + (hl<<33) + (lh<<22) + (lm<<11));
-
-
-    em_wp(_jit, _LUI(r0, hh));
-    em_wp(_jit, _SLLI(r0, r0, 32));
-    em_wp(_jit, _SRLI(r0, r0, 33));
-    em_wp(_jit, _ADDI(r0, r0, hl));
-
-    em_wp(_jit, _SLLI(r0, r0, 11));
-    em_wp(_jit, _ADDI(r0, r0, lh));
-
-    em_wp(_jit, _SLLI(r0, r0, 11));
-    em_wp(_jit, _ADDI(r0, r0, lm));
-
-    em_wp(_jit, _SLLI(r0, r0, 11));
-    em_wp(_jit, _ADDI(r0, r0, ll));
+    int64_t lo12 = i0 << 52 >> 52;
+    int64_t hi52 = (i0 + 0x800) >> 12;
+    int shift_amount = 12 + count_trailing_zeros((uint64_t) hi52);
+    hi52 = (hi52 >> (shift_amount - 12)) << shift_amount >> shift_amount;
+    movi(_jit, r0, hi52); // Recurse
+    em_wp(_jit, _SLLI(r0, r0, shift_amount));
+    if (lo12) {
+      em_wp(_jit, _ADDI(r0, r0, lo12));
+    }
   }
 }
 
