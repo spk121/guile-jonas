@@ -1576,7 +1576,7 @@ movi(jit_state_t *_jit, int32_t r0, jit_word_t i0)
   int32_t srcreg = jit_gpr_regno(_ZERO);
   if (simm32_p(i0)){
 
-    int64_t hi = ((i0 + 0x800) >> 12) & 0xFFFFF;
+    int64_t hi = (((i0 + 0x800) >> 12) & 0xFFFFF) << 44 >> 44;
     int64_t lo = (int32_t)i0<<20>>20;
 
     if(hi){
