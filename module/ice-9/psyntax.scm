@@ -411,36 +411,40 @@
       ((_ type value) (cons type value))
       ((_ 'type) '(type))
       ((_ type) (cons type '()))))
-  (define-syntax-rule (binding-type x)
-    (car x))
-  (define-syntax-rule (binding-value x)
-    (cdr x))
-
-  (define-syntax null-env (identifier-syntax '()))
+  (define (binding-type x) (car x))
+  (define (binding-value x) (cdr x))
+  (define null-env '())
 
   (define (extend-env labels bindings r)
-    (if (null? labels)
-        r
-        (extend-env (cdr labels) (cdr bindings)
-                    (cons (cons (car labels) (car bindings)) r))))
+    (match labels
+      (() r)
+      ((label . labels)
+       (match bindings
+         ((binding . bindings)
+          (extend-env labels bindings (acons label binding r)))))))
 
   (define (extend-var-env labels vars r)
     ;; variant of extend-env that forms "lexical" binding
-    (if (null? labels)
-        r
-        (extend-var-env (cdr labels) (cdr vars)
-                        (cons (cons (car labels) (make-binding 'lexical (car vars))) r))))
+    (match labels
+      (() r)
+      ((label . labels)
+       (match vars
+         ((var . vars)
+          (extend-var-env labels vars
+                          (acons label (make-binding 'lexical var) r)))))))
 
   ;; we use a "macros only" environment in expansion of local macro
   ;; definitions so that their definitions can use local macros without
   ;; attempting to use other lexical identifiers.
   (define (macros-only-env r)
-    (if (null? r)
-        '()
-        (let ((a (car r)))
-          (if (memq (cadr a) '(macro syntax-parameter ellipsis))
-              (cons a (macros-only-env (cdr r)))
-              (macros-only-env (cdr r))))))
+    (match r
+      (() '())
+      ((a . r)
+       (match a
+         ((k . ((or 'macro 'syntax-parameter 'ellipsis) . _))
+          (cons a (macros-only-env r)))
+         (_
+          (macros-only-env r))))))
 
   (define (global-extend type sym val)
     (module-define! (current-module)
@@ -483,9 +487,9 @@
   ;;      <subs> ::= #(ribcage #(<sym> ...) #(<mark> ...) #(<label> ...))
   ;;                 | #(ribcage (<sym> ...) (<mark> ...) (<label> ...))
 
-  (define-syntax make-wrap (identifier-syntax cons))
-  (define-syntax wrap-marks (identifier-syntax car))
-  (define-syntax wrap-subst (identifier-syntax cdr))
+  (define (make-wrap marks subst) (cons marks subst))
+  (define (wrap-marks wrap) (car wrap))
+  (define (wrap-subst wrap) (cdr wrap))
 
   (define* (gen-unique #:optional (module (current-module)))
     ;; Generate a unique value, used as a mark to identify a scope, or
@@ -512,9 +516,9 @@
     (gen-unique))
 
   (define (gen-labels ls)
-    (if (null? ls)
-        '()
-        (cons (gen-label) (gen-labels (cdr ls)))))
+    (match ls
+      (() '())
+      ((_ . ls) (cons (gen-label) (gen-labels ls)))))
 
   (define (make-ribcage symnames marks labels)
     (vector 'ribcage symnames marks labels))
@@ -525,14 +529,14 @@
   (define (set-ribcage-marks! ribcage x) (vector-set! ribcage 2 x))
   (define (set-ribcage-labels! ribcage x) (vector-set! ribcage 3 x))
 
-  (define-syntax empty-wrap (identifier-syntax '(())))
-  (define-syntax top-wrap (identifier-syntax '((top))))
+  (define empty-wrap '(()))
+  (define top-wrap '((top)))
 
   ;; Marks must be comparable with "eq?" and distinct from pairs and
   ;; the symbol top.  We do not use integers so that marks will remain
   ;; unique even across file compiles.
 
-  (define-syntax the-anti-mark (identifier-syntax #f))
+  (define the-anti-mark #f)
 
   (define (anti-mark w)
     (make-wrap (cons the-anti-mark (wrap-marks w))
@@ -559,24 +563,28 @@
 
   ;; make-binding-wrap creates vector-based ribcages
   (define (make-binding-wrap ids labels w)
-    (if (null? ids)
-        w
-        (make-wrap
-         (wrap-marks w)
-         (cons
-          (let ((labelvec (list->vector labels)))
-            (let ((n (vector-length labelvec)))
-              (let ((symnamevec (make-vector n)) (marksvec (make-vector n)))
-                (let f ((ids ids) (i 0))
-                  (if (not (null? ids))
-                      (call-with-values
-                          (lambda () (id-sym-name&marks (car ids) w))
-                        (lambda (symname marks)
-                          (vector-set! symnamevec i symname)
-                          (vector-set! marksvec i marks)
-                          (f (cdr ids) (1+ i))))))
-                (make-ribcage symnamevec marksvec labelvec))))
-          (wrap-subst w)))))
+    (match ids
+      (() w)
+      ((_ . _)
+       (make-wrap
+        (wrap-marks w)
+        (cons
+         (let* ((labelvec (list->vector labels))
+                (n (vector-length labelvec))
+                (symnamevec (make-vector n))
+                (marksvec (make-vector n)))
+           (let f ((ids ids) (i 0))
+             (match ids
+               (()
+                (make-ribcage symnamevec marksvec labelvec))
+               ((id . ids)
+                (call-with-values
+                    (lambda () (id-sym-name&marks id w))
+                  (lambda (symname marks)
+                    (vector-set! symnamevec i symname)
+                    (vector-set! marksvec i marks)
+                    (f ids (1+ i))))))))
+         (wrap-subst w))))))
 
   (define (smart-append m1 m2)
     (if (null? m2)
