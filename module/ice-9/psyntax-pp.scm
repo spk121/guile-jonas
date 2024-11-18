@@ -1151,11 +1151,11 @@
                                 (source-wrap e w (wrap-subst w) mod)
                                 x))
                               (else (decorate-source x))))))
-                 (let* ((t-680b775fb37a463-10a3 transformer-environment)
-                        (t-680b775fb37a463-10a4 (lambda (k) (k e r w s rib mod))))
+                 (let* ((t-680b775fb37a463-c51 transformer-environment)
+                        (t-680b775fb37a463-c52 (lambda (k) (k e r w s rib mod))))
                    (with-fluid*
-                    t-680b775fb37a463-10a3
-                    t-680b775fb37a463-10a4
+                    t-680b775fb37a463-c51
+                    t-680b775fb37a463-c52
                     (lambda () (rebuild-macro-output (p (source-wrap e (anti-mark w) s mod)) (new-mark))))))))
             (expand-body
              (lambda (body outer-form r w mod)
@@ -1686,11 +1686,11 @@
                                                 s
                                                 mod
                                                 get-formals
-                                                (map (lambda (tmp-680b775fb37a463-132c
-                                                              tmp-680b775fb37a463-132b
-                                                              tmp-680b775fb37a463-132a)
-                                                       (cons tmp-680b775fb37a463-132a
-                                                             (cons tmp-680b775fb37a463-132b tmp-680b775fb37a463-132c)))
+                                                (map (lambda (tmp-680b775fb37a463-eda
+                                                              tmp-680b775fb37a463-ed9
+                                                              tmp-680b775fb37a463-ed8)
+                                                       (cons tmp-680b775fb37a463-ed8
+                                                             (cons tmp-680b775fb37a463-ed9 tmp-680b775fb37a463-eda)))
                                                      e2*
                                                      e1*
                                                      args*)))
@@ -1721,709 +1721,745 @@
                    ((id? vars) (cons (wrap vars w #f) ls))
                    ((null? vars) ls)
                    ((syntax? vars) (lvl (syntax-expression vars) ls (join-wraps w (syntax-wrap vars))))
-                   (else (cons vars ls)))))))
-    (global-extend 'local-syntax 'letrec-syntax #t)
-    (global-extend 'local-syntax 'let-syntax #f)
-    (global-extend
-     'core
-     'syntax-parameterize
-     (lambda (e r w s mod)
-       (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ #(each (any any)) any . each-any))))
-         (if (and tmp (apply (lambda (var val e1 e2) (valid-bound-ids? var)) tmp))
-             (apply (lambda (var val e1 e2)
-                      (let ((names (map (lambda (x)
-                                          (call-with-values
-                                           (lambda () (resolve-identifier x w r mod #f))
-                                           (lambda (type value mod)
-                                             (let ((key type))
-                                               (cond
-                                                 ((memv key '(displaced-lexical))
-                                                  (syntax-violation
-                                                   'syntax-parameterize
-                                                   "identifier out of context"
-                                                   e
-                                                   (source-wrap x w s mod)))
-                                                 ((memv key '(syntax-parameter)) value)
-                                                 (else (syntax-violation
-                                                        'syntax-parameterize
-                                                        "invalid syntax parameter"
-                                                        e
-                                                        (source-wrap x w s mod))))))))
-                                        var))
-                            (bindings
-                             (let ((trans-r (macros-only-env r)))
-                               (map (lambda (x)
-                                      (cons 'syntax-parameter (eval-local-transformer (expand x trans-r w mod) mod)))
-                                    val))))
-                        (expand-body (cons e1 e2) (source-wrap e w s mod) (extend-env names bindings r) w mod)))
-                    tmp)
-             (syntax-violation 'syntax-parameterize "bad syntax" (source-wrap e w s mod))))))
-    (global-extend
-     'core
-     'quote
-     (lambda (e r w s mod)
-       (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ any))))
-         (if tmp
-             (apply (lambda (e) (build-data s (strip e))) tmp)
-             (syntax-violation 'quote "bad syntax" (source-wrap e w s mod))))))
-    (global-extend
-     'core
-     'quote-syntax
-     (lambda (e r w s mod)
-       (let* ((tmp-1 (source-wrap e w s mod)) (tmp ($sc-dispatch tmp-1 '(_ any))))
-         (if tmp (apply (lambda (e) (build-data s e)) tmp) (let ((e tmp-1)) (syntax-violation 'quote "bad syntax" e))))))
-    (global-extend
-     'core
-     'syntax
-     (letrec* ((gen-syntax
-                (lambda (src e r maps ellipsis? mod)
-                  (if (id? e)
-                      (call-with-values
-                       (lambda () (resolve-identifier e empty-wrap r mod #f))
-                       (lambda (type value mod)
-                         (let ((key type))
-                           (cond
-                             ((memv key '(syntax))
+                   (else (cons vars ls))))))
+            (expand-syntax-parameterize
+             (lambda (e r w s mod)
+               (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ #(each (any any)) any . each-any))))
+                 (if (and tmp (apply (lambda (var val e1 e2) (valid-bound-ids? var)) tmp))
+                     (apply (lambda (var val e1 e2)
+                              (let ((names (map (lambda (x)
+                                                  (call-with-values
+                                                   (lambda () (resolve-identifier x w r mod #f))
+                                                   (lambda (type value mod)
+                                                     (let ((key type))
+                                                       (cond
+                                                         ((memv key '(displaced-lexical))
+                                                          (syntax-violation
+                                                           'syntax-parameterize
+                                                           "identifier out of context"
+                                                           e
+                                                           (source-wrap x w s mod)))
+                                                         ((memv key '(syntax-parameter)) value)
+                                                         (else (syntax-violation
+                                                                'syntax-parameterize
+                                                                "invalid syntax parameter"
+                                                                e
+                                                                (source-wrap x w s mod))))))))
+                                                var))
+                                    (bindings
+                                     (let ((trans-r (macros-only-env r)))
+                                       (map (lambda (x)
+                                              (cons 'syntax-parameter
+                                                    (eval-local-transformer (expand x trans-r w mod) mod)))
+                                            val))))
+                                (expand-body (cons e1 e2) (source-wrap e w s mod) (extend-env names bindings r) w mod)))
+                            tmp)
+                     (syntax-violation 'syntax-parameterize "bad syntax" (source-wrap e w s mod))))))
+            (expand-quote
+             (lambda (e r w s mod)
+               (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ any))))
+                 (if tmp
+                     (apply (lambda (e) (build-data s (strip e))) tmp)
+                     (syntax-violation 'quote "bad syntax" (source-wrap e w s mod))))))
+            (expand-quote-syntax
+             (lambda (e r w s mod)
+               (let* ((tmp-1 (source-wrap e w s mod)) (tmp ($sc-dispatch tmp-1 '(_ any))))
+                 (if tmp
+                     (apply (lambda (e) (build-data s e)) tmp)
+                     (let ((e tmp-1)) (syntax-violation 'quote "bad syntax" e))))))
+            (expand-syntax
+             (letrec* ((gen-syntax
+                        (lambda (src e r maps ellipsis? mod)
+                          (if (id? e)
                               (call-with-values
-                               (lambda () (gen-ref src (car value) (cdr value) maps))
-                               (lambda (var maps) (values (list 'ref var) maps))))
-                             ((ellipsis? e r mod) (syntax-violation 'syntax "misplaced ellipsis" src))
-                             (else (values (list 'quote e) maps))))))
-                      (let* ((tmp e) (tmp-1 ($sc-dispatch tmp '(any any))))
-                        (if (and tmp-1 (apply (lambda (dots e) (ellipsis? dots r mod)) tmp-1))
-                            (apply (lambda (dots e) (gen-syntax src e r maps (lambda (e r mod) #f) mod)) tmp-1)
-                            (let ((tmp-1 ($sc-dispatch tmp '(any any . any))))
-                              (if (and tmp-1 (apply (lambda (x dots y) (ellipsis? dots r mod)) tmp-1))
-                                  (apply (lambda (x dots y)
-                                           (let f ((y y)
-                                                   (k (lambda (maps)
-                                                        (call-with-values
-                                                         (lambda () (gen-syntax src x r (cons '() maps) ellipsis? mod))
-                                                         (lambda (x maps)
-                                                           (if (null? (car maps))
-                                                               (syntax-violation 'syntax "extra ellipsis" src)
-                                                               (values (gen-map x (car maps)) (cdr maps))))))))
-                                             (let* ((tmp y) (tmp ($sc-dispatch tmp '(any . any))))
-                                               (if (and tmp (apply (lambda (dots y) (ellipsis? dots r mod)) tmp))
-                                                   (apply (lambda (dots y)
-                                                            (f y
-                                                               (lambda (maps)
-                                                                 (call-with-values
-                                                                  (lambda () (k (cons '() maps)))
-                                                                  (lambda (x maps)
-                                                                    (if (null? (car maps))
-                                                                        (syntax-violation 'syntax "extra ellipsis" src)
-                                                                        (values (gen-mappend x (car maps)) (cdr maps))))))))
-                                                          tmp)
-                                                   (call-with-values
-                                                    (lambda () (gen-syntax src y r maps ellipsis? mod))
-                                                    (lambda (y maps)
-                                                      (call-with-values
-                                                       (lambda () (k maps))
-                                                       (lambda (x maps) (values (gen-append x y) maps)))))))))
-                                         tmp-1)
-                                  (let ((tmp-1 ($sc-dispatch tmp '(any . any))))
-                                    (if tmp-1
-                                        (apply (lambda (x y)
-                                                 (call-with-values
-                                                  (lambda () (gen-syntax src x r maps ellipsis? mod))
-                                                  (lambda (x maps)
-                                                    (call-with-values
-                                                     (lambda () (gen-syntax src y r maps ellipsis? mod))
-                                                     (lambda (y maps) (values (gen-cons x y) maps))))))
-                                               tmp-1)
-                                        (let ((tmp-1 ($sc-dispatch tmp '#(vector (any . each-any)))))
-                                          (if tmp-1
-                                              (apply (lambda (e1 e2)
-                                                       (call-with-values
-                                                        (lambda () (gen-syntax src (cons e1 e2) r maps ellipsis? mod))
-                                                        (lambda (e maps) (values (gen-vector e) maps))))
-                                                     tmp-1)
-                                              (let ((tmp-1 (list tmp)))
-                                                (if (and tmp-1 (apply (lambda (x) (eq? (syntax->datum x) #nil)) tmp-1))
-                                                    (apply (lambda (x) (values ''#nil maps)) tmp-1)
-                                                    (let ((tmp ($sc-dispatch tmp '())))
-                                                      (if tmp
-                                                          (apply (lambda () (values ''() maps)) tmp)
-                                                          (values (list 'quote e) maps))))))))))))))))
-               (gen-ref
-                (lambda (src var level maps)
-                  (cond
-                    ((= level 0) (values var maps))
-                    ((null? maps) (syntax-violation 'syntax "missing ellipsis" src))
-                    (else (call-with-values
-                           (lambda () (gen-ref src var (#{1-}# level) (cdr maps)))
-                           (lambda (outer-var outer-maps)
-                             (let ((b (assq outer-var (car maps))))
-                               (if b
-                                   (values (cdr b) maps)
-                                   (let ((inner-var (gen-var 'tmp)))
-                                     (values inner-var (cons (cons (cons outer-var inner-var) (car maps)) outer-maps)))))))))))
-               (gen-mappend (lambda (e map-env) (list 'apply '(primitive append) (gen-map e map-env))))
-               (gen-map
-                (lambda (e map-env)
-                  (let ((formals (map cdr map-env)) (actuals (map (lambda (x) (list 'ref (car x))) map-env)))
-                    (cond
-                      ((eq? (car e) 'ref) (car actuals))
-                      ((and-map (lambda (x) (and (eq? (car x) 'ref) (memq (cadr x) formals))) (cdr e))
-                       (cons 'map
-                             (cons (list 'primitive (car e))
-                                   (map (let ((r (map cons formals actuals))) (lambda (x) (cdr (assq (cadr x) r))))
-                                        (cdr e)))))
-                      (else (cons 'map (cons (list 'lambda formals e) actuals)))))))
-               (gen-cons
-                (lambda (x y)
-                  (let ((key (car y)))
-                    (cond
-                      ((memv key '(quote))
-                       (cond
-                         ((eq? (car x) 'quote) (list 'quote (cons (cadr x) (cadr y))))
-                         ((eq? (cadr y) '()) (list 'list x))
-                         (else (list 'cons x y))))
-                      ((memv key '(list)) (cons 'list (cons x (cdr y))))
-                      (else (list 'cons x y))))))
-               (gen-append (lambda (x y) (if (equal? y ''()) x (list 'append x y))))
-               (gen-vector
-                (lambda (x)
-                  (cond
-                    ((eq? (car x) 'list) (cons 'vector (cdr x)))
-                    ((eq? (car x) 'quote) (list 'quote (list->vector (cadr x))))
-                    (else (list 'list->vector x)))))
-               (regen (lambda (x)
-                        (let ((key (car x)))
+                               (lambda () (resolve-identifier e empty-wrap r mod #f))
+                               (lambda (type value mod)
+                                 (let ((key type))
+                                   (cond
+                                     ((memv key '(syntax))
+                                      (call-with-values
+                                       (lambda () (gen-ref src (car value) (cdr value) maps))
+                                       (lambda (var maps) (values (list 'ref var) maps))))
+                                     ((ellipsis? e r mod) (syntax-violation 'syntax "misplaced ellipsis" src))
+                                     (else (values (list 'quote e) maps))))))
+                              (let* ((tmp e) (tmp-1 ($sc-dispatch tmp '(any any))))
+                                (if (and tmp-1 (apply (lambda (dots e) (ellipsis? dots r mod)) tmp-1))
+                                    (apply (lambda (dots e) (gen-syntax src e r maps (lambda (e r mod) #f) mod)) tmp-1)
+                                    (let ((tmp-1 ($sc-dispatch tmp '(any any . any))))
+                                      (if (and tmp-1 (apply (lambda (x dots y) (ellipsis? dots r mod)) tmp-1))
+                                          (apply (lambda (x dots y)
+                                                   (let f ((y y)
+                                                           (k (lambda (maps)
+                                                                (call-with-values
+                                                                 (lambda ()
+                                                                   (gen-syntax src x r (cons '() maps) ellipsis? mod))
+                                                                 (lambda (x maps)
+                                                                   (if (null? (car maps))
+                                                                       (syntax-violation 'syntax "extra ellipsis" src)
+                                                                       (values (gen-map x (car maps)) (cdr maps))))))))
+                                                     (let* ((tmp y) (tmp ($sc-dispatch tmp '(any . any))))
+                                                       (if (and tmp
+                                                                (apply (lambda (dots y) (ellipsis? dots r mod)) tmp))
+                                                           (apply (lambda (dots y)
+                                                                    (f y
+                                                                       (lambda (maps)
+                                                                         (call-with-values
+                                                                          (lambda () (k (cons '() maps)))
+                                                                          (lambda (x maps)
+                                                                            (if (null? (car maps))
+                                                                                (syntax-violation
+                                                                                 'syntax
+                                                                                 "extra ellipsis"
+                                                                                 src)
+                                                                                (values
+                                                                                 (gen-mappend x (car maps))
+                                                                                 (cdr maps))))))))
+                                                                  tmp)
+                                                           (call-with-values
+                                                            (lambda () (gen-syntax src y r maps ellipsis? mod))
+                                                            (lambda (y maps)
+                                                              (call-with-values
+                                                               (lambda () (k maps))
+                                                               (lambda (x maps) (values (gen-append x y) maps)))))))))
+                                                 tmp-1)
+                                          (let ((tmp-1 ($sc-dispatch tmp '(any . any))))
+                                            (if tmp-1
+                                                (apply (lambda (x y)
+                                                         (call-with-values
+                                                          (lambda () (gen-syntax src x r maps ellipsis? mod))
+                                                          (lambda (x maps)
+                                                            (call-with-values
+                                                             (lambda () (gen-syntax src y r maps ellipsis? mod))
+                                                             (lambda (y maps) (values (gen-cons x y) maps))))))
+                                                       tmp-1)
+                                                (let ((tmp-1 ($sc-dispatch tmp '#(vector (any . each-any)))))
+                                                  (if tmp-1
+                                                      (apply (lambda (e1 e2)
+                                                               (call-with-values
+                                                                (lambda ()
+                                                                  (gen-syntax src (cons e1 e2) r maps ellipsis? mod))
+                                                                (lambda (e maps) (values (gen-vector e) maps))))
+                                                             tmp-1)
+                                                      (let ((tmp-1 (list tmp)))
+                                                        (if (and tmp-1
+                                                                 (apply (lambda (x) (eq? (syntax->datum x) #nil)) tmp-1))
+                                                            (apply (lambda (x) (values ''#nil maps)) tmp-1)
+                                                            (let ((tmp ($sc-dispatch tmp '())))
+                                                              (if tmp
+                                                                  (apply (lambda () (values ''() maps)) tmp)
+                                                                  (values (list 'quote e) maps))))))))))))))))
+                       (gen-ref
+                        (lambda (src var level maps)
                           (cond
-                            ((memv key '(ref)) (build-lexical-reference no-source (cadr x) (cadr x)))
-                            ((memv key '(primitive)) (build-primref no-source (cadr x)))
-                            ((memv key '(quote)) (build-data no-source (cadr x)))
-                            ((memv key '(lambda))
-                             (if (list? (cadr x))
-                                 (build-simple-lambda no-source (cadr x) #f (cadr x) '() (regen (caddr x)))
-                                 (error "how did we get here" x)))
-                            (else (build-primcall no-source (car x) (map regen (cdr x)))))))))
-       (lambda (e r w s mod)
-         (let* ((e (source-wrap e w s mod)) (tmp e) (tmp ($sc-dispatch tmp '(_ any))))
-           (if tmp
-               (apply (lambda (x)
-                        (call-with-values (lambda () (gen-syntax e x r '() ellipsis? mod)) (lambda (e maps) (regen e))))
-                      tmp)
-               (syntax-violation 'syntax "bad `syntax' form" e))))))
-    (global-extend
-     'core
-     'lambda
-     (lambda (e r w s mod)
-       (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ any any . each-any))))
-         (if tmp
-             (apply (lambda (args e1 e2)
-                      (call-with-values
-                       (lambda () (lambda-formals args))
-                       (lambda (req opt rest kw)
-                         (let lp ((body (cons e1 e2)) (meta '()))
-                           (let* ((tmp-1 body) (tmp ($sc-dispatch tmp-1 '(any any . each-any))))
-                             (if (and tmp (apply (lambda (docstring e1 e2) (string? (syntax->datum docstring))) tmp))
-                                 (apply (lambda (docstring e1 e2)
-                                          (lp (cons e1 e2)
-                                              (append meta (list (cons 'documentation (syntax->datum docstring))))))
-                                        tmp)
-                                 (let ((tmp ($sc-dispatch tmp-1 '(#(vector #(each (any . any))) any . each-any))))
-                                   (if tmp
-                                       (apply (lambda (k v e1 e2)
-                                                (lp (cons e1 e2) (append meta (syntax->datum (map cons k v)))))
-                                              tmp)
-                                       (expand-simple-lambda e r w s mod req rest meta body)))))))))
-                    tmp)
-             (syntax-violation 'lambda "bad lambda" e)))))
-    (global-extend
-     'core
-     'lambda*
-     (lambda (e r w s mod)
-       (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ any any . each-any))))
-         (if tmp
-             (apply (lambda (args e1 e2)
-                      (call-with-values
-                       (lambda () (expand-lambda-case e r w s mod lambda*-formals (list (cons args (cons e1 e2)))))
-                       (lambda (meta lcase) (build-case-lambda s meta lcase))))
-                    tmp)
-             (syntax-violation 'lambda "bad lambda*" e)))))
-    (global-extend
-     'core
-     'case-lambda
-     (lambda (e r w s mod)
-       (letrec* ((build-it
-                  (lambda (meta clauses)
-                    (call-with-values
-                     (lambda () (expand-lambda-case e r w s mod lambda-formals clauses))
-                     (lambda (meta* lcase) (build-case-lambda s (append meta meta*) lcase))))))
-         (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ . #(each (any any . each-any))))))
-           (if tmp
-               (apply (lambda (args e1 e2)
-                        (build-it
-                         '()
-                         (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
-                                (cons tmp-680b775fb37a463 (cons tmp-680b775fb37a463-1 tmp-680b775fb37a463-2)))
-                              e2
-                              e1
-                              args)))
-                      tmp)
-               (let ((tmp ($sc-dispatch tmp-1 '(_ any . #(each (any any . each-any))))))
-                 (if (and tmp (apply (lambda (docstring args e1 e2) (string? (syntax->datum docstring))) tmp))
-                     (apply (lambda (docstring args e1 e2)
-                              (build-it
-                               (list (cons 'documentation (syntax->datum docstring)))
-                               (map (lambda (tmp-680b775fb37a463-6ae tmp-680b775fb37a463-6ad tmp-680b775fb37a463-6ac)
-                                      (cons tmp-680b775fb37a463-6ac
-                                            (cons tmp-680b775fb37a463-6ad tmp-680b775fb37a463-6ae)))
-                                    e2
-                                    e1
-                                    args)))
+                            ((= level 0) (values var maps))
+                            ((null? maps) (syntax-violation 'syntax "missing ellipsis" src))
+                            (else (call-with-values
+                                   (lambda () (gen-ref src var (#{1-}# level) (cdr maps)))
+                                   (lambda (outer-var outer-maps)
+                                     (let ((b (assq outer-var (car maps))))
+                                       (if b
+                                           (values (cdr b) maps)
+                                           (let ((inner-var (gen-var 'tmp)))
+                                             (values
+                                              inner-var
+                                              (cons (cons (cons outer-var inner-var) (car maps)) outer-maps)))))))))))
+                       (gen-mappend (lambda (e map-env) (list 'apply '(primitive append) (gen-map e map-env))))
+                       (gen-map
+                        (lambda (e map-env)
+                          (let ((formals (map cdr map-env)) (actuals (map (lambda (x) (list 'ref (car x))) map-env)))
+                            (cond
+                              ((eq? (car e) 'ref) (car actuals))
+                              ((and-map (lambda (x) (and (eq? (car x) 'ref) (memq (cadr x) formals))) (cdr e))
+                               (cons 'map
+                                     (cons (list 'primitive (car e))
+                                           (map (let ((r (map cons formals actuals)))
+                                                  (lambda (x) (cdr (assq (cadr x) r))))
+                                                (cdr e)))))
+                              (else (cons 'map (cons (list 'lambda formals e) actuals)))))))
+                       (gen-cons
+                        (lambda (x y)
+                          (let ((key (car y)))
+                            (cond
+                              ((memv key '(quote))
+                               (cond
+                                 ((eq? (car x) 'quote) (list 'quote (cons (cadr x) (cadr y))))
+                                 ((eq? (cadr y) '()) (list 'list x))
+                                 (else (list 'cons x y))))
+                              ((memv key '(list)) (cons 'list (cons x (cdr y))))
+                              (else (list 'cons x y))))))
+                       (gen-append (lambda (x y) (if (equal? y ''()) x (list 'append x y))))
+                       (gen-vector
+                        (lambda (x)
+                          (cond
+                            ((eq? (car x) 'list) (cons 'vector (cdr x)))
+                            ((eq? (car x) 'quote) (list 'quote (list->vector (cadr x))))
+                            (else (list 'list->vector x)))))
+                       (regen (lambda (x)
+                                (let ((key (car x)))
+                                  (cond
+                                    ((memv key '(ref)) (build-lexical-reference no-source (cadr x) (cadr x)))
+                                    ((memv key '(primitive)) (build-primref no-source (cadr x)))
+                                    ((memv key '(quote)) (build-data no-source (cadr x)))
+                                    ((memv key '(lambda))
+                                     (if (list? (cadr x))
+                                         (build-simple-lambda no-source (cadr x) #f (cadr x) '() (regen (caddr x)))
+                                         (error "how did we get here" x)))
+                                    (else (build-primcall no-source (car x) (map regen (cdr x)))))))))
+               (lambda (e r w s mod)
+                 (let* ((e (source-wrap e w s mod)) (tmp e) (tmp ($sc-dispatch tmp '(_ any))))
+                   (if tmp
+                       (apply (lambda (x)
+                                (call-with-values
+                                 (lambda () (gen-syntax e x r '() ellipsis? mod))
+                                 (lambda (e maps) (regen e))))
+                              tmp)
+                       (syntax-violation 'syntax "bad `syntax' form" e))))))
+            (expand-lambda
+             (lambda (e r w s mod)
+               (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ any any . each-any))))
+                 (if tmp
+                     (apply (lambda (args e1 e2)
+                              (call-with-values
+                               (lambda () (lambda-formals args))
+                               (lambda (req opt rest kw)
+                                 (let lp ((body (cons e1 e2)) (meta '()))
+                                   (let* ((tmp-1 body) (tmp ($sc-dispatch tmp-1 '(any any . each-any))))
+                                     (if (and tmp
+                                              (apply (lambda (docstring e1 e2) (string? (syntax->datum docstring))) tmp))
+                                         (apply (lambda (docstring e1 e2)
+                                                  (lp (cons e1 e2)
+                                                      (append
+                                                       meta
+                                                       (list (cons 'documentation (syntax->datum docstring))))))
+                                                tmp)
+                                         (let ((tmp ($sc-dispatch tmp-1 '(#(vector #(each (any . any))) any . each-any))))
+                                           (if tmp
+                                               (apply (lambda (k v e1 e2)
+                                                        (lp (cons e1 e2) (append meta (syntax->datum (map cons k v)))))
+                                                      tmp)
+                                               (expand-simple-lambda e r w s mod req rest meta body)))))))))
                             tmp)
-                     (syntax-violation 'case-lambda "bad case-lambda" e))))))))
-    (global-extend
-     'core
-     'case-lambda*
-     (lambda (e r w s mod)
-       (letrec* ((build-it
-                  (lambda (meta clauses)
-                    (call-with-values
-                     (lambda () (expand-lambda-case e r w s mod lambda*-formals clauses))
-                     (lambda (meta* lcase) (build-case-lambda s (append meta meta*) lcase))))))
-         (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ . #(each (any any . each-any))))))
-           (if tmp
-               (apply (lambda (args e1 e2)
-                        (build-it
-                         '()
-                         (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
-                                (cons tmp-680b775fb37a463 (cons tmp-680b775fb37a463-1 tmp-680b775fb37a463-2)))
-                              e2
-                              e1
-                              args)))
-                      tmp)
-               (let ((tmp ($sc-dispatch tmp-1 '(_ any . #(each (any any . each-any))))))
-                 (if (and tmp (apply (lambda (docstring args e1 e2) (string? (syntax->datum docstring))) tmp))
-                     (apply (lambda (docstring args e1 e2)
-                              (build-it
-                               (list (cons 'documentation (syntax->datum docstring)))
-                               (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
-                                      (cons tmp-680b775fb37a463 (cons tmp-680b775fb37a463-1 tmp-680b775fb37a463-2)))
-                                    e2
-                                    e1
-                                    args)))
+                     (syntax-violation 'lambda "bad lambda" e)))))
+            (expand-lambda*
+             (lambda (e r w s mod)
+               (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ any any . each-any))))
+                 (if tmp
+                     (apply (lambda (args e1 e2)
+                              (call-with-values
+                               (lambda ()
+                                 (expand-lambda-case e r w s mod lambda*-formals (list (cons args (cons e1 e2)))))
+                               (lambda (meta lcase) (build-case-lambda s meta lcase))))
                             tmp)
-                     (syntax-violation 'case-lambda "bad case-lambda*" e))))))))
-    (global-extend
-     'core
-     'with-ellipsis
-     (lambda (e r w s mod)
-       (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ any any . each-any))))
-         (if (and tmp (apply (lambda (dots e1 e2) (id? dots)) tmp))
-             (apply (lambda (dots e1 e2)
-                      (let ((id (if (symbol? dots)
-                                    '#{ $sc-ellipsis }#
-                                    (make-syntax
-                                     '#{ $sc-ellipsis }#
-                                     (syntax-wrap dots)
-                                     (syntax-module dots)
-                                     (syntax-sourcev dots)))))
-                        (let ((ids (list id))
-                              (labels (list (gen-label)))
-                              (bindings (list (cons 'ellipsis (source-wrap dots w s mod)))))
-                          (let ((nw (make-binding-wrap ids labels w)) (nr (extend-env labels bindings r)))
-                            (expand-body (cons e1 e2) (source-wrap e nw s mod) nr nw mod)))))
-                    tmp)
-             (syntax-violation 'with-ellipsis "bad syntax" (source-wrap e w s mod))))))
-    (global-extend
-     'core
-     'let
-     (letrec* ((expand-let
-                (lambda (e r w s mod constructor ids vals exps)
-                  (if (not (valid-bound-ids? ids))
-                      (syntax-violation 'let "duplicate bound variable" e)
-                      (let ((labels (gen-labels ids)) (new-vars (map gen-var ids)))
-                        (let ((nw (make-binding-wrap ids labels w)) (nr (extend-var-env labels new-vars r)))
-                          (constructor
-                           s
-                           (map syntax->datum ids)
-                           new-vars
-                           (map (lambda (x) (expand x r w mod)) vals)
-                           (expand-body exps (source-wrap e nw s mod) nr nw mod))))))))
-       (lambda (e r w s mod)
-         (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ #(each (any any)) any . each-any))))
-           (if (and tmp (apply (lambda (id val e1 e2) (and-map id? id)) tmp))
-               (apply (lambda (id val e1 e2) (expand-let e r w s mod build-let id val (cons e1 e2))) tmp)
-               (let ((tmp ($sc-dispatch tmp-1 '(_ any #(each (any any)) any . each-any))))
-                 (if (and tmp (apply (lambda (f id val e1 e2) (and (id? f) (and-map id? id))) tmp))
-                     (apply (lambda (f id val e1 e2)
-                              (expand-let e r w s mod build-named-let (cons f id) val (cons e1 e2)))
-                            tmp)
-                     (syntax-violation 'let "bad let" (source-wrap e w s mod)))))))))
-    (global-extend
-     'core
-     'letrec
-     (lambda (e r w s mod)
-       (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ #(each (any any)) any . each-any))))
-         (if (and tmp (apply (lambda (id val e1 e2) (and-map id? id)) tmp))
-             (apply (lambda (id val e1 e2)
-                      (let ((ids id))
-                        (if (not (valid-bound-ids? ids))
-                            (syntax-violation 'letrec "duplicate bound variable" e)
-                            (let ((labels (gen-labels ids)) (new-vars (map gen-var ids)))
-                              (let ((w (make-binding-wrap ids labels w)) (r (extend-var-env labels new-vars r)))
-                                (build-letrec
-                                 s
-                                 #f
-                                 (map syntax->datum ids)
-                                 new-vars
-                                 (map (lambda (x) (expand x r w mod)) val)
-                                 (expand-body (cons e1 e2) (source-wrap e w s mod) r w mod)))))))
-                    tmp)
-             (syntax-violation 'letrec "bad letrec" (source-wrap e w s mod))))))
-    (global-extend
-     'core
-     'letrec*
-     (lambda (e r w s mod)
-       (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ #(each (any any)) any . each-any))))
-         (if (and tmp (apply (lambda (id val e1 e2) (and-map id? id)) tmp))
-             (apply (lambda (id val e1 e2)
-                      (let ((ids id))
-                        (if (not (valid-bound-ids? ids))
-                            (syntax-violation 'letrec* "duplicate bound variable" e)
-                            (let ((labels (gen-labels ids)) (new-vars (map gen-var ids)))
-                              (let ((w (make-binding-wrap ids labels w)) (r (extend-var-env labels new-vars r)))
-                                (build-letrec
-                                 s
-                                 #t
-                                 (map syntax->datum ids)
-                                 new-vars
-                                 (map (lambda (x) (expand x r w mod)) val)
-                                 (expand-body (cons e1 e2) (source-wrap e w s mod) r w mod)))))))
-                    tmp)
-             (syntax-violation 'letrec* "bad letrec*" (source-wrap e w s mod))))))
-    (global-extend
-     'core
-     'set!
-     (lambda (e r w s mod)
-       (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ any any))))
-         (if (and tmp (apply (lambda (id val) (id? id)) tmp))
-             (apply (lambda (id val)
-                      (call-with-values
-                       (lambda () (resolve-identifier id w r mod #t))
-                       (lambda (type value id-mod)
-                         (let ((key type))
-                           (cond
-                             ((memv key '(lexical))
-                              (build-lexical-assignment s (syntax->datum id) value (expand val r w mod)))
-                             ((memv key '(global)) (build-global-assignment s value (expand val r w mod) id-mod))
-                             ((memv key '(macro))
-                              (if (procedure-property value 'variable-transformer)
-                                  (expand (expand-macro value e r w s #f mod) r empty-wrap mod)
-                                  (syntax-violation
-                                   'set!
-                                   "not a variable transformer"
-                                   (wrap e w mod)
-                                   (wrap id w id-mod))))
-                             ((memv key '(displaced-lexical))
-                              (syntax-violation 'set! "identifier out of context" (wrap id w mod)))
-                             (else (syntax-violation 'set! "bad set!" (source-wrap e w s mod))))))))
-                    tmp)
-             (let ((tmp ($sc-dispatch tmp-1 '(_ (any . each-any) any))))
-               (if tmp
-                   (apply (lambda (head tail val)
+                     (syntax-violation 'lambda "bad lambda*" e)))))
+            (expand-case-lambda
+             (lambda (e r w s mod)
+               (letrec* ((build-it
+                          (lambda (meta clauses)
                             (call-with-values
-                             (lambda () (syntax-type head r empty-wrap no-source #f mod #t))
-                             (lambda (type value ee* ee ww ss modmod)
-                               (let ((key type))
-                                 (if (memv key '(module-ref))
-                                     (let ((val (expand val r w mod)))
-                                       (call-with-values
-                                        (lambda () (value (cons head tail) r w mod))
-                                        (lambda (e r w s* mod)
-                                          (let* ((tmp-1 e) (tmp (list tmp-1)))
-                                            (if (and tmp (apply (lambda (e) (id? e)) tmp))
-                                                (apply (lambda (e)
-                                                         (build-global-assignment s (syntax->datum e) val mod))
-                                                       tmp)
-                                                (syntax-violation
-                                                 #f
-                                                 "source expression failed to match any pattern"
-                                                 tmp-1))))))
-                                     (build-call
-                                      s
-                                      (expand (list (make-syntax 'setter '((top)) '(hygiene guile)) head) r w mod)
-                                      (map (lambda (e) (expand e r w mod)) (append tail (list val)))))))))
-                          tmp)
-                   (syntax-violation 'set! "bad set!" (source-wrap e w s mod))))))))
-    (global-extend
-     'module-ref
-     '@
-     (lambda (e r w mod)
-       (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ each-any any))))
-         (if (and tmp (apply (lambda (mod id) (and (and-map id? mod) (id? id))) tmp))
-             (apply (lambda (mod id)
-                      (values
-                       (syntax->datum id)
-                       r
-                       top-wrap
-                       #f
-                       (syntax->datum (cons (make-syntax 'public '((top)) '(hygiene guile)) mod))))
-                    tmp)
-             (syntax-violation #f "source expression failed to match any pattern" tmp-1)))))
-    (global-extend
-     'module-ref
-     '@@
-     (lambda (e r w mod)
-       (letrec* ((remodulate
-                  (lambda (x mod)
-                    (cond
-                      ((pair? x) (cons (remodulate (car x) mod) (remodulate (cdr x) mod)))
-                      ((syntax? x)
-                       (make-syntax (remodulate (syntax-expression x) mod) (syntax-wrap x) mod (syntax-sourcev x)))
-                      ((vector? x)
-                       (let* ((n (vector-length x)) (v (make-vector n)))
-                         (let loop ((i 0))
-                           (if (= i n)
-                               (begin (if #f #f) v)
-                               (begin (vector-set! v i (remodulate (vector-ref x i) mod)) (loop (#{1+}# i)))))))
-                      (else x)))))
-         (let* ((tmp e)
-                (tmp-1 ($sc-dispatch
-                        tmp
-                        (list '_ (vector 'free-id (make-syntax 'primitive '((top)) '(hygiene guile))) 'any))))
-           (if (and tmp-1
-                    (apply (lambda (id)
-                             (and (id? id) (equal? (cdr (or (and (syntax? id) (syntax-module id)) mod)) '(guile))))
-                           tmp-1))
-               (apply (lambda (id) (values (syntax->datum id) r top-wrap #f '(primitive))) tmp-1)
-               (let ((tmp-1 ($sc-dispatch tmp '(_ each-any any))))
-                 (if (and tmp-1 (apply (lambda (mod id) (and (and-map id? mod) (id? id))) tmp-1))
+                             (lambda () (expand-lambda-case e r w s mod lambda-formals clauses))
+                             (lambda (meta* lcase) (build-case-lambda s (append meta meta*) lcase))))))
+                 (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ . #(each (any any . each-any))))))
+                   (if tmp
+                       (apply (lambda (args e1 e2)
+                                (build-it
+                                 '()
+                                 (map (lambda (tmp-680b775fb37a463-113f
+                                               tmp-680b775fb37a463-113e
+                                               tmp-680b775fb37a463-113d)
+                                        (cons tmp-680b775fb37a463-113d
+                                              (cons tmp-680b775fb37a463-113e tmp-680b775fb37a463-113f)))
+                                      e2
+                                      e1
+                                      args)))
+                              tmp)
+                       (let ((tmp ($sc-dispatch tmp-1 '(_ any . #(each (any any . each-any))))))
+                         (if (and tmp (apply (lambda (docstring args e1 e2) (string? (syntax->datum docstring))) tmp))
+                             (apply (lambda (docstring args e1 e2)
+                                      (build-it
+                                       (list (cons 'documentation (syntax->datum docstring)))
+                                       (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
+                                              (cons tmp-680b775fb37a463
+                                                    (cons tmp-680b775fb37a463-1 tmp-680b775fb37a463-2)))
+                                            e2
+                                            e1
+                                            args)))
+                                    tmp)
+                             (syntax-violation 'case-lambda "bad case-lambda" e))))))))
+            (expand-case-lambda*
+             (lambda (e r w s mod)
+               (letrec* ((build-it
+                          (lambda (meta clauses)
+                            (call-with-values
+                             (lambda () (expand-lambda-case e r w s mod lambda*-formals clauses))
+                             (lambda (meta* lcase) (build-case-lambda s (append meta meta*) lcase))))))
+                 (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ . #(each (any any . each-any))))))
+                   (if tmp
+                       (apply (lambda (args e1 e2)
+                                (build-it
+                                 '()
+                                 (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
+                                        (cons tmp-680b775fb37a463 (cons tmp-680b775fb37a463-1 tmp-680b775fb37a463-2)))
+                                      e2
+                                      e1
+                                      args)))
+                              tmp)
+                       (let ((tmp ($sc-dispatch tmp-1 '(_ any . #(each (any any . each-any))))))
+                         (if (and tmp (apply (lambda (docstring args e1 e2) (string? (syntax->datum docstring))) tmp))
+                             (apply (lambda (docstring args e1 e2)
+                                      (build-it
+                                       (list (cons 'documentation (syntax->datum docstring)))
+                                       (map (lambda (tmp-680b775fb37a463-118b
+                                                     tmp-680b775fb37a463-118a
+                                                     tmp-680b775fb37a463)
+                                              (cons tmp-680b775fb37a463
+                                                    (cons tmp-680b775fb37a463-118a tmp-680b775fb37a463-118b)))
+                                            e2
+                                            e1
+                                            args)))
+                                    tmp)
+                             (syntax-violation 'case-lambda "bad case-lambda*" e))))))))
+            (expand-with-ellipsis
+             (lambda (e r w s mod)
+               (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ any any . each-any))))
+                 (if (and tmp (apply (lambda (dots e1 e2) (id? dots)) tmp))
+                     (apply (lambda (dots e1 e2)
+                              (let ((id (if (symbol? dots)
+                                            '#{ $sc-ellipsis }#
+                                            (make-syntax
+                                             '#{ $sc-ellipsis }#
+                                             (syntax-wrap dots)
+                                             (syntax-module dots)
+                                             (syntax-sourcev dots)))))
+                                (let ((ids (list id))
+                                      (labels (list (gen-label)))
+                                      (bindings (list (cons 'ellipsis (source-wrap dots w s mod)))))
+                                  (let ((nw (make-binding-wrap ids labels w)) (nr (extend-env labels bindings r)))
+                                    (expand-body (cons e1 e2) (source-wrap e nw s mod) nr nw mod)))))
+                            tmp)
+                     (syntax-violation 'with-ellipsis "bad syntax" (source-wrap e w s mod))))))
+            (expand-let
+             (letrec* ((expand-let
+                        (lambda (e r w s mod constructor ids vals exps)
+                          (if (not (valid-bound-ids? ids))
+                              (syntax-violation 'let "duplicate bound variable" e)
+                              (let ((labels (gen-labels ids)) (new-vars (map gen-var ids)))
+                                (let ((nw (make-binding-wrap ids labels w)) (nr (extend-var-env labels new-vars r)))
+                                  (constructor
+                                   s
+                                   (map syntax->datum ids)
+                                   new-vars
+                                   (map (lambda (x) (expand x r w mod)) vals)
+                                   (expand-body exps (source-wrap e nw s mod) nr nw mod))))))))
+               (lambda (e r w s mod)
+                 (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ #(each (any any)) any . each-any))))
+                   (if (and tmp (apply (lambda (id val e1 e2) (and-map id? id)) tmp))
+                       (apply (lambda (id val e1 e2) (expand-let e r w s mod build-let id val (cons e1 e2))) tmp)
+                       (let ((tmp ($sc-dispatch tmp-1 '(_ any #(each (any any)) any . each-any))))
+                         (if (and tmp (apply (lambda (f id val e1 e2) (and (id? f) (and-map id? id))) tmp))
+                             (apply (lambda (f id val e1 e2)
+                                      (expand-let e r w s mod build-named-let (cons f id) val (cons e1 e2)))
+                                    tmp)
+                             (syntax-violation 'let "bad let" (source-wrap e w s mod)))))))))
+            (expand-letrec
+             (lambda (e r w s mod)
+               (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ #(each (any any)) any . each-any))))
+                 (if (and tmp (apply (lambda (id val e1 e2) (and-map id? id)) tmp))
+                     (apply (lambda (id val e1 e2)
+                              (let ((ids id))
+                                (if (not (valid-bound-ids? ids))
+                                    (syntax-violation 'letrec "duplicate bound variable" e)
+                                    (let ((labels (gen-labels ids)) (new-vars (map gen-var ids)))
+                                      (let ((w (make-binding-wrap ids labels w)) (r (extend-var-env labels new-vars r)))
+                                        (build-letrec
+                                         s
+                                         #f
+                                         (map syntax->datum ids)
+                                         new-vars
+                                         (map (lambda (x) (expand x r w mod)) val)
+                                         (expand-body (cons e1 e2) (source-wrap e w s mod) r w mod)))))))
+                            tmp)
+                     (syntax-violation 'letrec "bad letrec" (source-wrap e w s mod))))))
+            (expand-letrec*
+             (lambda (e r w s mod)
+               (let* ((tmp e) (tmp ($sc-dispatch tmp '(_ #(each (any any)) any . each-any))))
+                 (if (and tmp (apply (lambda (id val e1 e2) (and-map id? id)) tmp))
+                     (apply (lambda (id val e1 e2)
+                              (let ((ids id))
+                                (if (not (valid-bound-ids? ids))
+                                    (syntax-violation 'letrec* "duplicate bound variable" e)
+                                    (let ((labels (gen-labels ids)) (new-vars (map gen-var ids)))
+                                      (let ((w (make-binding-wrap ids labels w)) (r (extend-var-env labels new-vars r)))
+                                        (build-letrec
+                                         s
+                                         #t
+                                         (map syntax->datum ids)
+                                         new-vars
+                                         (map (lambda (x) (expand x r w mod)) val)
+                                         (expand-body (cons e1 e2) (source-wrap e w s mod) r w mod)))))))
+                            tmp)
+                     (syntax-violation 'letrec* "bad letrec*" (source-wrap e w s mod))))))
+            (expand-set!
+             (lambda (e r w s mod)
+               (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ any any))))
+                 (if (and tmp (apply (lambda (id val) (id? id)) tmp))
+                     (apply (lambda (id val)
+                              (call-with-values
+                               (lambda () (resolve-identifier id w r mod #t))
+                               (lambda (type value id-mod)
+                                 (let ((key type))
+                                   (cond
+                                     ((memv key '(lexical))
+                                      (build-lexical-assignment s (syntax->datum id) value (expand val r w mod)))
+                                     ((memv key '(global))
+                                      (build-global-assignment s value (expand val r w mod) id-mod))
+                                     ((memv key '(macro))
+                                      (if (procedure-property value 'variable-transformer)
+                                          (expand (expand-macro value e r w s #f mod) r empty-wrap mod)
+                                          (syntax-violation
+                                           'set!
+                                           "not a variable transformer"
+                                           (wrap e w mod)
+                                           (wrap id w id-mod))))
+                                     ((memv key '(displaced-lexical))
+                                      (syntax-violation 'set! "identifier out of context" (wrap id w mod)))
+                                     (else (syntax-violation 'set! "bad set!" (source-wrap e w s mod))))))))
+                            tmp)
+                     (let ((tmp ($sc-dispatch tmp-1 '(_ (any . each-any) any))))
+                       (if tmp
+                           (apply (lambda (head tail val)
+                                    (call-with-values
+                                     (lambda () (syntax-type head r empty-wrap no-source #f mod #t))
+                                     (lambda (type value ee* ee ww ss modmod)
+                                       (let ((key type))
+                                         (if (memv key '(module-ref))
+                                             (let ((val (expand val r w mod)))
+                                               (call-with-values
+                                                (lambda () (value (cons head tail) r w mod))
+                                                (lambda (e r w s* mod)
+                                                  (let* ((tmp-1 e) (tmp (list tmp-1)))
+                                                    (if (and tmp (apply (lambda (e) (id? e)) tmp))
+                                                        (apply (lambda (e)
+                                                                 (build-global-assignment s (syntax->datum e) val mod))
+                                                               tmp)
+                                                        (syntax-violation
+                                                         #f
+                                                         "source expression failed to match any pattern"
+                                                         tmp-1))))))
+                                             (build-call
+                                              s
+                                              (expand
+                                               (list (make-syntax 'setter '((top)) '(hygiene guile)) head)
+                                               r
+                                               w
+                                               mod)
+                                              (map (lambda (e) (expand e r w mod)) (append tail (list val)))))))))
+                                  tmp)
+                           (syntax-violation 'set! "bad set!" (source-wrap e w s mod))))))))
+            (expand-public-ref
+             (lambda (e r w mod)
+               (let* ((tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ each-any any))))
+                 (if (and tmp (apply (lambda (mod id) (and (and-map id? mod) (id? id))) tmp))
                      (apply (lambda (mod id)
                               (values
                                (syntax->datum id)
                                r
                                top-wrap
                                #f
-                               (syntax->datum (cons (make-syntax 'private '((top)) '(hygiene guile)) mod))))
+                               (syntax->datum (cons (make-syntax 'public '((top)) '(hygiene guile)) mod))))
+                            tmp)
+                     (syntax-violation #f "source expression failed to match any pattern" tmp-1)))))
+            (expand-private-ref
+             (lambda (e r w mod)
+               (letrec* ((remodulate
+                          (lambda (x mod)
+                            (cond
+                              ((pair? x) (cons (remodulate (car x) mod) (remodulate (cdr x) mod)))
+                              ((syntax? x)
+                               (make-syntax
+                                (remodulate (syntax-expression x) mod)
+                                (syntax-wrap x)
+                                mod
+                                (syntax-sourcev x)))
+                              ((vector? x)
+                               (let* ((n (vector-length x)) (v (make-vector n)))
+                                 (let loop ((i 0))
+                                   (if (= i n)
+                                       (begin (if #f #f) v)
+                                       (begin (vector-set! v i (remodulate (vector-ref x i) mod)) (loop (#{1+}# i)))))))
+                              (else x)))))
+                 (let* ((tmp e)
+                        (tmp-1 ($sc-dispatch
+                                tmp
+                                (list '_ (vector 'free-id (make-syntax 'primitive '((top)) '(hygiene guile))) 'any))))
+                   (if (and tmp-1
+                            (apply (lambda (id)
+                                     (and (id? id)
+                                          (equal? (cdr (or (and (syntax? id) (syntax-module id)) mod)) '(guile))))
+                                   tmp-1))
+                       (apply (lambda (id) (values (syntax->datum id) r top-wrap #f '(primitive))) tmp-1)
+                       (let ((tmp-1 ($sc-dispatch tmp '(_ each-any any))))
+                         (if (and tmp-1 (apply (lambda (mod id) (and (and-map id? mod) (id? id))) tmp-1))
+                             (apply (lambda (mod id)
+                                      (values
+                                       (syntax->datum id)
+                                       r
+                                       top-wrap
+                                       #f
+                                       (syntax->datum (cons (make-syntax 'private '((top)) '(hygiene guile)) mod))))
+                                    tmp-1)
+                             (let ((tmp-1 ($sc-dispatch
+                                           tmp
+                                           (list '_
+                                                 (vector 'free-id (make-syntax '@@ '((top)) '(hygiene guile)))
+                                                 'each-any
+                                                 'any))))
+                               (if (and tmp-1 (apply (lambda (mod exp) (and-map id? mod)) tmp-1))
+                                   (apply (lambda (mod exp)
+                                            (let ((mod (syntax->datum
+                                                        (cons (make-syntax 'private '((top)) '(hygiene guile)) mod))))
+                                              (values (remodulate exp mod) r w (source-annotation exp) mod)))
+                                          tmp-1)
+                                   (syntax-violation #f "source expression failed to match any pattern" tmp))))))))))
+            (expand-if
+             (lambda (e r w s mod)
+               (let* ((tmp e) (tmp-1 ($sc-dispatch tmp '(_ any any))))
+                 (if tmp-1
+                     (apply (lambda (test then)
+                              (build-conditional s (expand test r w mod) (expand then r w mod) (build-void no-source)))
                             tmp-1)
-                     (let ((tmp-1 ($sc-dispatch
-                                   tmp
-                                   (list '_
-                                         (vector 'free-id (make-syntax '@@ '((top)) '(hygiene guile)))
-                                         'each-any
-                                         'any))))
-                       (if (and tmp-1 (apply (lambda (mod exp) (and-map id? mod)) tmp-1))
-                           (apply (lambda (mod exp)
-                                    (let ((mod (syntax->datum
-                                                (cons (make-syntax 'private '((top)) '(hygiene guile)) mod))))
-                                      (values (remodulate exp mod) r w (source-annotation exp) mod)))
+                     (let ((tmp-1 ($sc-dispatch tmp '(_ any any any))))
+                       (if tmp-1
+                           (apply (lambda (test then else)
+                                    (build-conditional
+                                     s
+                                     (expand test r w mod)
+                                     (expand then r w mod)
+                                     (expand else r w mod)))
                                   tmp-1)
-                           (syntax-violation #f "source expression failed to match any pattern" tmp))))))))))
-    (global-extend
-     'core
-     'if
-     (lambda (e r w s mod)
-       (let* ((tmp e) (tmp-1 ($sc-dispatch tmp '(_ any any))))
-         (if tmp-1
-             (apply (lambda (test then)
-                      (build-conditional s (expand test r w mod) (expand then r w mod) (build-void no-source)))
-                    tmp-1)
-             (let ((tmp-1 ($sc-dispatch tmp '(_ any any any))))
-               (if tmp-1
-                   (apply (lambda (test then else)
-                            (build-conditional s (expand test r w mod) (expand then r w mod) (expand else r w mod)))
-                          tmp-1)
-                   (syntax-violation #f "source expression failed to match any pattern" tmp)))))))
+                           (syntax-violation #f "source expression failed to match any pattern" tmp)))))))
+            (expand-syntax-case
+             (letrec* ((convert-pattern
+                        (lambda (pattern keys ellipsis?)
+                          (letrec* ((cvt* (lambda (p* n ids)
+                                            (let* ((tmp p*) (tmp ($sc-dispatch tmp '(any . any))))
+                                              (if tmp
+                                                  (apply (lambda (x y)
+                                                           (call-with-values
+                                                            (lambda () (cvt* y n ids))
+                                                            (lambda (y ids)
+                                                              (call-with-values
+                                                               (lambda () (cvt x n ids))
+                                                               (lambda (x ids) (values (cons x y) ids))))))
+                                                         tmp)
+                                                  (cvt p* n ids)))))
+                                    (v-reverse
+                                     (lambda (x)
+                                       (let loop ((r '()) (x x))
+                                         (if (not (pair? x)) (values r x) (loop (cons (car x) r) (cdr x))))))
+                                    (cvt (lambda (p n ids)
+                                           (if (id? p)
+                                               (cond
+                                                 ((bound-id-member? p keys) (values (vector 'free-id p) ids))
+                                                 ((free-id=? p (make-syntax '_ '((top)) '(hygiene guile)))
+                                                  (values '_ ids))
+                                                 (else (values 'any (cons (cons p n) ids))))
+                                               (let* ((tmp p) (tmp-1 ($sc-dispatch tmp '(any any))))
+                                                 (if (and tmp-1 (apply (lambda (x dots) (ellipsis? dots)) tmp-1))
+                                                     (apply (lambda (x dots)
+                                                              (call-with-values
+                                                               (lambda () (cvt x (#{1+}# n) ids))
+                                                               (lambda (p ids)
+                                                                 (values
+                                                                  (if (eq? p 'any) 'each-any (vector 'each p))
+                                                                  ids))))
+                                                            tmp-1)
+                                                     (let ((tmp-1 ($sc-dispatch tmp '(any any . any))))
+                                                       (if (and tmp-1
+                                                                (apply (lambda (x dots ys) (ellipsis? dots)) tmp-1))
+                                                           (apply (lambda (x dots ys)
+                                                                    (call-with-values
+                                                                     (lambda () (cvt* ys n ids))
+                                                                     (lambda (ys ids)
+                                                                       (call-with-values
+                                                                        (lambda () (cvt x (+ n 1) ids))
+                                                                        (lambda (x ids)
+                                                                          (call-with-values
+                                                                           (lambda () (v-reverse ys))
+                                                                           (lambda (ys e)
+                                                                             (values (vector 'each+ x ys e) ids))))))))
+                                                                  tmp-1)
+                                                           (let ((tmp-1 ($sc-dispatch tmp '(any . any))))
+                                                             (if tmp-1
+                                                                 (apply (lambda (x y)
+                                                                          (call-with-values
+                                                                           (lambda () (cvt y n ids))
+                                                                           (lambda (y ids)
+                                                                             (call-with-values
+                                                                              (lambda () (cvt x n ids))
+                                                                              (lambda (x ids) (values (cons x y) ids))))))
+                                                                        tmp-1)
+                                                                 (let ((tmp-1 ($sc-dispatch tmp '())))
+                                                                   (if tmp-1
+                                                                       (apply (lambda () (values '() ids)) tmp-1)
+                                                                       (let ((tmp-1 ($sc-dispatch
+                                                                                     tmp
+                                                                                     '#(vector each-any))))
+                                                                         (if tmp-1
+                                                                             (apply (lambda (x)
+                                                                                      (call-with-values
+                                                                                       (lambda () (cvt x n ids))
+                                                                                       (lambda (p ids)
+                                                                                         (values (vector 'vector p) ids))))
+                                                                                    tmp-1)
+                                                                             (let ((x tmp))
+                                                                               (values (vector 'atom (strip p)) ids))))))))))))))))
+                            (cvt pattern 0 '()))))
+                       (build-dispatch-call
+                        (lambda (pvars exp y r mod)
+                          (let ((ids (map car pvars)) (levels (map cdr pvars)))
+                            (let ((labels (gen-labels ids)) (new-vars (map gen-var ids)))
+                              (build-primcall
+                               no-source
+                               'apply
+                               (list (build-simple-lambda
+                                      no-source
+                                      (map syntax->datum ids)
+                                      #f
+                                      new-vars
+                                      '()
+                                      (expand
+                                       exp
+                                       (extend-env
+                                        labels
+                                        (map (lambda (var level) (cons 'syntax (cons var level)))
+                                             new-vars
+                                             (map cdr pvars))
+                                        r)
+                                       (make-binding-wrap ids labels empty-wrap)
+                                       mod))
+                                     y))))))
+                       (gen-clause
+                        (lambda (x keys clauses r pat fender exp mod)
+                          (call-with-values
+                           (lambda () (convert-pattern pat keys (lambda (e) (ellipsis? e r mod))))
+                           (lambda (p pvars)
+                             (cond
+                               ((not (and-map (lambda (x) (not (ellipsis? (car x) r mod))) pvars))
+                                (syntax-violation 'syntax-case "misplaced ellipsis" pat))
+                               ((not (distinct-bound-ids? (map car pvars)))
+                                (syntax-violation 'syntax-case "duplicate pattern variable" pat))
+                               (else (let ((y (gen-var 'tmp)))
+                                       (build-call
+                                        no-source
+                                        (build-simple-lambda
+                                         no-source
+                                         (list 'tmp)
+                                         #f
+                                         (list y)
+                                         '()
+                                         (let ((y (build-lexical-reference no-source 'tmp y)))
+                                           (build-conditional
+                                            no-source
+                                            (let* ((tmp fender) (tmp ($sc-dispatch tmp '#(atom #t))))
+                                              (if tmp
+                                                  (apply (lambda () y) tmp)
+                                                  (build-conditional
+                                                   no-source
+                                                   y
+                                                   (build-dispatch-call pvars fender y r mod)
+                                                   (build-data no-source #f))))
+                                            (build-dispatch-call pvars exp y r mod)
+                                            (gen-syntax-case x keys clauses r mod))))
+                                        (list (if (eq? p 'any)
+                                                  (build-primcall no-source 'list (list x))
+                                                  (build-primcall
+                                                   no-source
+                                                   '$sc-dispatch
+                                                   (list x (build-data no-source p)))))))))))))
+                       (gen-syntax-case
+                        (lambda (x keys clauses r mod)
+                          (if (null? clauses)
+                              (build-primcall
+                               no-source
+                               'syntax-violation
+                               (list (build-data no-source #f)
+                                     (build-data no-source "source expression failed to match any pattern")
+                                     x))
+                              (let* ((tmp-1 (car clauses)) (tmp ($sc-dispatch tmp-1 '(any any))))
+                                (if tmp
+                                    (apply (lambda (pat exp)
+                                             (if (and (id? pat)
+                                                      (and-map
+                                                       (lambda (x) (not (free-id=? pat x)))
+                                                       (cons (make-syntax '... '((top)) '(hygiene guile)) keys)))
+                                                 (if (free-id=? pat (make-syntax '_ '((top)) '(hygiene guile)))
+                                                     (expand exp r empty-wrap mod)
+                                                     (let ((labels (list (gen-label))) (var (gen-var pat)))
+                                                       (build-call
+                                                        no-source
+                                                        (build-simple-lambda
+                                                         no-source
+                                                         (list (syntax->datum pat))
+                                                         #f
+                                                         (list var)
+                                                         '()
+                                                         (expand
+                                                          exp
+                                                          (extend-env labels (list (cons 'syntax (cons var 0))) r)
+                                                          (make-binding-wrap (list pat) labels empty-wrap)
+                                                          mod))
+                                                        (list x))))
+                                                 (gen-clause x keys (cdr clauses) r pat #t exp mod)))
+                                           tmp)
+                                    (let ((tmp ($sc-dispatch tmp-1 '(any any any))))
+                                      (if tmp
+                                          (apply (lambda (pat fender exp)
+                                                   (gen-clause x keys (cdr clauses) r pat fender exp mod))
+                                                 tmp)
+                                          (syntax-violation 'syntax-case "invalid clause" (car clauses))))))))))
+               (lambda (e r w s mod)
+                 (let* ((e (source-wrap e w s mod)) (tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ any each-any . each-any))))
+                   (if tmp
+                       (apply (lambda (val key m)
+                                (if (and-map (lambda (x) (and (id? x) (not (ellipsis? x r mod)))) key)
+                                    (let ((x (gen-var 'tmp)))
+                                      (build-call
+                                       s
+                                       (build-simple-lambda
+                                        no-source
+                                        (list 'tmp)
+                                        #f
+                                        (list x)
+                                        '()
+                                        (gen-syntax-case (build-lexical-reference no-source 'tmp x) key m r mod))
+                                       (list (expand val r empty-wrap mod))))
+                                    (syntax-violation 'syntax-case "invalid literals list" e)))
+                              tmp)
+                       (syntax-violation #f "source expression failed to match any pattern" tmp-1)))))))
+    (global-extend 'local-syntax 'letrec-syntax #t)
+    (global-extend 'local-syntax 'let-syntax #f)
+    (global-extend 'core 'syntax-parameterize expand-syntax-parameterize)
+    (global-extend 'core 'quote expand-quote)
+    (global-extend 'core 'quote-syntax expand-quote-syntax)
+    (global-extend 'core 'syntax expand-syntax)
+    (global-extend 'core 'lambda expand-lambda)
+    (global-extend 'core 'lambda* expand-lambda*)
+    (global-extend 'core 'case-lambda expand-case-lambda)
+    (global-extend 'core 'case-lambda* expand-case-lambda*)
+    (global-extend 'core 'with-ellipsis expand-with-ellipsis)
+    (global-extend 'core 'let expand-let)
+    (global-extend 'core 'letrec expand-letrec)
+    (global-extend 'core 'letrec* expand-letrec*)
+    (global-extend 'core 'set! expand-set!)
+    (global-extend 'module-ref '@ expand-public-ref)
+    (global-extend 'module-ref '@@ expand-private-ref)
+    (global-extend 'core 'if expand-if)
     (global-extend 'begin 'begin '())
     (global-extend 'define 'define '())
     (global-extend 'define-syntax 'define-syntax '())
     (global-extend 'define-syntax-parameter 'define-syntax-parameter '())
     (global-extend 'eval-when 'eval-when '())
-    (global-extend
-     'core
-     'syntax-case
-     (letrec* ((convert-pattern
-                (lambda (pattern keys ellipsis?)
-                  (letrec* ((cvt* (lambda (p* n ids)
-                                    (let* ((tmp p*) (tmp ($sc-dispatch tmp '(any . any))))
-                                      (if tmp
-                                          (apply (lambda (x y)
-                                                   (call-with-values
-                                                    (lambda () (cvt* y n ids))
-                                                    (lambda (y ids)
-                                                      (call-with-values
-                                                       (lambda () (cvt x n ids))
-                                                       (lambda (x ids) (values (cons x y) ids))))))
-                                                 tmp)
-                                          (cvt p* n ids)))))
-                            (v-reverse
-                             (lambda (x)
-                               (let loop ((r '()) (x x))
-                                 (if (not (pair? x)) (values r x) (loop (cons (car x) r) (cdr x))))))
-                            (cvt (lambda (p n ids)
-                                   (if (id? p)
-                                       (cond
-                                         ((bound-id-member? p keys) (values (vector 'free-id p) ids))
-                                         ((free-id=? p (make-syntax '_ '((top)) '(hygiene guile))) (values '_ ids))
-                                         (else (values 'any (cons (cons p n) ids))))
-                                       (let* ((tmp p) (tmp-1 ($sc-dispatch tmp '(any any))))
-                                         (if (and tmp-1 (apply (lambda (x dots) (ellipsis? dots)) tmp-1))
-                                             (apply (lambda (x dots)
-                                                      (call-with-values
-                                                       (lambda () (cvt x (#{1+}# n) ids))
-                                                       (lambda (p ids)
-                                                         (values (if (eq? p 'any) 'each-any (vector 'each p)) ids))))
-                                                    tmp-1)
-                                             (let ((tmp-1 ($sc-dispatch tmp '(any any . any))))
-                                               (if (and tmp-1 (apply (lambda (x dots ys) (ellipsis? dots)) tmp-1))
-                                                   (apply (lambda (x dots ys)
-                                                            (call-with-values
-                                                             (lambda () (cvt* ys n ids))
-                                                             (lambda (ys ids)
-                                                               (call-with-values
-                                                                (lambda () (cvt x (+ n 1) ids))
-                                                                (lambda (x ids)
-                                                                  (call-with-values
-                                                                   (lambda () (v-reverse ys))
-                                                                   (lambda (ys e) (values (vector 'each+ x ys e) ids))))))))
-                                                          tmp-1)
-                                                   (let ((tmp-1 ($sc-dispatch tmp '(any . any))))
-                                                     (if tmp-1
-                                                         (apply (lambda (x y)
-                                                                  (call-with-values
-                                                                   (lambda () (cvt y n ids))
-                                                                   (lambda (y ids)
-                                                                     (call-with-values
-                                                                      (lambda () (cvt x n ids))
-                                                                      (lambda (x ids) (values (cons x y) ids))))))
-                                                                tmp-1)
-                                                         (let ((tmp-1 ($sc-dispatch tmp '())))
-                                                           (if tmp-1
-                                                               (apply (lambda () (values '() ids)) tmp-1)
-                                                               (let ((tmp-1 ($sc-dispatch tmp '#(vector each-any))))
-                                                                 (if tmp-1
-                                                                     (apply (lambda (x)
-                                                                              (call-with-values
-                                                                               (lambda () (cvt x n ids))
-                                                                               (lambda (p ids)
-                                                                                 (values (vector 'vector p) ids))))
-                                                                            tmp-1)
-                                                                     (let ((x tmp))
-                                                                       (values (vector 'atom (strip p)) ids))))))))))))))))
-                    (cvt pattern 0 '()))))
-               (build-dispatch-call
-                (lambda (pvars exp y r mod)
-                  (let ((ids (map car pvars)) (levels (map cdr pvars)))
-                    (let ((labels (gen-labels ids)) (new-vars (map gen-var ids)))
-                      (build-primcall
-                       no-source
-                       'apply
-                       (list (build-simple-lambda
-                              no-source
-                              (map syntax->datum ids)
-                              #f
-                              new-vars
-                              '()
-                              (expand
-                               exp
-                               (extend-env
-                                labels
-                                (map (lambda (var level) (cons 'syntax (cons var level))) new-vars (map cdr pvars))
-                                r)
-                               (make-binding-wrap ids labels empty-wrap)
-                               mod))
-                             y))))))
-               (gen-clause
-                (lambda (x keys clauses r pat fender exp mod)
-                  (call-with-values
-                   (lambda () (convert-pattern pat keys (lambda (e) (ellipsis? e r mod))))
-                   (lambda (p pvars)
-                     (cond
-                       ((not (and-map (lambda (x) (not (ellipsis? (car x) r mod))) pvars))
-                        (syntax-violation 'syntax-case "misplaced ellipsis" pat))
-                       ((not (distinct-bound-ids? (map car pvars)))
-                        (syntax-violation 'syntax-case "duplicate pattern variable" pat))
-                       (else (let ((y (gen-var 'tmp)))
-                               (build-call
-                                no-source
-                                (build-simple-lambda
-                                 no-source
-                                 (list 'tmp)
-                                 #f
-                                 (list y)
-                                 '()
-                                 (let ((y (build-lexical-reference no-source 'tmp y)))
-                                   (build-conditional
-                                    no-source
-                                    (let* ((tmp fender) (tmp ($sc-dispatch tmp '#(atom #t))))
-                                      (if tmp
-                                          (apply (lambda () y) tmp)
-                                          (build-conditional
-                                           no-source
-                                           y
-                                           (build-dispatch-call pvars fender y r mod)
-                                           (build-data no-source #f))))
-                                    (build-dispatch-call pvars exp y r mod)
-                                    (gen-syntax-case x keys clauses r mod))))
-                                (list (if (eq? p 'any)
-                                          (build-primcall no-source 'list (list x))
-                                          (build-primcall no-source '$sc-dispatch (list x (build-data no-source p)))))))))))))
-               (gen-syntax-case
-                (lambda (x keys clauses r mod)
-                  (if (null? clauses)
-                      (build-primcall
-                       no-source
-                       'syntax-violation
-                       (list (build-data no-source #f)
-                             (build-data no-source "source expression failed to match any pattern")
-                             x))
-                      (let* ((tmp-1 (car clauses)) (tmp ($sc-dispatch tmp-1 '(any any))))
-                        (if tmp
-                            (apply (lambda (pat exp)
-                                     (if (and (id? pat)
-                                              (and-map
-                                               (lambda (x) (not (free-id=? pat x)))
-                                               (cons (make-syntax '... '((top)) '(hygiene guile)) keys)))
-                                         (if (free-id=? pat (make-syntax '_ '((top)) '(hygiene guile)))
-                                             (expand exp r empty-wrap mod)
-                                             (let ((labels (list (gen-label))) (var (gen-var pat)))
-                                               (build-call
-                                                no-source
-                                                (build-simple-lambda
-                                                 no-source
-                                                 (list (syntax->datum pat))
-                                                 #f
-                                                 (list var)
-                                                 '()
-                                                 (expand
-                                                  exp
-                                                  (extend-env labels (list (cons 'syntax (cons var 0))) r)
-                                                  (make-binding-wrap (list pat) labels empty-wrap)
-                                                  mod))
-                                                (list x))))
-                                         (gen-clause x keys (cdr clauses) r pat #t exp mod)))
-                                   tmp)
-                            (let ((tmp ($sc-dispatch tmp-1 '(any any any))))
-                              (if tmp
-                                  (apply (lambda (pat fender exp)
-                                           (gen-clause x keys (cdr clauses) r pat fender exp mod))
-                                         tmp)
-                                  (syntax-violation 'syntax-case "invalid clause" (car clauses))))))))))
-       (lambda (e r w s mod)
-         (let* ((e (source-wrap e w s mod)) (tmp-1 e) (tmp ($sc-dispatch tmp-1 '(_ any each-any . each-any))))
-           (if tmp
-               (apply (lambda (val key m)
-                        (if (and-map (lambda (x) (and (id? x) (not (ellipsis? x r mod)))) key)
-                            (let ((x (gen-var 'tmp)))
-                              (build-call
-                               s
-                               (build-simple-lambda
-                                no-source
-                                (list 'tmp)
-                                #f
-                                (list x)
-                                '()
-                                (gen-syntax-case (build-lexical-reference no-source 'tmp x) key m r mod))
-                               (list (expand val r empty-wrap mod))))
-                            (syntax-violation 'syntax-case "invalid literals list" e)))
-                      tmp)
-               (syntax-violation #f "source expression failed to match any pattern" tmp-1))))))
+    (global-extend 'core 'syntax-case expand-syntax-case)
     (set! macroexpand
           (lambda* (x #:optional (m 'e) (esew '(eval)))
             (letrec* ((unstrip
@@ -2802,9 +2838,8 @@
                                  #f
                                  k
                                  (list docstring)
-                                 (map (lambda (tmp-680b775fb37a463 tmp-680b775fb37a463-145f tmp-680b775fb37a463-145e)
-                                        (list (cons tmp-680b775fb37a463-145e tmp-680b775fb37a463-145f)
-                                              tmp-680b775fb37a463))
+                                 (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
+                                        (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-1) tmp-680b775fb37a463-2))
                                       template
                                       pattern
                                       keyword)))
@@ -2816,9 +2851,11 @@
                                        dots
                                        k
                                        '()
-                                       (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
-                                              (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-1)
-                                                    tmp-680b775fb37a463-2))
+                                       (map (lambda (tmp-680b775fb37a463-149b
+                                                     tmp-680b775fb37a463-149a
+                                                     tmp-680b775fb37a463)
+                                              (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-149a)
+                                                    tmp-680b775fb37a463-149b))
                                             template
                                             pattern
                                             keyword)))
@@ -2834,11 +2871,11 @@
                                              dots
                                              k
                                              (list docstring)
-                                             (map (lambda (tmp-680b775fb37a463-2
-                                                           tmp-680b775fb37a463-1
-                                                           tmp-680b775fb37a463)
-                                                    (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-1)
-                                                          tmp-680b775fb37a463-2))
+                                             (map (lambda (tmp-680b775fb37a463-14ba
+                                                           tmp-680b775fb37a463-14b9
+                                                           tmp-680b775fb37a463-14b8)
+                                                    (list (cons tmp-680b775fb37a463-14b8 tmp-680b775fb37a463-14b9)
+                                                          tmp-680b775fb37a463-14ba))
                                                   template
                                                   pattern
                                                   keyword)))
@@ -2993,9 +3030,9 @@
                                                                    (apply (lambda (p)
                                                                             (if (= lev 0)
                                                                                 (quasiappend
-                                                                                 (map (lambda (tmp-680b775fb37a463-154a)
+                                                                                 (map (lambda (tmp-680b775fb37a463-156c)
                                                                                         (list "value"
-                                                                                              tmp-680b775fb37a463-154a))
+                                                                                              tmp-680b775fb37a463-156c))
                                                                                       p)
                                                                                  (quasi q lev))
                                                                                 (quasicons
@@ -3135,8 +3172,8 @@
                                        (let ((tmp-1 ls))
                                          (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                            (if tmp
-                                               (apply (lambda (t-680b775fb37a463-15ae)
-                                                        (cons "vector" t-680b775fb37a463-15ae))
+                                               (apply (lambda (t-680b775fb37a463-15d0)
+                                                        (cons "vector" t-680b775fb37a463-15d0))
                                                       tmp)
                                                (syntax-violation
                                                 #f
@@ -3146,8 +3183,8 @@
                               (let ((tmp-1 ($sc-dispatch tmp '(#(atom "quote") each-any))))
                                 (if tmp-1
                                     (apply (lambda (y)
-                                             (k (map (lambda (tmp-680b775fb37a463-15ba)
-                                                       (list "quote" tmp-680b775fb37a463-15ba))
+                                             (k (map (lambda (tmp-680b775fb37a463-15dc)
+                                                       (list "quote" tmp-680b775fb37a463-15dc))
                                                      y)))
                                            tmp-1)
                                     (let ((tmp-1 ($sc-dispatch tmp '(#(atom "list") . each-any))))
@@ -3158,8 +3195,8 @@
                                                 (apply (lambda (y z) (f z (lambda (ls) (k (append y ls))))) tmp-1)
                                                 (let ((else tmp))
                                                   (let ((tmp x))
-                                                    (let ((t-680b775fb37a463-15c9 tmp))
-                                                      (list "list->vector" t-680b775fb37a463-15c9)))))))))))))))))
+                                                    (let ((t-680b775fb37a463-15eb tmp))
+                                                      (list "list->vector" t-680b775fb37a463-15eb)))))))))))))))))
                (emit (lambda (x)
                        (let ((tmp x))
                          (let ((tmp-1 ($sc-dispatch tmp '(#(atom "quote") any))))
@@ -3171,9 +3208,9 @@
                                               (let ((tmp-1 (map emit x)))
                                                 (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                                   (if tmp
-                                                      (apply (lambda (t-680b775fb37a463-15d8)
+                                                      (apply (lambda (t-680b775fb37a463-15fa)
                                                                (cons (make-syntax 'list '((top)) '(hygiene guile))
-                                                                     t-680b775fb37a463-15d8))
+                                                                     t-680b775fb37a463-15fa))
                                                              tmp)
                                                       (syntax-violation
                                                        #f
@@ -3189,14 +3226,14 @@
                                                           (let ((tmp-1 (list (emit (car x*)) (f (cdr x*)))))
                                                             (let ((tmp ($sc-dispatch tmp-1 '(any any))))
                                                               (if tmp
-                                                                  (apply (lambda (t-680b775fb37a463-15ec
-                                                                                  t-680b775fb37a463-15eb)
+                                                                  (apply (lambda (t-680b775fb37a463-160e
+                                                                                  t-680b775fb37a463-160d)
                                                                            (list (make-syntax
                                                                                   'cons
                                                                                   '((top))
                                                                                   '(hygiene guile))
-                                                                                 t-680b775fb37a463-15ec
-                                                                                 t-680b775fb37a463-15eb))
+                                                                                 t-680b775fb37a463-160e
+                                                                                 t-680b775fb37a463-160d))
                                                                          tmp)
                                                                   (syntax-violation
                                                                    #f
@@ -3209,12 +3246,12 @@
                                                           (let ((tmp-1 (map emit x)))
                                                             (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                                               (if tmp
-                                                                  (apply (lambda (t-680b775fb37a463-15f8)
+                                                                  (apply (lambda (t-680b775fb37a463-161a)
                                                                            (cons (make-syntax
                                                                                   'append
                                                                                   '((top))
                                                                                   '(hygiene guile))
-                                                                                 t-680b775fb37a463-15f8))
+                                                                                 t-680b775fb37a463-161a))
                                                                          tmp)
                                                                   (syntax-violation
                                                                    #f
