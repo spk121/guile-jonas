@@ -708,39 +708,34 @@
   ;; marks to them.
   ;;
   (define (locally-bound-identifiers w mod)
-    (define scan
-      (lambda (subst results)
-        (if (null? subst)
-            results
-            (let ((fst (car subst)))
-              (if (eq? fst 'shift)
-                  (scan (cdr subst) results)
-                  (let ((symnames (ribcage-symnames fst))
-                        (marks (ribcage-marks fst)))
-                    (if (vector? symnames)
-                        (scan-vector-rib subst symnames marks results)
-                        (scan-list-rib subst symnames marks results))))))))
-    (define scan-list-rib
-      (lambda (subst symnames marks results)
-        (let f ((symnames symnames) (marks marks) (results results))
-          (if (null? symnames)
-              (scan (cdr subst) results)
-              (f (cdr symnames) (cdr marks)
-                 (cons (wrap (car symnames)
-                             (anti-mark (make-wrap (car marks) subst))
-                             mod)
-                       results))))))
-    (define scan-vector-rib
-      (lambda (subst symnames marks results)
-        (let ((n (vector-length symnames)))
-          (let f ((i 0) (results results))
-            (if (= i n)
-                (scan (cdr subst) results)
-                (f (1+ i)
-                   (cons (wrap (vector-ref symnames i)
-                               (anti-mark (make-wrap (vector-ref marks i) subst))
-                               mod)
-                         results)))))))
+    (define (scan subst results)
+      (match subst
+        (() results)
+        (('shift . subst) (scan subst results))
+        ((#('ribcage symnames marks labels) . subst*)
+         (define (scan-list-rib)
+           (let lp ((symnames symnames) (marks marks) (results results))
+             (match symnames
+               (() (scan subst* results))
+               ((sym . symnames)
+                (match marks
+                  ((m . marks)
+                   (lp symnames marks
+                       (cons (wrap sym (anti-mark (make-wrap m subst)) mod)
+                             results))))))))
+         (define (scan-vector-rib)
+           (let ((n (vector-length symnames)))
+             (let lp ((i 0) (results results))
+               (if (= i n)
+                   (scan subst* results)
+                   (lp (1+ i)
+                       (let ((sym (vector-ref symnames i))
+                             (m (vector-ref marks i)))
+                         (cons (wrap sym (anti-mark (make-wrap m subst)) mod)
+                               results)))))))
+         (if (vector? symnames)
+             (scan-vector-rib)
+             (scan-list-rib)))))
     (scan (wrap-subst w) '()))
 
   ;; Returns three values: binding type, binding value, and the module
