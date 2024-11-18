@@ -807,6 +807,14 @@ abi_mem_to_gpr(jit_state_t *_jit, enum jit_operand_abi abi,
   case JIT_OPERAND_ABI_INT16:
     jit_ldxi_s(_jit, dst, base, offset);
     break;
+  case JIT_OPERAND_ABI_FLOAT:
+  {
+    jit_fpr_t tmp = get_temp_fpr(_jit);
+    jit_ldxi_f(_jit, tmp, base, offset);
+    jit_movr_i_f(_jit, dst, tmp);
+    unget_temp_fpr(_jit);
+    break;
+  }
 #if __WORDSIZE == 32
   case JIT_OPERAND_ABI_UINT32:
   case JIT_OPERAND_ABI_POINTER:
@@ -823,6 +831,14 @@ abi_mem_to_gpr(jit_state_t *_jit, enum jit_operand_abi abi,
   case JIT_OPERAND_ABI_INT64:
     jit_ldxi_l(_jit, dst, base, offset);
     break;
+  case JIT_OPERAND_ABI_DOUBLE:
+  {
+    jit_fpr_t tmp = get_temp_fpr(_jit);
+    jit_ldxi_d(_jit, tmp, base, offset);
+    jit_movr_l_d(_jit, dst, tmp);
+    unget_temp_fpr(_jit);
+    break;
+  }
 #endif
   default:
     abort();
@@ -887,7 +903,8 @@ enum move_kind {
   MOVE_KIND_ENUM(IMM, MEM),
   MOVE_KIND_ENUM(GPR, MEM),
   MOVE_KIND_ENUM(FPR, MEM),
-  MOVE_KIND_ENUM(MEM, MEM)
+  MOVE_KIND_ENUM(MEM, MEM),
+  MOVE_KIND_ENUM(FPR, GPR)
 };
 #undef MOVE_KIND_ENUM
 
@@ -900,6 +917,14 @@ move_operand(jit_state_t *_jit, jit_operand_t dst, jit_operand_t src)
 
   case MOVE_GPR_TO_GPR:
     return jit_movr(_jit, dst.loc.gpr.gpr, src.loc.gpr.gpr);
+
+  case MOVE_FPR_TO_GPR:
+#if __WORDSIZE > 32
+    if (src.abi == JIT_OPERAND_ABI_DOUBLE)
+      return jit_movr_l_d(_jit, dst.loc.gpr.gpr, src.loc.fpr);
+    else
+#endif
+      return jit_movr_i_f(_jit, dst.loc.gpr.gpr, src.loc.fpr);
 
   case MOVE_MEM_TO_GPR:
     return abi_mem_to_gpr(_jit, src.abi, dst.loc.gpr.gpr, src.loc.mem.base,

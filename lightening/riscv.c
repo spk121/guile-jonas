@@ -111,6 +111,16 @@ reset_abi_arg_iterator(struct abi_arg_iterator *iter, size_t argc,
 static void
 next_abi_arg(struct abi_arg_iterator *iter, jit_operand_t *arg)
 {
+  // RISC-V Calling convention:
+  // https://riscv.org/wp-content/uploads/2015/01/riscv-calling.pdf
+  //
+  // The RISC-V calling convention passes arguments in registers when possible.
+  // Up to eight integer registers, a0–a7, and up to eight ﬂoating-point
+  // registers, fa0–fa7, are used for this purpose.
+  //
+  // If argument i < 8 is a ﬂoating-point type, it is passed in ﬂoating-point
+  // register fai; otherwise, it is passed in integer register ai.
+
   ASSERT(iter->arg_idx < iter->argc);
   enum jit_operand_abi abi = iter->args[iter->arg_idx].abi;
   iter->arg_idx++;
@@ -120,6 +130,9 @@ next_abi_arg(struct abi_arg_iterator *iter, jit_operand_t *arg)
   }
   if (is_fpr_arg(abi) && iter->fpr_idx < abi_fpr_arg_count) {
     *arg = jit_operand_fpr (abi, abi_fpr_args[iter->fpr_idx++]);
+    return;
+  } else if (is_fpr_arg(abi) && iter->gpr_idx < abi_gpr_arg_count) {
+    *arg = jit_operand_gpr (abi, abi_gpr_args[iter->gpr_idx++]);
     return;
   }
   *arg = jit_operand_mem (abi, JIT_SP, iter->stack_size);

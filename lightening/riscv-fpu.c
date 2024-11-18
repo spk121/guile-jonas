@@ -103,6 +103,10 @@ static void absr_d(jit_state_t *_jit, int32_t r0, int32_t r1);
 // Transfer operations
 static void movr_f(jit_state_t *_jit, int32_t r0, int32_t r1);
 static void movr_d(jit_state_t *_jit, int32_t r0, int32_t r1);
+static void movr_i_f(jit_state_t *_jit, int32_t r0, int32_t r1);
+static void movr_l_d(jit_state_t *_jit, int32_t r0, int32_t r1);
+static void movr_f_i(jit_state_t *_jit, int32_t r0, int32_t r1);
+static void movr_d_l(jit_state_t *_jit, int32_t r0, int32_t r1);
 
 // Argument management
 static void retr_f(jit_state_t *_jit, int32_t u);
@@ -398,6 +402,27 @@ movr_d(jit_state_t *_jit, int32_t r0, int32_t r1)
   if (r0 != r1)
     em_wp(_jit, _FMV_D(r0, r1));
 }
+static void
+movr_i_f(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  em_wp(_jit, _FMV_X_W(r0, r1));
+}
+static void
+movr_f_i(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  em_wp(_jit, _FMV_W_X(r0, r1));
+}
+static void
+movr_l_d(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  em_wp(_jit, _FMV_X_D(r0, r1));
+}
+static void
+movr_d_l(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  em_wp(_jit, _FMV_D_X(r0, r1));
+}
+
 static void
 truncr_f_i(jit_state_t *_jit, int32_t r0, int32_t r1)
 {
