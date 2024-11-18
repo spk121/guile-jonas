@@ -777,8 +777,7 @@
         (if (and v (variable-bound? v) (macro? (variable-ref v)))
             (let* ((m (variable-ref v))
                    (type (macro-type m))
-                   (trans (macro-binding m))
-                   (trans (if (pair? trans) (car trans) trans)))
+                   (trans (macro-binding m)))
               (if (eq? type 'syntax-parameter)
                   (if resolve-syntax-parameters?
                       (let ((lexical (assq-ref r v)))

@@ -583,10 +583,7 @@
                             (let ((v (and (not (equal? mod '(primitive)))
                                           (module-variable (if mod (resolve-module (cdr mod)) (current-module)) var))))
                               (if (and v (variable-bound? v) (macro? (variable-ref v)))
-                                  (let* ((m (variable-ref v))
-                                         (type (macro-type m))
-                                         (trans (macro-binding m))
-                                         (trans (if (pair? trans) (car trans) trans)))
+                                  (let* ((m (variable-ref v)) (type (macro-type m)) (trans (macro-binding m)))
                                     (if (eq? type 'syntax-parameter)
                                         (if resolve-syntax-parameters?
                                             (let ((lexical (assq-ref r v)))
@@ -1154,11 +1151,11 @@
                                 (source-wrap e w (wrap-subst w) mod)
                                 x))
                               (else (decorate-source x))))))
-                 (let* ((t-680b775fb37a463-10a5 transformer-environment)
-                        (t-680b775fb37a463-10a6 (lambda (k) (k e r w s rib mod))))
+                 (let* ((t-680b775fb37a463-10a3 transformer-environment)
+                        (t-680b775fb37a463-10a4 (lambda (k) (k e r w s rib mod))))
                    (with-fluid*
-                    t-680b775fb37a463-10a5
-                    t-680b775fb37a463-10a6
+                    t-680b775fb37a463-10a3
+                    t-680b775fb37a463-10a4
                     (lambda () (rebuild-macro-output (p (source-wrap e (anti-mark w) s mod)) (new-mark))))))))
             (expand-body
              (lambda (body outer-form r w mod)
@@ -1689,11 +1686,11 @@
                                                 s
                                                 mod
                                                 get-formals
-                                                (map (lambda (tmp-680b775fb37a463-132e
-                                                              tmp-680b775fb37a463-132d
-                                                              tmp-680b775fb37a463-132c)
-                                                       (cons tmp-680b775fb37a463-132c
-                                                             (cons tmp-680b775fb37a463-132d tmp-680b775fb37a463-132e)))
+                                                (map (lambda (tmp-680b775fb37a463-132c
+                                                              tmp-680b775fb37a463-132b
+                                                              tmp-680b775fb37a463-132a)
+                                                       (cons tmp-680b775fb37a463-132a
+                                                             (cons tmp-680b775fb37a463-132b tmp-680b775fb37a463-132c)))
                                                      e2*
                                                      e1*
                                                      args*)))
@@ -2805,8 +2802,9 @@
                                  #f
                                  k
                                  (list docstring)
-                                 (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
-                                        (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-1) tmp-680b775fb37a463-2))
+                                 (map (lambda (tmp-680b775fb37a463 tmp-680b775fb37a463-145f tmp-680b775fb37a463-145e)
+                                        (list (cons tmp-680b775fb37a463-145e tmp-680b775fb37a463-145f)
+                                              tmp-680b775fb37a463))
                                       template
                                       pattern
                                       keyword)))
@@ -2818,11 +2816,9 @@
                                        dots
                                        k
                                        '()
-                                       (map (lambda (tmp-680b775fb37a463-147b
-                                                     tmp-680b775fb37a463-147a
-                                                     tmp-680b775fb37a463)
-                                              (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-147a)
-                                                    tmp-680b775fb37a463-147b))
+                                       (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
+                                              (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-1)
+                                                    tmp-680b775fb37a463-2))
                                             template
                                             pattern
                                             keyword)))
@@ -2838,11 +2834,11 @@
                                              dots
                                              k
                                              (list docstring)
-                                             (map (lambda (tmp-680b775fb37a463-149a
+                                             (map (lambda (tmp-680b775fb37a463-2
                                                            tmp-680b775fb37a463-1
                                                            tmp-680b775fb37a463)
                                                     (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-1)
-                                                          tmp-680b775fb37a463-149a))
+                                                          tmp-680b775fb37a463-2))
                                                   template
                                                   pattern
                                                   keyword)))
@@ -2997,9 +2993,9 @@
                                                                    (apply (lambda (p)
                                                                             (if (= lev 0)
                                                                                 (quasiappend
-                                                                                 (map (lambda (tmp-680b775fb37a463-154c)
+                                                                                 (map (lambda (tmp-680b775fb37a463-154a)
                                                                                         (list "value"
-                                                                                              tmp-680b775fb37a463-154c))
+                                                                                              tmp-680b775fb37a463-154a))
                                                                                       p)
                                                                                  (quasi q lev))
                                                                                 (quasicons
@@ -3139,8 +3135,8 @@
                                        (let ((tmp-1 ls))
                                          (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                            (if tmp
-                                               (apply (lambda (t-680b775fb37a463-15b0)
-                                                        (cons "vector" t-680b775fb37a463-15b0))
+                                               (apply (lambda (t-680b775fb37a463-15ae)
+                                                        (cons "vector" t-680b775fb37a463-15ae))
                                                       tmp)
                                                (syntax-violation
                                                 #f
@@ -3150,8 +3146,8 @@
                               (let ((tmp-1 ($sc-dispatch tmp '(#(atom "quote") each-any))))
                                 (if tmp-1
                                     (apply (lambda (y)
-                                             (k (map (lambda (tmp-680b775fb37a463-15bc)
-                                                       (list "quote" tmp-680b775fb37a463-15bc))
+                                             (k (map (lambda (tmp-680b775fb37a463-15ba)
+                                                       (list "quote" tmp-680b775fb37a463-15ba))
                                                      y)))
                                            tmp-1)
                                     (let ((tmp-1 ($sc-dispatch tmp '(#(atom "list") . each-any))))
@@ -3162,8 +3158,8 @@
                                                 (apply (lambda (y z) (f z (lambda (ls) (k (append y ls))))) tmp-1)
                                                 (let ((else tmp))
                                                   (let ((tmp x))
-                                                    (let ((t-680b775fb37a463-15cb tmp))
-                                                      (list "list->vector" t-680b775fb37a463-15cb)))))))))))))))))
+                                                    (let ((t-680b775fb37a463-15c9 tmp))
+                                                      (list "list->vector" t-680b775fb37a463-15c9)))))))))))))))))
                (emit (lambda (x)
                        (let ((tmp x))
                          (let ((tmp-1 ($sc-dispatch tmp '(#(atom "quote") any))))
@@ -3175,9 +3171,9 @@
                                               (let ((tmp-1 (map emit x)))
                                                 (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                                   (if tmp
-                                                      (apply (lambda (t-680b775fb37a463-15da)
+                                                      (apply (lambda (t-680b775fb37a463-15d8)
                                                                (cons (make-syntax 'list '((top)) '(hygiene guile))
-                                                                     t-680b775fb37a463-15da))
+                                                                     t-680b775fb37a463-15d8))
                                                              tmp)
                                                       (syntax-violation
                                                        #f
@@ -3193,14 +3189,14 @@
                                                           (let ((tmp-1 (list (emit (car x*)) (f (cdr x*)))))
                                                             (let ((tmp ($sc-dispatch tmp-1 '(any any))))
                                                               (if tmp
-                                                                  (apply (lambda (t-680b775fb37a463-15ee
-                                                                                  t-680b775fb37a463-15ed)
+                                                                  (apply (lambda (t-680b775fb37a463-15ec
+                                                                                  t-680b775fb37a463-15eb)
                                                                            (list (make-syntax
                                                                                   'cons
                                                                                   '((top))
                                                                                   '(hygiene guile))
-                                                                                 t-680b775fb37a463-15ee
-                                                                                 t-680b775fb37a463-15ed))
+                                                                                 t-680b775fb37a463-15ec
+                                                                                 t-680b775fb37a463-15eb))
                                                                          tmp)
                                                                   (syntax-violation
                                                                    #f
@@ -3213,12 +3209,12 @@
                                                           (let ((tmp-1 (map emit x)))
                                                             (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                                               (if tmp
-                                                                  (apply (lambda (t-680b775fb37a463-15fa)
+                                                                  (apply (lambda (t-680b775fb37a463-15f8)
                                                                            (cons (make-syntax
                                                                                   'append
                                                                                   '((top))
                                                                                   '(hygiene guile))
-                                                                                 t-680b775fb37a463-15fa))
+                                                                                 t-680b775fb37a463-15f8))
                                                                          tmp)
                                                                   (syntax-violation
                                                                    #f
