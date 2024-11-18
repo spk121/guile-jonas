@@ -261,6 +261,7 @@
              (lambda (type sym val) (module-define! (current-module) sym (make-syntax-transformer sym type val))))
             (nonsymbol-id? (lambda (x) (and (syntax? x) (symbol? (syntax-expression x)))))
             (id? (lambda (x) (if (symbol? x) #t (and (syntax? x) (symbol? (syntax-expression x))))))
+            (id-sym-name (lambda (x) (if (syntax? x) (syntax-expression x) x)))
             (id-sym-name&marks
              (lambda (x w)
                (if (syntax? x)
@@ -346,52 +347,154 @@
             (id-var-name
              (lambda (id w mod)
                (letrec* ((search
-                          (lambda (sym subst marks mod)
-                            (if (null? subst)
-                                (values #f marks)
-                                (let ((fst (car subst)))
-                                  (if (eq? fst 'shift)
-                                      (search sym (cdr subst) (cdr marks) mod)
-                                      (let ((symnames (ribcage-symnames fst)))
-                                        (if (vector? symnames)
-                                            (search-vector-rib sym subst marks symnames fst mod)
-                                            (search-list-rib sym subst marks symnames fst mod))))))))
-                         (search-list-rib
-                          (lambda (sym subst marks symnames ribcage mod)
-                            (let f ((symnames symnames)
-                                    (rlabels (ribcage-labels ribcage))
-                                    (rmarks (ribcage-marks ribcage)))
-                              (cond
-                                ((null? symnames) (search sym (cdr subst) marks mod))
-                                ((and (eq? (car symnames) sym) (same-marks? marks (car rmarks)))
-                                 (let ((n (car rlabels)))
-                                   (if (pair? n)
-                                       (if (equal? mod (car n))
-                                           (values (cdr n) marks)
-                                           (f (cdr symnames) (cdr rlabels) (cdr rmarks)))
-                                       (values n marks))))
-                                (else (f (cdr symnames) (cdr rlabels) (cdr rmarks)))))))
-                         (search-vector-rib
-                          (lambda (sym subst marks symnames ribcage mod)
-                            (let ((n (vector-length symnames)))
-                              (let f ((i 0))
-                                (cond
-                                  ((= i n) (search sym (cdr subst) marks mod))
-                                  ((and (eq? (vector-ref symnames i) sym)
-                                        (same-marks? marks (vector-ref (ribcage-marks ribcage) i)))
-                                   (let ((n (vector-ref (ribcage-labels ribcage) i)))
-                                     (if (pair? n)
-                                         (if (equal? mod (car n)) (values (cdr n) marks) (f (#{1+}# i)))
-                                         (values n marks))))
-                                  (else (f (#{1+}# i)))))))))
+                          (lambda (sym subst marks)
+                            (let* ((v subst)
+                                   (fk (lambda ()
+                                         (let ((fk (lambda ()
+                                                     (let ((fk (lambda () (error "value failed to match" v))))
+                                                       (if (pair? v)
+                                                           (let ((vx (car v)) (vy (cdr v)))
+                                                             (if (and (vector? vx)
+                                                                      (eq? (vector-length vx)
+                                                                           (length '('ribcage rsymnames rmarks rlabels))))
+                                                                 (if (eq? (vector-ref vx 0) 'ribcage)
+                                                                     (let* ((rsymnames (vector-ref vx (#{1+}# 0)))
+                                                                            (rmarks (vector-ref vx (#{1+}# (#{1+}# 0))))
+                                                                            (rlabels
+                                                                             (vector-ref
+                                                                              vx
+                                                                              (#{1+}# (#{1+}# (#{1+}# 0)))))
+                                                                            (subst vy))
+                                                                       (letrec* ((search-list-rib
+                                                                                  (lambda ()
+                                                                                    (let lp ((rsymnames rsymnames)
+                                                                                             (rmarks rmarks)
+                                                                                             (rlabels rlabels))
+                                                                                      (let* ((v rsymnames)
+                                                                                             (fk (lambda ()
+                                                                                                   (let ((fk (lambda ()
+                                                                                                               (error "value failed to match"
+                                                                                                                      v))))
+                                                                                                     (if (pair? v)
+                                                                                                         (let ((vx (car v))
+                                                                                                               (vy (cdr v)))
+                                                                                                           (let* ((rsym vx)
+                                                                                                                  (rsymnames
+                                                                                                                   vy)
+                                                                                                                  (v rmarks)
+                                                                                                                  (fk (lambda ()
+                                                                                                                        (error "value failed to match"
+                                                                                                                               v))))
+                                                                                                             (if (pair? v)
+                                                                                                                 (let ((vx (car v))
+                                                                                                                       (vy (cdr v)))
+                                                                                                                   (let* ((rmarks1
+                                                                                                                           vx)
+                                                                                                                          (rmarks
+                                                                                                                           vy)
+                                                                                                                          (v rlabels)
+                                                                                                                          (fk (lambda ()
+                                                                                                                                (error "value failed to match"
+                                                                                                                                       v))))
+                                                                                                                     (if (pair? v)
+                                                                                                                         (let ((vx (car v))
+                                                                                                                               (vy (cdr v)))
+                                                                                                                           (let* ((label vx)
+                                                                                                                                  (rlabels
+                                                                                                                                   vy))
+                                                                                                                             (if (and (eq? sym
+                                                                                                                                           rsym)
+                                                                                                                                      (same-marks?
+                                                                                                                                       marks
+                                                                                                                                       rmarks1))
+                                                                                                                                 (let* ((v label)
+                                                                                                                                        (fk (lambda ()
+                                                                                                                                              (let ((fk (lambda ()
+                                                                                                                                                          (error "value failed to match"
+                                                                                                                                                                 v))))
+                                                                                                                                                label))))
+                                                                                                                                   (if (pair? v)
+                                                                                                                                       (let ((vx (car v))
+                                                                                                                                             (vy (cdr v)))
+                                                                                                                                         (let* ((mod* vx)
+                                                                                                                                                (label vy))
+                                                                                                                                           (if (equal?
+                                                                                                                                                mod*
+                                                                                                                                                mod)
+                                                                                                                                               label
+                                                                                                                                               (lp rsymnames
+                                                                                                                                                   rmarks
+                                                                                                                                                   rlabels))))
+                                                                                                                                       (fk)))
+                                                                                                                                 (lp rsymnames
+                                                                                                                                     rmarks
+                                                                                                                                     rlabels))))
+                                                                                                                         (fk))))
+                                                                                                                 (fk))))
+                                                                                                         (fk))))))
+                                                                                        (if (null? v)
+                                                                                            (search sym subst marks)
+                                                                                            (fk))))))
+                                                                                 (search-vector-rib
+                                                                                  (lambda ()
+                                                                                    (let ((n (vector-length rsymnames)))
+                                                                                      (let lp ((i 0))
+                                                                                        (cond
+                                                                                          ((= i n)
+                                                                                           (search sym subst marks))
+                                                                                          ((and (eq? (vector-ref
+                                                                                                      rsymnames
+                                                                                                      i)
+                                                                                                     sym)
+                                                                                                (same-marks?
+                                                                                                 marks
+                                                                                                 (vector-ref rmarks i)))
+                                                                                           (let* ((v (vector-ref
+                                                                                                      rlabels
+                                                                                                      i))
+                                                                                                  (fk (lambda ()
+                                                                                                        (let* ((fk (lambda ()
+                                                                                                                     (error "value failed to match"
+                                                                                                                            v)))
+                                                                                                               (label v))
+                                                                                                          label))))
+                                                                                             (if (pair? v)
+                                                                                                 (let ((vx (car v))
+                                                                                                       (vy (cdr v)))
+                                                                                                   (let* ((mod* vx)
+                                                                                                          (label vy))
+                                                                                                     (if (equal?
+                                                                                                          mod*
+                                                                                                          mod)
+                                                                                                         label
+                                                                                                         (lp (#{1+}# i)))))
+                                                                                                 (fk))))
+                                                                                          (else (lp (#{1+}# i)))))))))
+                                                                         (if (vector? rsymnames)
+                                                                             (search-vector-rib)
+                                                                             (search-list-rib))))
+                                                                     (fk))
+                                                                 (fk)))
+                                                           (fk))))))
+                                           (if (pair? v)
+                                               (let ((vx (car v)) (vy (cdr v)))
+                                                 (if (eq? vx 'shift)
+                                                     (let* ((subst vy)
+                                                            (v marks)
+                                                            (fk (lambda () (error "value failed to match" v))))
+                                                       (if (pair? v)
+                                                           (let ((vx (car v)) (vy (cdr v)))
+                                                             (let ((marks vy)) (search sym subst marks)))
+                                                           (fk)))
+                                                     (fk)))
+                                               (fk))))))
+                              (if (null? v) #f (fk))))))
                  (cond
-                   ((symbol? id) (or (search id (wrap-subst w) (wrap-marks w) mod) id))
+                   ((symbol? id) (or (search id (wrap-subst w) (wrap-marks w)) id))
                    ((syntax? id)
                     (let ((id (syntax-expression id)) (w1 (syntax-wrap id)) (mod (or (syntax-module id) mod)))
                       (let ((marks (join-marks (wrap-marks w) (wrap-marks w1))))
-                        (call-with-values
-                         (lambda () (search id (wrap-subst w) marks mod))
-                         (lambda (new-id marks) (or new-id (search id (wrap-subst w1) marks mod) id))))))
+                        (or (search id (wrap-subst w) marks) (search id (wrap-subst w1) marks) id))))
                    (else (syntax-violation 'id-var-name "invalid id" id))))))
             (locally-bound-identifiers
              (lambda (w mod)
@@ -480,14 +583,12 @@
                       (nj (id-var-name j empty-wrap mj)))
                  (letrec* ((id-module-binding
                             (lambda (id mod)
-                              (module-variable
-                               (if mod (resolve-module (cdr mod)) (current-module))
-                               (let ((x id)) (if (syntax? x) (syntax-expression x) x))))))
+                              (module-variable (if mod (resolve-module (cdr mod)) (current-module)) (id-sym-name id)))))
                    (cond
                      ((syntax? ni) (free-id=? ni j))
                      ((syntax? nj) (free-id=? i nj))
                      ((symbol? ni)
-                      (and (eq? nj (let ((x j)) (if (syntax? x) (syntax-expression x) x)))
+                      (and (eq? nj (id-sym-name j))
                            (let ((bi (id-module-binding i mi)))
                              (if bi (eq? bi (id-module-binding j mj)) (and (not (id-module-binding j mj)) (eq? ni nj))))
                            (eq? (id-module-binding i mi) (id-module-binding j mj))))
@@ -920,11 +1021,11 @@
                                 (source-wrap e w (wrap-subst w) mod)
                                 x))
                               (else (decorate-source x))))))
-                 (let* ((t-680b775fb37a463-f2c transformer-environment)
-                        (t-680b775fb37a463-f2d (lambda (k) (k e r w s rib mod))))
+                 (let* ((t-680b775fb37a463-fa5 transformer-environment)
+                        (t-680b775fb37a463-fa6 (lambda (k) (k e r w s rib mod))))
                    (with-fluid*
-                    t-680b775fb37a463-f2c
-                    t-680b775fb37a463-f2d
+                    t-680b775fb37a463-fa5
+                    t-680b775fb37a463-fa6
                     (lambda () (rebuild-macro-output (p (source-wrap e (anti-mark w) s mod)) (new-mark))))))))
             (expand-body
              (lambda (body outer-form r w mod)
@@ -1454,11 +1555,11 @@
                                                 s
                                                 mod
                                                 get-formals
-                                                (map (lambda (tmp-680b775fb37a463-119a
+                                                (map (lambda (tmp-680b775fb37a463-2
                                                               tmp-680b775fb37a463-1
                                                               tmp-680b775fb37a463)
                                                        (cons tmp-680b775fb37a463
-                                                             (cons tmp-680b775fb37a463-1 tmp-680b775fb37a463-119a)))
+                                                             (cons tmp-680b775fb37a463-1 tmp-680b775fb37a463-2)))
                                                      e2*
                                                      e1*
                                                      args*)))
@@ -1726,8 +1827,8 @@
                (apply (lambda (args e1 e2)
                         (build-it
                          '()
-                         (map (lambda (tmp-680b775fb37a463-6be tmp-680b775fb37a463-6bd tmp-680b775fb37a463-6bc)
-                                (cons tmp-680b775fb37a463-6bc (cons tmp-680b775fb37a463-6bd tmp-680b775fb37a463-6be)))
+                         (map (lambda (tmp-680b775fb37a463-6bf tmp-680b775fb37a463-6be tmp-680b775fb37a463-6bd)
+                                (cons tmp-680b775fb37a463-6bd (cons tmp-680b775fb37a463-6be tmp-680b775fb37a463-6bf)))
                               e2
                               e1
                               args)))
@@ -1737,9 +1838,9 @@
                      (apply (lambda (docstring args e1 e2)
                               (build-it
                                (list (cons 'documentation (syntax->datum docstring)))
-                               (map (lambda (tmp-680b775fb37a463-6d4 tmp-680b775fb37a463-6d3 tmp-680b775fb37a463-6d2)
-                                      (cons tmp-680b775fb37a463-6d2
-                                            (cons tmp-680b775fb37a463-6d3 tmp-680b775fb37a463-6d4)))
+                               (map (lambda (tmp-680b775fb37a463-6d5 tmp-680b775fb37a463-6d4 tmp-680b775fb37a463-6d3)
+                                      (cons tmp-680b775fb37a463-6d3
+                                            (cons tmp-680b775fb37a463-6d4 tmp-680b775fb37a463-6d5)))
                                     e2
                                     e1
                                     args)))
@@ -1770,9 +1871,9 @@
                      (apply (lambda (docstring args e1 e2)
                               (build-it
                                (list (cons 'documentation (syntax->datum docstring)))
-                               (map (lambda (tmp-680b775fb37a463-69e tmp-680b775fb37a463-69d tmp-680b775fb37a463-69c)
-                                      (cons tmp-680b775fb37a463-69c
-                                            (cons tmp-680b775fb37a463-69d tmp-680b775fb37a463-69e)))
+                               (map (lambda (tmp-680b775fb37a463-69f tmp-680b775fb37a463-69e tmp-680b775fb37a463-69d)
+                                      (cons tmp-680b775fb37a463-69d
+                                            (cons tmp-680b775fb37a463-69e tmp-680b775fb37a463-69f)))
                                     e2
                                     e1
                                     args)))
@@ -2553,9 +2654,9 @@
                            #f
                            k
                            '()
-                           (map (lambda (tmp-680b775fb37a463-12b5 tmp-680b775fb37a463-12b4 tmp-680b775fb37a463-12b3)
-                                  (list (cons tmp-680b775fb37a463-12b3 tmp-680b775fb37a463-12b4)
-                                        tmp-680b775fb37a463-12b5))
+                           (map (lambda (tmp-680b775fb37a463-132e tmp-680b775fb37a463-132d tmp-680b775fb37a463-132c)
+                                  (list (cons tmp-680b775fb37a463-132c tmp-680b775fb37a463-132d)
+                                        tmp-680b775fb37a463-132e))
                                 template
                                 pattern
                                 keyword)))
@@ -2570,11 +2671,8 @@
                                  #f
                                  k
                                  (list docstring)
-                                 (map (lambda (tmp-680b775fb37a463-12ce
-                                               tmp-680b775fb37a463-12cd
-                                               tmp-680b775fb37a463-12cc)
-                                        (list (cons tmp-680b775fb37a463-12cc tmp-680b775fb37a463-12cd)
-                                              tmp-680b775fb37a463-12ce))
+                                 (map (lambda (tmp-680b775fb37a463-2 tmp-680b775fb37a463-1 tmp-680b775fb37a463)
+                                        (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-1) tmp-680b775fb37a463-2))
                                       template
                                       pattern
                                       keyword)))
@@ -2586,11 +2684,11 @@
                                        dots
                                        k
                                        '()
-                                       (map (lambda (tmp-680b775fb37a463-12e7
-                                                     tmp-680b775fb37a463-12e6
-                                                     tmp-680b775fb37a463-12e5)
-                                              (list (cons tmp-680b775fb37a463-12e5 tmp-680b775fb37a463-12e6)
-                                                    tmp-680b775fb37a463-12e7))
+                                       (map (lambda (tmp-680b775fb37a463
+                                                     tmp-680b775fb37a463-135f
+                                                     tmp-680b775fb37a463-135e)
+                                              (list (cons tmp-680b775fb37a463-135e tmp-680b775fb37a463-135f)
+                                                    tmp-680b775fb37a463))
                                             template
                                             pattern
                                             keyword)))
@@ -2606,11 +2704,11 @@
                                              dots
                                              k
                                              (list docstring)
-                                             (map (lambda (tmp-680b775fb37a463-2
-                                                           tmp-680b775fb37a463-1
-                                                           tmp-680b775fb37a463)
-                                                    (list (cons tmp-680b775fb37a463 tmp-680b775fb37a463-1)
-                                                          tmp-680b775fb37a463-2))
+                                             (map (lambda (tmp-680b775fb37a463-137f
+                                                           tmp-680b775fb37a463-137e
+                                                           tmp-680b775fb37a463-137d)
+                                                    (list (cons tmp-680b775fb37a463-137d tmp-680b775fb37a463-137e)
+                                                          tmp-680b775fb37a463-137f))
                                                   template
                                                   pattern
                                                   keyword)))
@@ -2738,9 +2836,9 @@
                                                              (apply (lambda (p)
                                                                       (if (= lev 0)
                                                                           (quasilist*
-                                                                           (map (lambda (tmp-680b775fb37a463-13b3)
+                                                                           (map (lambda (tmp-680b775fb37a463-142c)
                                                                                   (list "value"
-                                                                                        tmp-680b775fb37a463-13b3))
+                                                                                        tmp-680b775fb37a463-142c))
                                                                                 p)
                                                                            (quasi q lev))
                                                                           (quasicons
@@ -2766,9 +2864,9 @@
                                                                    (apply (lambda (p)
                                                                             (if (= lev 0)
                                                                                 (quasiappend
-                                                                                 (map (lambda (tmp-680b775fb37a463-13b8)
+                                                                                 (map (lambda (tmp-680b775fb37a463)
                                                                                         (list "value"
-                                                                                              tmp-680b775fb37a463-13b8))
+                                                                                              tmp-680b775fb37a463))
                                                                                       p)
                                                                                  (quasi q lev))
                                                                                 (quasicons
@@ -2804,8 +2902,8 @@
                                            (apply (lambda (p)
                                                     (if (= lev 0)
                                                         (quasilist*
-                                                         (map (lambda (tmp-680b775fb37a463-13ce)
-                                                                (list "value" tmp-680b775fb37a463-13ce))
+                                                         (map (lambda (tmp-680b775fb37a463)
+                                                                (list "value" tmp-680b775fb37a463))
                                                               p)
                                                          (vquasi q lev))
                                                         (quasicons
@@ -2825,8 +2923,8 @@
                                                  (apply (lambda (p)
                                                           (if (= lev 0)
                                                               (quasiappend
-                                                               (map (lambda (tmp-680b775fb37a463-13d3)
-                                                                      (list "value" tmp-680b775fb37a463-13d3))
+                                                               (map (lambda (tmp-680b775fb37a463-144c)
+                                                                      (list "value" tmp-680b775fb37a463-144c))
                                                                     p)
                                                                (vquasi q lev))
                                                               (quasicons
@@ -2908,8 +3006,7 @@
                                        (let ((tmp-1 ls))
                                          (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                            (if tmp
-                                               (apply (lambda (t-680b775fb37a463-141c)
-                                                        (cons "vector" t-680b775fb37a463-141c))
+                                               (apply (lambda (t-680b775fb37a463) (cons "vector" t-680b775fb37a463))
                                                       tmp)
                                                (syntax-violation
                                                 #f
@@ -2919,7 +3016,8 @@
                               (let ((tmp-1 ($sc-dispatch tmp '(#(atom "quote") each-any))))
                                 (if tmp-1
                                     (apply (lambda (y)
-                                             (k (map (lambda (tmp-680b775fb37a463) (list "quote" tmp-680b775fb37a463))
+                                             (k (map (lambda (tmp-680b775fb37a463-14a1)
+                                                       (list "quote" tmp-680b775fb37a463-14a1))
                                                      y)))
                                            tmp-1)
                                     (let ((tmp-1 ($sc-dispatch tmp '(#(atom "list") . each-any))))
@@ -2930,8 +3028,8 @@
                                                 (apply (lambda (y z) (f z (lambda (ls) (k (append y ls))))) tmp-1)
                                                 (let ((else tmp))
                                                   (let ((tmp x))
-                                                    (let ((t-680b775fb37a463 tmp))
-                                                      (list "list->vector" t-680b775fb37a463)))))))))))))))))
+                                                    (let ((t-680b775fb37a463-14b0 tmp))
+                                                      (list "list->vector" t-680b775fb37a463-14b0)))))))))))))))))
                (emit (lambda (x)
                        (let ((tmp x))
                          (let ((tmp-1 ($sc-dispatch tmp '(#(atom "quote") any))))
@@ -2943,9 +3041,9 @@
                                               (let ((tmp-1 (map emit x)))
                                                 (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                                   (if tmp
-                                                      (apply (lambda (t-680b775fb37a463)
+                                                      (apply (lambda (t-680b775fb37a463-14bf)
                                                                (cons (make-syntax 'list '((top)) '(hygiene guile))
-                                                                     t-680b775fb37a463))
+                                                                     t-680b775fb37a463-14bf))
                                                              tmp)
                                                       (syntax-violation
                                                        #f
@@ -2961,14 +3059,14 @@
                                                           (let ((tmp-1 (list (emit (car x*)) (f (cdr x*)))))
                                                             (let ((tmp ($sc-dispatch tmp-1 '(any any))))
                                                               (if tmp
-                                                                  (apply (lambda (t-680b775fb37a463-145a
-                                                                                  t-680b775fb37a463)
+                                                                  (apply (lambda (t-680b775fb37a463-14d3
+                                                                                  t-680b775fb37a463-14d2)
                                                                            (list (make-syntax
                                                                                   'cons
                                                                                   '((top))
                                                                                   '(hygiene guile))
-                                                                                 t-680b775fb37a463-145a
-                                                                                 t-680b775fb37a463))
+                                                                                 t-680b775fb37a463-14d3
+                                                                                 t-680b775fb37a463-14d2))
                                                                          tmp)
                                                                   (syntax-violation
                                                                    #f
@@ -2981,12 +3079,12 @@
                                                           (let ((tmp-1 (map emit x)))
                                                             (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                                               (if tmp
-                                                                  (apply (lambda (t-680b775fb37a463)
+                                                                  (apply (lambda (t-680b775fb37a463-14df)
                                                                            (cons (make-syntax
                                                                                   'append
                                                                                   '((top))
                                                                                   '(hygiene guile))
-                                                                                 t-680b775fb37a463))
+                                                                                 t-680b775fb37a463-14df))
                                                                          tmp)
                                                                   (syntax-violation
                                                                    #f
@@ -2999,12 +3097,12 @@
                                                                 (let ((tmp-1 (map emit x)))
                                                                   (let ((tmp ($sc-dispatch tmp-1 'each-any)))
                                                                     (if tmp
-                                                                        (apply (lambda (t-680b775fb37a463)
+                                                                        (apply (lambda (t-680b775fb37a463-14eb)
                                                                                  (cons (make-syntax
                                                                                         'vector
                                                                                         '((top))
                                                                                         '(hygiene guile))
-                                                                                       t-680b775fb37a463))
+                                                                                       t-680b775fb37a463-14eb))
                                                                                tmp)
                                                                         (syntax-violation
                                                                          #f
@@ -3015,12 +3113,12 @@
                                                          (if tmp-1
                                                              (apply (lambda (x)
                                                                       (let ((tmp (emit x)))
-                                                                        (let ((t-680b775fb37a463-147e tmp))
+                                                                        (let ((t-680b775fb37a463-14f7 tmp))
                                                                           (list (make-syntax
                                                                                  'list->vector
                                                                                  '((top))
                                                                                  '(hygiene guile))
-                                                                                t-680b775fb37a463-147e))))
+                                                                                t-680b775fb37a463-14f7))))
                                                                     tmp-1)
                                                              (let ((tmp-1 ($sc-dispatch tmp '(#(atom "value") any))))
                                                                (if tmp-1

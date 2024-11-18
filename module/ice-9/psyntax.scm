@@ -343,7 +343,7 @@
 
   (define-syntax-rule (arg-check pred? e who)
     (let ((x e))
-      (if (not (pred? x)) (syntax-violation who "invalid argument" x))))
+      (unless (pred? x) (syntax-violation who "invalid argument" x))))
 
   ;; compile-time environments
 
@@ -467,11 +467,10 @@
      ((syntax? x) (symbol? (syntax-expression x)))
      (else #f)))
 
-  (define-syntax-rule (id-sym-name e)
-    (let ((x e))
-      (if (syntax? x)
-          (syntax-expression x)
-          x)))
+  (define (id-sym-name x)
+    (if (syntax? x)
+        (syntax-expression x)
+        x))
 
   (define (id-sym-name&marks x w)
     (if (syntax? x)
@@ -638,63 +637,62 @@
     ;; case, this routine returns either a symbol, a syntax object, or
     ;; a string label.
     ;;
-    (define-syntax-rule (first e)
-      ;; Rely on Guile's multiple-values truncation.
-      e)
-    (define search
-      (lambda (sym subst marks mod)
-        (if (null? subst)
-            (values #f marks)
-            (let ((fst (car subst)))
-              (if (eq? fst 'shift)
-                  (search sym (cdr subst) (cdr marks) mod)
-                  (let ((symnames (ribcage-symnames fst)))
-                    (if (vector? symnames)
-                        (search-vector-rib sym subst marks symnames fst mod)
-                        (search-list-rib sym subst marks symnames fst mod))))))))
-    (define search-list-rib
-      (lambda (sym subst marks symnames ribcage mod)
-        (let f ((symnames symnames)
-                (rlabels (ribcage-labels ribcage))
-                (rmarks (ribcage-marks ribcage)))
-          (cond
-           ((null? symnames) (search sym (cdr subst) marks mod))
-           ((and (eq? (car symnames) sym) (same-marks? marks (car rmarks)))
-            (let ((n (car rlabels)))
-              (if (pair? n)
-                  (if (equal? mod (car n))
-                      (values (cdr n) marks)
-                      (f (cdr symnames) (cdr rlabels) (cdr rmarks)))
-                  (values n marks))))
-           (else (f (cdr symnames) (cdr rlabels) (cdr rmarks)))))))
-    (define search-vector-rib
-      (lambda (sym subst marks symnames ribcage mod)
-        (let ((n (vector-length symnames)))
-          (let f ((i 0))
-            (cond
-             ((= i n) (search sym (cdr subst) marks mod))
-             ((and (eq? (vector-ref symnames i) sym)
-                   (same-marks? marks (vector-ref (ribcage-marks ribcage) i)))
-              (let ((n (vector-ref (ribcage-labels ribcage) i)))
-                (if (pair? n)
-                    (if (equal? mod (car n))
-                        (values (cdr n) marks)
-                        (f (1+ i)))
-                    (values n marks))))
-             (else (f (1+ i))))))))
+    (define (search sym subst marks)
+      (match subst
+        (() #f)
+        (('shift . subst)
+         (match marks
+           ((_ . marks)
+            (search sym subst marks))))
+        ((#('ribcage rsymnames rmarks rlabels) . subst)
+         (define (search-list-rib)
+           (let lp ((rsymnames rsymnames)
+                    (rmarks rmarks)
+                    (rlabels rlabels))
+             (match rsymnames
+               (() (search sym subst marks))
+               ((rsym . rsymnames)
+                (match rmarks
+                  ((rmarks1 . rmarks)
+                   (match rlabels
+                     ((label . rlabels)
+                      (if (and (eq? sym rsym) (same-marks? marks rmarks1))
+                          (match label
+                            ((mod* . label)
+                             (if (equal? mod* mod)
+                                 label
+                                 (lp rsymnames rmarks rlabels)))
+                            (_ label))
+                          (lp rsymnames rmarks rlabels))))))))))
+         (define (search-vector-rib)
+           (let ((n (vector-length rsymnames)))
+             (let lp ((i 0))
+               (cond
+                ((= i n) (search sym subst marks))
+                ((and (eq? (vector-ref rsymnames i) sym)
+                      (same-marks? marks (vector-ref rmarks i)))
+                 (match (vector-ref rlabels i)
+                   ((mod* . label)
+                    (if (equal? mod* mod)
+                        label
+                        (lp (1+ i))))
+                   (label
+                    label)))
+                (else (lp (1+ i)))))))
+         (if (vector? rsymnames)
+             (search-vector-rib)
+             (search-list-rib)))))
     (cond
      ((symbol? id)
-      (or (first (search id (wrap-subst w) (wrap-marks w) mod)) id))
+      (or (search id (wrap-subst w) (wrap-marks w)) id))
      ((syntax? id)
       (let ((id (syntax-expression id))
             (w1 (syntax-wrap id))
             (mod (or (syntax-module id) mod)))
         (let ((marks (join-marks (wrap-marks w) (wrap-marks w1))))
-          (call-with-values (lambda () (search id (wrap-subst w) marks mod))
-            (lambda (new-id marks)
-              (or new-id
-                  (first (search id (wrap-subst w1) marks mod))
-                  id))))))
+          (or (search id (wrap-subst w) marks)
+              (search id (wrap-subst w1) marks)
+              id))))
      (else (syntax-violation 'id-var-name "invalid id" id))))
 
   ;; A helper procedure for syntax-locally-bound-identifiers, which
