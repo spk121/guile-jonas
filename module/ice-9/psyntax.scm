@@ -224,12 +224,12 @@
     (match mod
       (#f (bare-cont #f var))
       (('public . mod) (modref-cont mod var #t))
-      (((or 'private hygiene) . mod)
+      (((or 'private 'hygiene) . mod)
        (if (equal? mod (module-name (current-module)))
            (bare-cont mod var)
            (modref-cont mod var #f)))
       (('bare . _) (bare-cont var))
-      (('primitive. _)
+      (('primitive . _)
        (syntax-violation #f "primitive not in operator position" var))))
 
   (define (build-global-reference sourcev var mod)
