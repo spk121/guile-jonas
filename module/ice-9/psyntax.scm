@@ -214,7 +214,7 @@
   (define (build-conditional sourcev test-exp then-exp else-exp)
     (make-conditional sourcev test-exp then-exp else-exp))
   
-  (define (build-lexical-reference type sourcev name var)
+  (define (build-lexical-reference sourcev name var)
     (make-lexical-ref sourcev name var))
   
   (define (build-lexical-assignment sourcev name var exp)
@@ -306,7 +306,7 @@
             (make-letrec
              src #f
              (list f-name) (list f) (list (maybe-name-value f-name proc))
-             (build-call src (build-lexical-reference 'fun src f-name f)
+             (build-call src (build-lexical-reference src f-name f)
                          (map maybe-name-value ids val-exps)))))))))
 
   (define (build-letrec src in-order? ids vars val-exps body-exp)
@@ -897,9 +897,10 @@
 
   (define (valid-bound-ids? ids)
     (and (let all-ids? ((ids ids))
-           (or (null? ids)
-               (and (id? (car ids))
-                    (all-ids? (cdr ids)))))
+           (match ids
+             (() #t)
+             ((id . ids)
+              (and (id? id) (all-ids? ids)))))
          (distinct-bound-ids? ids)))
 
   ;; distinct-bound-ids? expects a list of ids and returns #t if there are
@@ -910,14 +911,18 @@
 
   (define (distinct-bound-ids? ids)
     (let distinct? ((ids ids))
-      (or (null? ids)
-          (and (not (bound-id-member? (car ids) (cdr ids)))
-               (distinct? (cdr ids))))))
+      (match ids
+        (() #t)
+        ((id . ids)
+         (and (not (bound-id-member? id ids))
+              (distinct? ids))))))
 
-  (define (bound-id-member? x list)
-    (and (not (null? list))
-         (or (bound-id=? x (car list))
-             (bound-id-member? x (cdr list)))))
+  (define (bound-id-member? x ids)
+    (match ids
+      (() #f)
+      ((id . ids)
+       (or (bound-id=? x id)
+           (bound-id-member? x ids)))))
 
   ;; wrapping expressions and identifiers
 
@@ -944,11 +949,12 @@
 
   (define (expand-sequence body r w s mod)
     (build-sequence s
-                    (let dobody ((body body) (r r) (w w) (mod mod))
-                      (if (null? body)
-                          '()
-                          (let ((first (expand (car body) r w mod)))
-                            (cons first (dobody (cdr body) r w mod)))))))
+                    (let lp ((body body))
+                      (match body
+                        (() '())
+                        ((head . tail)
+                         (let ((expr (expand head r w mod)))
+                           (cons expr (lp tail))))))))
 
   ;; At top-level, we allow mixed definitions and expressions.  Like
   ;; expand-body we expand in two passes.
@@ -991,10 +997,11 @@
         ;; to appending a uniquifying integer.
         (define (ribcage-has-var? var)
           (let lp ((labels (ribcage-labels ribcage)))
-            (and (pair? labels)
-                 (let ((wrapped (cdar labels)))
-                   (or (eq? (syntax-expression wrapped) var)
-                       (lp (cdr labels)))))))
+            (match labels
+              (() #f)
+              (((_ . wrapped) . labels)
+               (or (eq? (syntax-expression wrapped) var)
+                   (lp labels))))))
         (let lp ((unique var) (n 1))
           (if (ribcage-has-var? unique)
               (let ((tail (string->symbol (number->string n))))
@@ -1012,21 +1019,22 @@
             (hash (syntax->datum orig-form) most-positive-fixnum)
             16)))))
       (define (parse body r w s m esew mod)
-        (let lp ((body body) (exps '()))
-          (if (null? body)
-              exps
-              (lp (cdr body)
-                  (append (parse1 (car body) r w s m esew mod)
-                          exps)))))
+        (let lp ((body body))
+          (match body
+            (() '())
+            ((head . tail)
+             (let ((thunks (parse1 head r w s m esew mod)))
+               (append thunks (lp tail)))))))
       (define (parse1 x r w s m esew mod)
         (define (current-module-for-expansion mod)
-          (case (car mod)
-            ;; If the module was just put in place for hygiene, in a
-            ;; top-level `begin' always recapture the current
-            ;; module.  If a user wants to override, then we need to
-            ;; use @@ or similar.
-            ((hygiene) (cons 'hygiene (module-name (current-module))))
-            (else mod)))
+          (match mod
+            (('hygiene . _)
+             ;; If the module was just put in place for hygiene, in a
+             ;; top-level `begin' always recapture the current
+             ;; module.  If a user wants to override, then we need to
+             ;; use @@ or similar.
+             (cons 'hygiene (module-name (current-module))))
+            (_ mod)))
         (call-with-values
             (lambda ()
               (let ((mod (current-module-for-expansion mod)))
@@ -1049,10 +1057,10 @@
                         (lambda (type* value* mod*)
                           ;; If the identifier to be bound is currently bound to a
                           ;; macro, then immediately discard that binding.
-                          (if (eq? type* 'macro)
-                              (top-level-eval (build-global-definition
-                                               s mod var (build-void s))
-                                              mod))
+                          (when (eq? type* 'macro)
+                            (top-level-eval (build-global-definition
+                                             s mod var (build-void s))
+                                            mod))
                           (lambda ()
                             (build-global-definition s mod var (expand e r w mod)))))))))
               ((define-syntax-form define-syntax-parameter-form)
@@ -1079,10 +1087,10 @@
                       (top-level-eval e mod)
                       (list (lambda () e))))
                    (else
-                    (if (memq 'eval esew)
-                        (top-level-eval
-                         (expand-install-global mod var type (expand e r w mod))
-                         mod))
+                    (when (memq 'eval esew)
+                      (top-level-eval
+                       (expand-install-global mod var type (expand e r w mod))
+                       mod))
                     '()))))
               ((begin-form)
                (syntax-case e ()
@@ -1105,10 +1113,10 @@
                           (recurse (if (memq 'expand when-list) 'c&e 'e)
                                    '(eval))
                           (begin
-                            (if (memq 'expand when-list)
-                                (top-level-eval
-                                 (expand-top-sequence body r w s 'e '(eval) mod)
-                                 mod))
+                            (when (memq 'expand when-list)
+                              (top-level-eval
+                               (expand-top-sequence body r w s 'e '(eval) mod)
+                               mod))
                             '())))
                      ((memq 'load when-list)
                       (if (or (memq 'compile when-list)
@@ -1135,11 +1143,12 @@
                       (lambda () x))
                     (lambda ()
                       (expand-expr type value form e r w s mod)))))))))
-      (let ((exps (map (lambda (x) (x))
-                       (reverse (parse body r w s m esew mod)))))
-        (if (null? exps)
-            (build-void s)
-            (build-sequence s exps)))))
+      (match (let lp ((thunks (parse body r w s m esew mod)))
+               (match thunks
+                 (() '())
+                 ((thunk . thunks) (cons (thunk) (lp thunks)))))
+        (() (build-void s))
+        (exps (build-sequence s exps)))))
   
   (define (expand-install-global mod name type e)
     (build-global-definition
@@ -1159,12 +1168,12 @@
   (define (parse-when-list e when-list)
     (let ((result (strip when-list)))
       (let lp ((l result))
-        (if (null? l)
-            result
-            (if (memq (car l) '(compile load eval expand))
-                (lp (cdr l))
-                (syntax-violation 'eval-when "invalid situation" e
-                                  (car l)))))))
+        (match l
+          (() result)
+          ((x . l)
+           (match x
+             ((or 'compile 'load 'eval 'expand) (lp l))
+             (_ (syntax-violation 'eval-when "invalid situation" e x))))))))
 
   ;; syntax-type returns seven values: type, value, form, e, w, s, and
   ;; mod. The first two are described in the table below.
@@ -1306,7 +1315,7 @@
   (define (expand-expr type value form e r w s mod)
     (case type
       ((lexical)
-       (build-lexical-reference 'value s e value))
+       (build-lexical-reference s e value))
       ((core core-form)
        ;; apply transformer
        (value e r w s mod))
@@ -1317,7 +1326,7 @@
       ((lexical-call)
        (expand-call
         (let ((id (car e)))
-          (build-lexical-reference 'fun (source-annotation id)
+          (build-lexical-reference (source-annotation id)
                                    (if (syntax? id)
                                        (syntax->datum id)
                                        id)
@@ -2119,7 +2128,7 @@
 
      (define (regen x)
        (case (car x)
-         ((ref) (build-lexical-reference 'value no-source (cadr x) (cadr x)))
+         ((ref) (build-lexical-reference no-source (cadr x) (cadr x)))
          ((primitive) (build-primref no-source (cadr x)))
          ((quote) (build-data no-source (cadr x)))
          ((lambda)
@@ -2539,8 +2548,7 @@
                              ;; fat finger binding and references to temp variable y
                              (build-call no-source
                                          (build-simple-lambda no-source (list 'tmp) #f (list y) '()
-                                                              (let ((y (build-lexical-reference 'value no-source
-                                                                                                'tmp y)))
+                                                              (let ((y (build-lexical-reference no-source 'tmp y)))
                                                                 (build-conditional no-source
                                                                                    (syntax-case fender ()
                                                                                      (#t y)
@@ -2601,8 +2609,7 @@
                                 ;; fat finger binding and references to temp variable x
                                 (build-call s
                                             (build-simple-lambda no-source (list 'tmp) #f (list x) '()
-                                                                 (gen-syntax-case (build-lexical-reference 'value no-source
-                                                                                                           'tmp x)
+                                                                 (gen-syntax-case (build-lexical-reference no-source 'tmp x)
                                                                                   #'(key ...) #'(m ...)
                                                                                   r
                                                                                   mod))
