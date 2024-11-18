@@ -1422,10 +1422,10 @@
     (define (decorate-source x)
       (source-wrap x empty-wrap s #f))
     (define (map* f x)
-      (cond
-       ((null? x) x)
-       ((pair? x) (cons (f (car x)) (map* f (cdr x))))
-       (else (f x))))
+      (match x
+        (() '())
+        ((x . x*) (cons (f x) (map* f x*)))
+        (x (f x))))
     (define rebuild-macro-output
       (lambda (x m)
         (cond ((pair? x)
@@ -1663,9 +1663,9 @@
 
   (define (eval-local-transformer expanded mod)
     (let ((p (local-eval expanded mod)))
-      (if (procedure? p)
-          p
-          (syntax-violation #f "nonprocedure transformer" p))))
+      (unless (procedure? p)
+        (syntax-violation #f "nonprocedure transformer" p))
+      p))
 
   (define (expand-void)
     (build-void no-source))
