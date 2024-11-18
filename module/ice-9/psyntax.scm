@@ -327,7 +327,7 @@
     ;; that the generated identifier is reproducible.
     (module-gensym (symbol->string id)))
 
-  (define-syntax no-source (identifier-syntax #f))
+  (define no-source #f)
 
   (define (datum-sourcev datum)
     (let ((props (source-properties datum)))
@@ -546,7 +546,7 @@
 
   ;; make-empty-ribcage and extend-ribcage maintain list-based ribcages for
   ;; internal definitions, in which the ribcages are built incrementally
-  (define-syntax-rule (make-empty-ribcage)
+  (define (make-empty-ribcage)
     (make-ribcage '() '() '()))
 
   (define (extend-ribcage! ribcage id label)
