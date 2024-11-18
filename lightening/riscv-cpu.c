@@ -17,6 +17,11 @@
  *      Paulo Cesar Pereira de Andrade
  *      Ekaitz Zarraga <ekaitz@elenq.tech>
  */
+
+#if __BYTE_ORDER != __LITTLE_ENDIAN
+#error RISC-V requires little-endian host
+#endif
+
 #define stack_framesize   (200 + 64)
 #define simm6_p(im)       ((im) <= 31 && (im) >= -32)
 #define simm12_p(im)      ((im) <= 2047 && (im) >= -2048)
