@@ -228,7 +228,6 @@
        (if (equal? mod (module-name (current-module)))
            (bare-cont mod var)
            (modref-cont mod var #f)))
-      (('bare . _) (bare-cont var))
       (('primitive . _)
        (syntax-violation #f "primitive not in operator position" var))))
 
