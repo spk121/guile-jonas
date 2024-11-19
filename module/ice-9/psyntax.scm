@@ -207,6 +207,10 @@
   (define (local-eval x mod)
     (primitive-eval x))
 
+  (define (global-extend type sym val)
+    (module-define! (current-module) sym
+                    (make-syntax-transformer sym type val)))
+
   (define (sourcev-filename s) (vector-ref s 0))
   (define (sourcev-line s) (vector-ref s 1))
   (define (sourcev-column s) (vector-ref s 2))
@@ -438,12 +442,6 @@
           (cons a (macros-only-env r)))
          (_
           (macros-only-env r))))))
-
-  (define (global-extend type sym val)
-    (module-define! (current-module)
-                    sym
-                    (make-syntax-transformer sym type val)))
-
 
   ;; Conceptually, identifiers are always syntax objects.  Internally,
   ;; however, the wrap is sometimes maintained separately (a source of
