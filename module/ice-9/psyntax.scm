@@ -268,9 +268,7 @@
                           (maybe-name-value var exp)))
 
   (define (build-simple-lambda src req rest vars meta exp)
-    (make-lambda src
-                 meta
-                 ;; hah, a case in which kwargs would be nice.
+    (make-lambda src meta
                  (make-lambda-case
                   ;; src req opt rest kw inits vars body else
                   src req #f rest #f '() vars exp #f)))
