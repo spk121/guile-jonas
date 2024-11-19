@@ -127,7 +127,7 @@
             (build-conditional make-conditional)
             (build-lexical-reference make-lexical-ref)
             (build-lexical-assignment
-             (lambda (sourcev name var exp) (make-lexical-set sourcev name var (maybe-name-value name exp))))
+             (lambda (src name var exp) (make-lexical-set src name var (maybe-name-value name exp))))
             (analyze-variable
              (lambda (mod var modref-cont bare-cont)
                (let* ((v mod)
@@ -161,23 +161,22 @@
                                   (fk))))))
                  (if (eq? v #f) (bare-cont #f var) (fk)))))
             (build-global-reference
-             (lambda (sourcev var mod)
+             (lambda (src var mod)
                (analyze-variable
                 mod
                 var
-                (lambda (mod var public?) (make-module-ref sourcev mod var public?))
-                (lambda (mod var) (make-toplevel-ref sourcev mod var)))))
+                (lambda (mod var public?) (make-module-ref src mod var public?))
+                (lambda (mod var) (make-toplevel-ref src mod var)))))
             (build-global-assignment
-             (lambda (sourcev var exp mod)
+             (lambda (src var exp mod)
                (let ((exp (maybe-name-value var exp)))
                  (analyze-variable
                   mod
                   var
-                  (lambda (mod var public?) (make-module-set sourcev mod var public? exp))
-                  (lambda (mod var) (make-toplevel-set sourcev mod var exp))))))
+                  (lambda (mod var public?) (make-module-set src mod var public? exp))
+                  (lambda (mod var) (make-toplevel-set src mod var exp))))))
             (build-global-definition
-             (lambda (sourcev mod var exp)
-               (make-toplevel-define sourcev (and mod (cdr mod)) var (maybe-name-value var exp))))
+             (lambda (src mod var exp) (make-toplevel-define src (and mod (cdr mod)) var (maybe-name-value var exp))))
             (build-simple-lambda
              (lambda (src req rest vars meta exp)
                (make-lambda src meta (make-lambda-case src req #f rest #f '() vars exp #f))))

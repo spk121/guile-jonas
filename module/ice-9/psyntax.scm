@@ -232,8 +232,8 @@
   (define build-call make-call)
   (define build-conditional make-conditional)
   (define build-lexical-reference make-lexical-ref)
-  (define (build-lexical-assignment sourcev name var exp)
-    (make-lexical-set sourcev name var (maybe-name-value name exp)))
+  (define (build-lexical-assignment src name var exp)
+    (make-lexical-set src name var (maybe-name-value name exp)))
   
   (define (analyze-variable mod var modref-cont bare-cont)
     (match mod
@@ -246,25 +246,25 @@
       (('primitive . _)
        (syntax-violation #f "primitive not in operator position" var))))
 
-  (define (build-global-reference sourcev var mod)
+  (define (build-global-reference src var mod)
     (analyze-variable
      mod var
      (lambda (mod var public?) 
-       (make-module-ref sourcev mod var public?))
+       (make-module-ref src mod var public?))
      (lambda (mod var)
-       (make-toplevel-ref sourcev mod var))))
+       (make-toplevel-ref src mod var))))
 
-  (define (build-global-assignment sourcev var exp mod)
+  (define (build-global-assignment src var exp mod)
     (let ((exp (maybe-name-value var exp)))
       (analyze-variable
        mod var
        (lambda (mod var public?) 
-         (make-module-set sourcev mod var public? exp))
+         (make-module-set src mod var public? exp))
        (lambda (mod var)
-         (make-toplevel-set sourcev mod var exp)))))
+         (make-toplevel-set src mod var exp)))))
 
-  (define (build-global-definition sourcev mod var exp)
-    (make-toplevel-define sourcev (and mod (cdr mod)) var
+  (define (build-global-definition src mod var exp)
+    (make-toplevel-define src (and mod (cdr mod)) var
                           (maybe-name-value var exp)))
 
   (define (build-simple-lambda src req rest vars meta exp)
