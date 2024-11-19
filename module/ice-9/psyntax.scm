@@ -394,7 +394,7 @@
   ;; form.
 
   ;; a displaced-lexical identifier is a lexical identifier removed from
-  ;; it's scope by the return of a syntax object containing the identifier.
+  ;; its scope by the return of a syntax object containing the identifier.
   ;; a displaced lexical can also appear when a letrec-syntax-bound
   ;; keyword is referenced on the rhs of one of the letrec-syntax clauses.
   ;; a displaced lexical should never occur with properly written macros.
