@@ -228,18 +228,10 @@
         val))
 
   ;; output constructors
-  (define (build-void sourcev)
-    (make-void sourcev))
-
-  (define (build-call sourcev fun-exp arg-exps)
-    (make-call sourcev fun-exp arg-exps))
-  
-  (define (build-conditional sourcev test-exp then-exp else-exp)
-    (make-conditional sourcev test-exp then-exp else-exp))
-  
-  (define (build-lexical-reference sourcev name var)
-    (make-lexical-ref sourcev name var))
-  
+  (define build-void make-void)
+  (define build-call make-call)
+  (define build-conditional make-conditional)
+  (define build-lexical-reference make-lexical-ref)
   (define (build-lexical-assignment sourcev name var exp)
     (make-lexical-set sourcev name var (maybe-name-value name exp)))
   
@@ -283,30 +275,11 @@
                   ;; src req opt rest kw inits vars body else
                   src req #f rest #f '() vars exp #f)))
 
-  (define (build-case-lambda src meta body)
-    (make-lambda src meta body))
-
-  (define (build-lambda-case src req opt rest kw inits vars body else-case)
-    ;; req := (name ...)
-    ;; opt := (name ...) | #f
-    ;; rest := name | #f
-    ;; kw := (allow-other-keys? (keyword name var) ...) | #f
-    ;; inits: (init ...)
-    ;; vars: (sym ...)
-    ;; vars map to named arguments in the following order:
-    ;;  required, optional (positional), rest, keyword.
-    ;; the body of a lambda: anything, already expanded
-    ;; else: lambda-case | #f
-    (make-lambda-case src req opt rest kw inits vars body else-case))
-
-  (define (build-primcall src name args)
-    (make-primcall src name args))
-  
-  (define (build-primref src name)
-    (make-primitive-ref src name))
-  
-  (define (build-data src exp)
-    (make-const src exp))
+  (define build-case-lambda make-lambda)
+  (define build-lambda-case make-lambda-case)
+  (define build-primcall make-primcall)
+  (define build-primref make-primitive-ref)
+  (define build-data make-const)
 
   (define (build-sequence src exps)
     (match exps
