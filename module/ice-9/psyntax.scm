@@ -2588,6 +2588,14 @@
   (global-extend 'eval-when 'eval-when '())
   (global-extend 'core 'syntax-case expand-syntax-case)
 
+  (define-syntax define/override
+    (syntax-rules ()
+      ((_ (id . args) . body) (define/override id (lambda args . body)))
+      ((_ id exp) (set! id exp))))
+  (define-syntax define*/override
+    (syntax-rules ()
+      ((_ (id . args) . body) (define/override id (lambda* args . body)))))
+
   ;; The portable macroexpand seeds expand-top's mode m with 'e (for
   ;; evaluating) and esew (which stands for "eval syntax expanders
   ;; when") with '(eval).  In Chez Scheme, m is set to 'c instead of e
@@ -2597,89 +2605,81 @@
   ;; syntactic definitions are evaluated immediately after they are
   ;; expanded, and the expanded definitions are also residualized into
   ;; the object file if we are compiling a file.
-  (set! macroexpand
-        (lambda* (x #:optional (m 'e) (esew '(eval)))
-          (define (unstrip x)
-            (define (annotate result)
-              (let ((props (source-properties x)))
-                (if (pair? props)
-                    (datum->syntax #f result #:source props)
-                    result)))
-            (cond
-             ((pair? x)
-              (annotate (cons (unstrip (car x)) (unstrip (cdr x)))))
-             ((vector? x)
-              (let ((v (make-vector (vector-length x))))
-                (annotate (list->vector (map unstrip (vector->list x))))))
-             ((syntax? x) x)
-             (else (annotate x))))
-          (expand-top-sequence (list (unstrip x)) null-env top-wrap #f m esew
-                               (cons 'hygiene (module-name (current-module))))))
+  (define*/override (macroexpand x #:optional (m 'e) (esew '(eval)))
+    (define (unstrip x)
+      (define (annotate result)
+        (let ((props (source-properties x)))
+          (if (pair? props)
+              (datum->syntax #f result #:source props)
+              result)))
+      (cond
+       ((pair? x)
+        (annotate (cons (unstrip (car x)) (unstrip (cdr x)))))
+       ((vector? x)
+        (let ((v (make-vector (vector-length x))))
+          (annotate (list->vector (map unstrip (vector->list x))))))
+       ((syntax? x) x)
+       (else (annotate x))))
+    (expand-top-sequence (list (unstrip x)) null-env top-wrap #f m esew
+                         (cons 'hygiene (module-name (current-module)))))
 
-  (set! identifier?
-        (lambda (x)
-          (nonsymbol-id? x)))
+  (define/override (identifier? x)
+    (nonsymbol-id? x))
 
-  (set! datum->syntax
-        (lambda* (id datum #:key source)
-          (define (props->sourcev alist)
-            (and (pair? alist)
-                 (vector (assq-ref alist 'filename)
-                         (assq-ref alist 'line)
-                         (assq-ref alist 'column))))
-          (make-syntax datum
-                       (if id
-                           (syntax-wrap id)
-                           empty-wrap)
-                       (if id
-                           (syntax-module id)
-                           #f)
-                       (cond
-                        ((not source)
-                         (props->sourcev (source-properties datum)))
-                        ((and (list? source) (and-map pair? source))
-                         (props->sourcev source))
-                        ((and (vector? source) (= 3 (vector-length source)))
-                         source)
-                        (else (syntax-sourcev source))))))
+  (define*/override (datum->syntax id datum #:key source)
+    (define (props->sourcev alist)
+      (and (pair? alist)
+           (vector (assq-ref alist 'filename)
+                   (assq-ref alist 'line)
+                   (assq-ref alist 'column))))
+    (make-syntax datum
+                 (if id
+                     (syntax-wrap id)
+                     empty-wrap)
+                 (if id
+                     (syntax-module id)
+                     #f)
+                 (cond
+                  ((not source)
+                   (props->sourcev (source-properties datum)))
+                  ((and (list? source) (and-map pair? source))
+                   (props->sourcev source))
+                  ((and (vector? source) (= 3 (vector-length source)))
+                   source)
+                  (else (syntax-sourcev source)))))
 
-  (set! syntax->datum
-        ;; accepts any object, since syntax objects may consist partially
-        ;; or entirely of unwrapped, nonsymbolic data
-        (lambda (x)
-          (strip x)))
+  (define/override (syntax->datum x)
+    ;; accepts any object, since syntax objects may consist partially
+    ;; or entirely of unwrapped, nonsymbolic data
+    (strip x))
 
-  (set! generate-temporaries
-        (lambda (ls)
-          (arg-check list? ls 'generate-temporaries)
-          (let ((mod (cons 'hygiene (module-name (current-module)))))
-            (map (lambda (x)
-                   (wrap (gen-var 't) top-wrap mod))
-                 ls))))
+  (define/override (generate-temporaries ls)
+    (arg-check list? ls 'generate-temporaries)
+    (let ((mod (cons 'hygiene (module-name (current-module)))))
+      (map (lambda (x)
+             (wrap (gen-var 't) top-wrap mod))
+           ls)))
 
-  (set! free-identifier=?
-        (lambda (x y)
-          (arg-check nonsymbol-id? x 'free-identifier=?)
-          (arg-check nonsymbol-id? y 'free-identifier=?)
-          (free-id=? x y)))
+  (define/override (free-identifier=? x y)
+    (arg-check nonsymbol-id? x 'free-identifier=?)
+    (arg-check nonsymbol-id? y 'free-identifier=?)
+    (free-id=? x y))
 
-  (set! bound-identifier=?
-        (lambda (x y)
-          (arg-check nonsymbol-id? x 'bound-identifier=?)
-          (arg-check nonsymbol-id? y 'bound-identifier=?)
-          (bound-id=? x y)))
+  (define/override (bound-identifier=? x y)
+    (arg-check nonsymbol-id? x 'bound-identifier=?)
+    (arg-check nonsymbol-id? y 'bound-identifier=?)
+    (bound-id=? x y))
 
-  (set! syntax-violation
-        (lambda* (who message form #:optional subform)
-          (arg-check (lambda (x) (or (not x) (string? x) (symbol? x)))
-                     who 'syntax-violation)
-          (arg-check string? message 'syntax-violation)
-          (throw 'syntax-error who message
-                 (sourcev->alist
-                  (or (source-annotation subform)
-                      (source-annotation form)))
-                 (strip form)
-                 (strip subform))))
+  (define*/override (syntax-violation who message form #:optional subform)
+    (arg-check (lambda (x) (or (not x) (string? x) (symbol? x)))
+               who 'syntax-violation)
+    (arg-check string? message 'syntax-violation)
+    (throw 'syntax-error who message
+           (sourcev->alist
+            (or (source-annotation subform)
+                (source-annotation form)))
+           (strip form)
+           (strip subform)))
 
   (let ()
     (define (%syntax-module id)
@@ -2737,30 +2737,27 @@
     (define! 'syntax-local-binding syntax-local-binding)
     (define! 'syntax-locally-bound-identifiers syntax-locally-bound-identifiers))
   
-  ;; $sc-dispatch expects an expression and a pattern.  If the expression
-  ;; matches the pattern a list of the matching expressions for each
-  ;; "any" is returned.  Otherwise, #f is returned.  (This use of #f will
-  ;; not work on r4rs implementations that violate the ieee requirement
-  ;; that #f and () be distinct.)
+  (define/override ($sc-dispatch e p)
+    ;; $sc-dispatch expects an expression and a pattern.  If the expression
+    ;; matches the pattern a list of the matching expressions for each
+    ;; "any" is returned.  Otherwise, #f is returned.
 
-  ;; The expression is matched with the pattern as follows:
+    ;; The expression is matched with the pattern as follows:
 
-  ;; pattern:                           matches:
-  ;;   ()                                 empty list
-  ;;   any                                anything
-  ;;   (<pattern>1 . <pattern>2)          (<pattern>1 . <pattern>2)
-  ;;   each-any                           (any*)
-  ;;   #(free-id <key>)                   <key> with free-identifier=?
-  ;;   #(each <pattern>)                  (<pattern>*)
-  ;;   #(each+ p1 (p2_1 ... p2_n) p3)      (p1* (p2_n ... p2_1) . p3)
-  ;;   #(vector <pattern>)                (list->vector <pattern>)
-  ;;   #(atom <object>)                   <object> with "equal?"
+    ;; pattern:                           matches:
+    ;;   ()                                 empty list
+    ;;   any                                anything
+    ;;   (<pattern>1 . <pattern>2)          (<pattern>1 . <pattern>2)
+    ;;   each-any                           (any*)
+    ;;   #(free-id <key>)                   <key> with free-identifier=?
+    ;;   #(each <pattern>)                  (<pattern>*)
+    ;;   #(each+ p1 (p2_1 ... p2_n) p3)      (p1* (p2_n ... p2_1) . p3)
+    ;;   #(vector <pattern>)                (list->vector <pattern>)
+    ;;   #(atom <object>)                   <object> with "equal?"
 
-  ;; Vector cops out to pair under assumption that vectors are rare.  If
-  ;; not, should convert to:
-  ;;   #(vector <pattern>*)               #(<pattern>*)
-
-  (let ()
+    ;; Vector cops out to pair under assumption that vectors are rare.  If
+    ;; not, should convert to:
+    ;;   #(vector <pattern>*)               #(<pattern>*)
 
     (define (match-each e p w mod)
       (cond
@@ -2884,15 +2881,13 @@
          (or (syntax-module e) mod)))
        (else (match* e p w r mod))))
 
-    (set! $sc-dispatch
-          (lambda (e p)
-            (cond
-             ((eq? p 'any) (list e))
-             ((eq? p '_) '())
-             ((syntax? e)
-              (match* (syntax-expression e)
-                      p (syntax-wrap e) '() (syntax-module e)))
-             (else (match* e p empty-wrap '() #f)))))))
+    (cond
+     ((eq? p 'any) (list e))
+     ((eq? p '_) '())
+     ((syntax? e)
+      (match* (syntax-expression e)
+              p (syntax-wrap e) '() (syntax-module e)))
+     (else (match* e p empty-wrap '() #f)))))
 
 
 (define-syntax with-syntax
