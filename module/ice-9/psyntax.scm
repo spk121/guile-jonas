@@ -846,12 +846,10 @@
         ;; bound to the same variable, or both unbound and have
         ;; the same name.
         (and (eq? nj (id-sym-name j))
-             (let ((bi (id-module-binding i mi)))
-               (if bi
-                   (eq? bi (id-module-binding j mj))
-                   (and (not (id-module-binding j mj))
-                        (eq? ni nj))))
-             (eq? (id-module-binding i mi) (id-module-binding j mj))))
+             (let ((bi (id-module-binding i mi))
+                   (bj (id-module-binding j mj)))
+               (and (eq? bi bj)
+                    (or bi (eq? ni nj))))))
        (else
         ;; Otherwise `i' is bound, so check that `j' is bound, and
         ;; bound to the same thing.
