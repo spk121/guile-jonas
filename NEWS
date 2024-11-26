@@ -14,7 +14,7 @@ Changes in 3.0.11 (since 3.0.10)
 ** The SRFI-64 module for test suites has been rewritten
 
 A new, backward-compatible implementation of (srfi srfi-64) has been
-contributed by Tomas Wolf.  The reference implementation, which was used
+contributed by Tomas Volf.  The reference implementation, which was used
 so far, had a number of issues on Guile that made some of its interface
 downright unusable (e.g., <https://bugs.gnu.org/72378>), non-conforming
 (e.g., <https://bugs.gnu.org/72383>), or buggy (e.g.,
