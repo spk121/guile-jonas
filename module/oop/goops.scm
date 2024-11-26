@@ -2069,7 +2069,14 @@ function."
 ;;;                     rest)))))))
 ;;;
 ;;; With the current state of the compiler, this results in slower code
-;;; than the implementation below since the apply call isn't eliminated.
+;;; than the implementation below since the apply call isn't
+;;; eliminated. Note also that it doesn't support the (next-method) call
+;;; as does the following implementation.
+;;;
+;;; If you make changes to the following implementation, bear in mind
+;;; that define-method* is supposed to also be able to handle ordinary
+;;; methods without keyword formals. See the Guile Reference and the
+;;; module (oop goops keyword-formals).
 ;;;
 
 (define-syntax define-method
