@@ -271,6 +271,7 @@ SOURCES =					\
   oop/goops/stklos.scm				\
   oop/goops/accessors.scm			\
   oop/goops/simple.scm				\
+  oop/goops/keyword-formals.scm			\
 						\
   scheme/base.scm				\
   scheme/case-lambda.scm			\

@@ -954,10 +954,38 @@ the rest argument, as for @code{define*}.
 @end deffn
 
 @menu
+* Advanced argument handling in method and define-method::
 * Type dispatch and redefinition for advanced argument handling::
 * next-method call in method*::
 * Advanced argument handling design choices::
 @end menu
+
+@node Advanced argument handling in method and define-method
+@subsubsection Advanced argument handling in method and define-method
+
+Some users may find it more natural not to have to choose between
+@code{define-method} and @code{define-method*} in their code.
+
+It turns out that @code{method*} and @code{define-method*} can do just
+fine also for ordinary methods without keyword formals. They take
+marginally longer to compile but result in the same code as
+@code{method} and @code{define-method} if keyword formals are absent.
+
+For this reason, we provide a module (oop goops keyword-formals) which
+replaces the standard @code{method} and @code{define-method} bindings
+with their keyword formal counterparts. It can be used like this:
+
+@lisp
+(use-modules (oop goops) (oop goops keyword-formals))
+@end lisp
+
+or
+
+@lisp
+(define-module (foo)
+  #:use-module (oop goops)
+  #:use-module (oop goops keyword-formals))
+@end lisp
 
 @node Type dispatch and redefinition for advanced argument handling
 @subsubsection Type dispatch and redefinition for advanced argument handling
@@ -1081,6 +1109,9 @@ It makes it easier for other implementations (like guile-hoot) to choose
 to only provide the simpler functionality (through @code{method} and
 @code{define-method}).
 @end enumerate
+
+However, note that users who prefer to only use @code{define-method} can
+do so. @xref{Advanced argument handling in method and define-method}.
 
 Second, we have chosen not to do type dispatch on optional or keyword
 arguments. Reasons include:
