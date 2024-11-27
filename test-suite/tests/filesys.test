@@ -423,19 +423,20 @@
   (define file (search-path %load-path "ice-9/boot-9.scm"))
 
 
-  (pass-if-equal "test directory" (dirname file)
+  ;; canonicalize-path is used to not stumble over differences due to links
+  (pass-if-equal "test directory" (canonicalize-path (dirname file))
     (let ((olddir (getcwd))
           (dir #f))
-      (chdir (dirname file))
+      (chdir (canonicalize-path (dirname file)))
       (set! dir (getcwd))
       (chdir olddir)
       dir))
 
-  (pass-if-equal "test directory, via port" (dirname file)
+  (pass-if-equal "test directory, via port" (canonicalize-path (dirname file))
     (unless (provided? 'chdir-port)
       (throw 'unresolved))
     (let ((olddir (getcwd))
-          (port (open (dirname file) O_RDONLY))
+          (port (open (canonicalize-path (dirname file)) O_RDONLY))
           (dir #f))
       (chdir port)
       (set! dir (getcwd))
