@@ -2073,10 +2073,9 @@ function."
 ;;; eliminated. Note also that it doesn't support the (next-method) call
 ;;; as does the following implementation.
 ;;;
-;;; If you make changes to the following implementation, bear in mind
-;;; that define-method* is supposed to also be able to handle ordinary
-;;; methods without keyword formals. See the Guile Reference and the
-;;; module (oop goops keyword-formals).
+;;; If you make changes, bear in mind that define-method* is supposed to
+;;; also be able to handle ordinary methods without keyword formals. See
+;;; the Guile Reference and the module (oop goops keyword-formals).
 ;;;
 
 (define-syntax define-method
@@ -2369,7 +2368,7 @@ function."
 (define-syntax method*
   (lambda (x)
     (syntax-case x ()
-      ((_ formals) #'(method formals (if #f #f)))
+      ((_ formals) #'(method* formals (if #f #f)))
       ((_ formals body0 body1 ...)
        (with-syntax (((formals (specializer ...) keyword-formals)
                       (parse-keyword-formals #'formals)))
