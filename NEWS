@@ -49,6 +49,9 @@ arguments. The new syntax is documented in the Guile Reference manual.
    (<https://bugs.gnu.org/72547>)
 ** Fix compilation with GCC 14 and musl on 32-bit systems
    (<https://bugs.gnu.org/73835>)
+** Immutable stringbufs are now 8-byte aligned on all systems
+   Previously they could end up with an alignment that violated the type
+   tag for their type (e.g. ending up tagged as immediates SCM_IMP()).
 
 
 Changes in 3.0.10 (since 3.0.9)
