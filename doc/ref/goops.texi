@@ -192,10 +192,10 @@ understood by whatever methods get applied when the @code{initialize}
 generic function is applied to the newly allocated instance.
 
 In practice, specialized @code{initialize} methods would normally call
-@code{(next-method)}, and so eventually the standard GOOPS
-@code{initialize} methods are applied.  These methods expect
-@var{initargs} to be a list with an even number of elements, where
-even-numbered elements (counting from zero) are keywords and
+@code{(next-method)} (@pxref{Next-method}), and so eventually the
+standard GOOPS @code{initialize} methods are applied.  These methods
+expect @var{initargs} to be a list with an even number of elements,
+where even-numbered elements (counting from zero) are keywords and
 odd-numbered elements are the corresponding values.
 
 GOOPS processes initialization argument keywords automatically for slots
@@ -857,6 +857,7 @@ to that descendant's ancestors too.
 @node Next-method
 @subsection Next-method
 
+@fnindex next-method
 When you call a generic function, with a particular set of arguments,
 GOOPS builds a list of all the methods that are applicable to those
 arguments and orders them by how closely the method definitions match
@@ -865,44 +866,39 @@ list.  If the selected method's code wants to call on to the next method
 in this list, it can do so by using @code{next-method}.
 
 @lisp
-(define-method (Test (a <integer>)) (cons 'integer (next-method)))
-(define-method (Test (a <number>))  (cons 'number  (next-method)))
-(define-method (Test a)             (list 'top))
+(define-method (test (a <integer>)) (cons 'integer (next-method)))
+(define-method (test (a <number>))  (cons 'number  (next-method)))
+(define-method (test a)             (list 'top))
 @end lisp
 
 With these definitions,
 
 @lisp
-(Test 1)   @result{} (integer number top)
-(Test 1.0) @result{} (number top)
-(Test #t)  @result{} (top)
+(test 1)   @result{} (integer number top)
+(test 1.0) @result{} (number top)
+(test #t)  @result{} (top)
 @end lisp
 
-@code{next-method} is always called as just @code{(next-method)}.  The
-arguments for the next method call are always implicit, and always the
-same as for the original method call.
+@code{next-method} can be called as just @code{(next-method)}.  The
+arguments for the next method call are then implicit, and the same as
+for the original method call.
 
 If you want to call on to a method with the same name but with a
 different set of arguments (as you might with overloaded methods in C++,
-for example), you do not use @code{next-method}, but instead simply
-write the new call as usual:
+for example), you can pass custom arguments to @code{next-method}:
 
 @lisp
-(define-method (Test (a <number>) min max)
+(define-method (test (a <number>) min max)
   (if (and (>= a min) (<= a max))
       (display "Number is in range\n"))
-  (Test a))
+  (next-method a))
 
-(Test 2 1 10)
+(test 2 1 10)
 @print{}
 Number is in range
 @result{}
 (integer number top)
 @end lisp
-
-(You should be careful in this case that the @code{Test} calls do not
-lead to an infinite recursion, but this consideration is just the same
-as in Scheme code in general.)
 
 @node method* and define-method*
 @subsection method* and define-method*
@@ -1042,10 +1038,9 @@ in the same position in less specialized methods. For example if
 @var{<B>},
 
 @lisp
-> (define-method* (foo (obj <A>) #:optional (c 1)) c)
-> (define-method* (foo (obj <B>) #:optional c)) (next-method))
-> (foo b)
-$1 = #f
+(define-method* (foo (obj <A>) #:optional (c 1)) c)
+(define-method* (foo (obj <B>) #:optional c)) (next-method))
+(foo b) @result{} #f
 @end lisp
 
 The reason for this is that @var{c} will obtain the value @code{#f}
@@ -1058,10 +1053,9 @@ A keyword argument will not shadow a default value for the same keyword
 argument in less specialized methods. Example:
 
 @lisp
-> (define-method* (foo (obj <A>) #:key (c 1)) c)
-> (define-method* (foo (obj <B>) #:key c)) (next-method))
-> (foo b)
-$1 = 1
+(define-method* (foo (obj <A>) #:key (c 1)) c)
+(define-method* (foo (obj <B>) #:key c)) (next-method))
+(foo b) @result{} 1
 @end lisp
 
 The reason for this is that the first (less specialized, called last)
@@ -1362,6 +1356,7 @@ The ordering of the returned slots is not significant.
 @menu
 * Class Precedence List::
 * Sorting Methods::
+* Inheritance and accessors::
 @end menu
 
 
@@ -1476,6 +1471,38 @@ a class C1 is more specific than another class C2, for an object of
 actual class C, if C1 comes before C2 in C's class precedence list.
 @end itemize
 
+@node Inheritance and accessors
+@subsection Inheritance and accessors
+
+When a class @var{<A>} defines a getter, setter or accessor for one of
+its slots @var{x}, an @emph{accessor method} specialized to class
+@var{<A>} is created. Accessor methods are special in that they always
+refer to a concrete class. When you subclass @var{<A>}, a new accessor
+method for @var{x} is created automatically, specialized to the
+subclass:
+
+@lisp
+(define-class <A> () (x #:accessor x))
+(define-class <B> (<A>))
+(generic-function-methods x)
+@result{}
+(#<<accessor-method> (<B>) 7faa66b5b1c0>
+ #<<accessor-method> (<A>) 7faa66b5b240>)
+@end lisp
+
+Note, in particular, that the @var{x} accessor method specialized to
+@var{<A>} is @emph{not} applicable to objects of class @var{B}:
+
+@lisp
+(define o (make <B>))
+(compute-applicable-methods x (list o))
+@result{}
+(#<<accessor-method> (<B>) 7faa66b5b1c0>)
+@end lisp
+
+As a consequence, an accessor doesn't have a next-method. The fact that
+accessor methods always apply to concrete classes allows for extensive
+optimization.
 
 @node Introspection
 @section Introspection
