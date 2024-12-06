@@ -178,29 +178,6 @@
 
   (define-syntax-rule (match e cs ...) (simple-match e cs ...))
 
-  (define (resolve-module* mod)
-    (match mod
-      (#f (current-module))
-      (('primitive) #f)
-      (('public . mod)
-       ;; Defer possibly-failed binding of (@ (unknown-module) id) until
-       ;; run-time.
-       (match (resolve-module mod #:ensure #f)
-         (#f #f)
-         (mod (module-public-interface mod))))
-      (((or 'private 'hygiene) . mod)
-       (resolve-module mod #:ensure #f))))
-
-  (define (resolve-variable mod var)
-    (match (resolve-module* mod)
-      (#f (match (current-module)
-            (#f
-             ;; Module system not yet booted.
-             (match mod
-               (('hygiene 'guile) (module-variable #f var))))
-            (_ #f)))
-      (mod (module-variable mod var))))
-
   (define (top-level-eval x mod)
     (primitive-eval x))
 
@@ -735,7 +712,11 @@
     (define (resolve-global var mod)
       (when (and (not mod) (current-module))
         (warn "module system is booted, we should have a module" var))
-      (let ((v (resolve-variable mod var)))
+      (let ((v (and (not (equal? mod '(primitive)))
+                    (module-variable (if mod
+                                         (resolve-module (cdr mod))
+                                         (current-module))
+                                     var))))
         ;; The expander needs to know when a top-level definition from
         ;; outside the compilation unit is a macro.
         ;;
@@ -836,7 +817,14 @@
            (ni (id-var-name i empty-wrap mi))
            (nj (id-var-name j empty-wrap mj)))
       (define (id-module-binding id mod)
-        (resolve-variable mod (id-sym-name id)))
+        (module-variable
+         (if mod
+             ;; The normal case.
+             (resolve-module (cdr mod))
+             ;; Either modules have not been booted, or we have a
+             ;; raw symbol coming in, which is possible.
+             (current-module))
+         (id-sym-name id)))
       (cond
        ((syntax? ni) (free-id=? ni j))
        ((syntax? nj) (free-id=? i nj))
