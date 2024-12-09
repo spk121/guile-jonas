@@ -273,7 +273,10 @@ to @var{value}.
 Sorting is very important in computer programs.  Therefore, Guile comes
 with several sorting procedures built-in.  As always, procedures with
 names ending in @code{!} are side-effecting, that means that they may
-modify their parameters in order to produce their results.
+modify their parameters in order to produce their results. The predicate
+@var{less} passed as second or third argument to the procedures below is
+assumed to define a strict weak order on the elements to be merged or
+sorted.
 
 The first group of procedures can be used to merge two lists (which must
 be already sorted on their own) and produce sorted lists containing
