@@ -195,26 +195,26 @@ scm_i_utf8_string_hash (const char *str, size_t len)
   /* Handle most of the key.  */
   while (length > 3)
     {
-      ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+      ustr += u8_mbtouc (&u32, ustr, end - ustr);
       a += u32;
-      ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+      ustr += u8_mbtouc (&u32, ustr, end - ustr);
       b += u32;
-      ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+      ustr += u8_mbtouc (&u32, ustr, end - ustr);
       c += u32;
       mix (a, b, c);
       length -= 3;
     }
 
   /* Handle the last 3 elements's.  */
-  ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+  ustr += u8_mbtouc (&u32, ustr, end - ustr);
   a += u32;
   if (--length)
     {
-      ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+      ustr += u8_mbtouc (&u32, ustr, end - ustr);
       b += u32;
       if (--length)
         {
-          ustr += u8_mbtouc_unsafe (&u32, ustr, end - ustr);
+          ustr += u8_mbtouc (&u32, ustr, end - ustr);
           c += u32;
         }
     }
