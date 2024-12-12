@@ -2662,7 +2662,7 @@ each context, and apply non-SRFI-19 facilities to convert where necessary.
 Return @code{#t} if @var{obj} is a date object, or @code{#f} if not.
 @end defun
 
-@defun make-date nsecs seconds minutes hours date month year zone-offset
+@defun make-date nsecs seconds minutes hours day month year zone-offset
 Create a new date object.
 @c
 @c  FIXME: What can we say about the ranges of the values.  The
