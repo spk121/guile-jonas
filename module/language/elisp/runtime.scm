@@ -116,13 +116,13 @@
      thunk
      (lambda () (vector-set! x 4 old)))))
 
-(define-inlinable (ensure-present! module sym thunk)
+(define (ensure-present! module sym thunk)
   (or (module-local-variable module sym)
       (let ((variable (make-variable (thunk))))
         (module-add! module sym variable)
         variable)))
 
-(define-inlinable (ensure-desc! module sym)
+(define (ensure-desc! module sym)
   (ensure-present! module
                    sym
                    (lambda ()
@@ -130,7 +130,7 @@
                        (vector-set! x 0 sym)
                        x))))
 
-(define-inlinable (schemify symbol)
+(define (schemify symbol)
   (case symbol
     ((#nil) nil_)
     ((#t) t_)
