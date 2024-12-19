@@ -984,6 +984,28 @@ used.  This procedure is equivalent to:
 @end lisp
 @end deffn
 
+@deffn {Scheme Procedure} for-rdelim-from-port port proc rdelim-proc @
+        [#:stop-pred=eof-object?]
+For every unit provided by @code{(rdelim-proc port)}, provide
+this unit(rdelim) to @var{proc} to be processed. This will continue throughout
+@var{port} until @var{stop-pred} returns @code{#t}.
+@var{stop-pred} is @code{eof-object?} by default.
+@var{rdelim-proc} has to advance through @var{port} with every call made to it.
+@end deffn
+
+@deffn {Scheme Procedure} for-delimited-from-port port proc @
+        [#:delims=''\n''] [#:handle-delim='trim]
+Call @var{proc} for every line delimited by @var{delims} from @var{port}.
+@end deffn
+
+@deffn {Scheme Procedure} for-line-in-file file proc @
+        [#:encoding=#f] [#:guess-encoding=#f]
+Call @var{proc} for every line in @var{file}.
+@var{file} must be a filename string.
+
+The line provided to @var{proc} is guaranteed to be a string.
+@end deffn
+
 @node Default Ports
 @subsection Default Ports for Input, Output and Errors
 @cindex Default ports

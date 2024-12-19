@@ -38,6 +38,13 @@ advanced argument handling such as optional and keyword arguments. The
 implementation fully supports (next-method) calls, also for keyword
 arguments. The new syntax is documented in the Guile Reference manual.
 
+** New line or field iteration procedures in (ice-9 rdelim)
+
+(ice-9 rdelim) has three new procedures: for-rdelim-from-port,
+for-delimited-from-port and for-line-in-file. Of these, for-line-in-file
+is helpful in the common situation where you want a procedure applied to
+every line in a file.
+
 * Changes to the distribution
 
 * Bug fixes
