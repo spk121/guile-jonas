@@ -301,11 +301,19 @@ EndOfFile < !.
 (define (Literal->defn lst for-syntax)
   (apply string (map (lambda (x) (Char->defn x for-syntax)) (cdr lst))))
 
-;; (NotInClass ...)
-;;  `-> (and ...)
+;; (NotInClass (Range ...) (Range ...))
+;;  `-> (and (followed-by (not-in-range ...))
+;;           (followed-by (not-in-range ...))
+;;           ...
+;;           (not-in-range ...))
+;; NOTE: the order doesn't matter, because all `not-in-range`s will always
+;; parse exactly one character, but all the elements but the last need not to
+;; consume the input.
 (define (NotInClass->defn lst for-syntax)
-  #`(and #,@(map (lambda (x) (NotInRange->defn x for-syntax))
-                 (cdr lst))))
+  #`(and
+      #,@(map (lambda (x) #`(followed-by #,(NotInRange->defn x for-syntax)))
+              (cddr lst))
+      #,(NotInRange->defn (cadr lst) for-syntax)))
 
 ;; (Class ...)
 ;;  `-> (or ...)
