@@ -67,9 +67,10 @@ Literal <-- SQUOTE (!SQUOTE Char)* SQUOTE Spacing
 NotInClass <-- OPENBRACKET NOTIN  (!CLOSEBRACKET Range)* CLOSEBRACKET Spacing
 Class <-- OPENBRACKET !NOTIN  (!CLOSEBRACKET Range)* CLOSEBRACKET Spacing
 Range <-- Char DASH Char / Char
-Char <-- '\\\\' [nrt'\"\\[\\]\\\\]
+Char <-- '\\\\' [nrtf'\"\\[\\]\\\\]
        / '\\\\' [0-7][0-7][0-7]
        / '\\\\' [0-7][0-7]?
+       / '\\\\' 'u' HEX HEX HEX HEX
        / !'\\\\' .
 
 # NOTE: `<--` and `<` are extensions
@@ -79,6 +80,7 @@ DQUOTE < [\"]
 DASH < '-'
 OPENBRACKET < '['
 CLOSEBRACKET < ']'
+HEX <- [0-9a-fA-F]
 NOTIN < '^'
 SLASH < '/' Spacing
 AND <-- '&' Spacing
@@ -92,7 +94,7 @@ DOT <-- '.' Spacing
 
 Spacing < (Space / Comment)*
 Comment < '#' (!EndOfLine .)* EndOfLine
-Space < ' ' / '\t' / EndOfLine
+Space < ' ' / '\\t' / EndOfLine
 EndOfLine < '\\r\\n' / '\\n' / '\\r'
 EndOfFile < !.
 ")
@@ -144,12 +146,15 @@ EndOfFile < !.
 (define-sexp-parser Range all
   (or (and Char DASH Char) Char))
 (define-sexp-parser Char all
-  (or (and "\\" (or "n" "r" "t" "'" "\"" "[" "]" "\\"))
+  (or (and "\\" (or "n" "r" "t" "f" "'" "\"" "[" "]" "\\"))
       (and "\\" (range #\0 #\7) (range #\0 #\7) (range #\0 #\7))
       (and "\\" (range #\0 #\7) (? (range #\0 #\7)))
+      (and "\\" "u" HEX HEX HEX HEX)
       (and (not-followed-by "\\") peg-any)))
 (define-sexp-parser LEFTARROW body
   (and (or "<--" "<-" "<") Spacing)) ; NOTE: <-- and < are extensions
+(define-sexp-parser HEX body
+  (or (range #\0 #\9) (range #\a #\f) (range #\A #\F)))
 (define-sexp-parser NOTIN none
   (and "^"))
 (define-sexp-parser SLASH none
@@ -372,12 +377,27 @@ EndOfFile < !.
                      (* (- (char->integer x) (char->integer #\0)) y))
                    (reverse (string->list charstr 1))
                    '(1 8 64)))))
+      ((char=? #\u (string-ref charstr 1))
+       (integer->char
+         (reduce + 0
+                 (map
+                   (lambda (x y)
+                     (* (cond
+                          ((char-numeric? x)
+                           (- (char->integer x) (char->integer #\0)))
+                          ((char-alphabetic? x)
+                           (+ 10 (- (char->integer x) (char->integer #\a)))))
+                        y))
+                   (reverse (string->list (string-downcase charstr) 2))
+                   '(1 16 256 4096)))))
       (else
         (case (string-ref charstr 1)
           ((#\n) #\newline)
           ((#\r) #\return)
           ((#\t) #\tab)
+          ((#\f) #\page)
           ((#\') #\')
+          ((#\") #\")
           ((#\]) #\])
           ((#\\) #\\)
           ((#\[) #\[))))))
