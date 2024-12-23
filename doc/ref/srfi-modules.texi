@@ -5390,13 +5390,31 @@ is also easy to add new tests, without having to name individual tests
 (though that is optional).
 
 Test cases are executed in the context of a @dfn{test runner}, which is
-a object that accumulates and reports test results.  This specification
+an object that accumulates and reports test results.  This specification
 defines how to create and use custom test runners, but implementations
 should also provide a default test runner.  It is suggested (but not
 required) that loading the above file in a top-level environment will
 cause the tests to be executed using an implementation-specified default
 test runner, and @code{test-end} will cause a summary to be displayed in
-an implementation-specified manner.
+an implementation-specified manner.  The SRFI 64 implementation used in
+Guile provides such a default test runner; running the above snippet at
+the REPL prints:
+
+@example
+*** Entering test group: vec-test ***
+$1 = #t
+* PASS:
+$2 = ((pass . 1))
+* PASS:
+$3 = ((pass . 2))
+* PASS:
+$4 = ((pass . 3))
+*** Leaving test group: vec-test ***
+*** Test suite finished. ***
+*** # of expected passes    : 3
+@end example
+
+It also returns the @code{<test-runner>} object.
 
 @subsubheading Simple test-cases
 
@@ -5458,6 +5476,14 @@ once):
   (and (>= test-expr (- expected error))
        (<= test-expr (+ expected error))))
 @end lisp
+
+Here's an example:
+@lisp
+(test-approximate "is 22/7 within 1% of π?"
+ 3.1415926535
+ 22/7
+ 1/100)
+@end lisp
 @end deffn
 
 @subsubheading Tests for catching errors
@@ -5495,7 +5521,59 @@ classes:
 
 An implementation that cannot catch exceptions should skip
 @code{test-error} forms.
+
+@cindex test-error error types
+@cindex error types, test-error, srfi-64
+The SRFI-64 implementation in Guile supports specifying @var{error-type}
+as either:
+@itemize
+@item
+@code{#f}, meaning the test is @emph{not} expected to produce an error
+@item
+@code{#t}, meaning the test is expected to produce an error, of any type
+@item
+A native exception type, as created via @code{make-exception-type} or
+@code{make-condition-type} from SRFI-35
+@item
+A predicate, which will be applied to the exception caught
+to determine whether is it of the right type
+@item
+A symbol, for the exception kind of legacy
+@code{make-exception-from-throw} style exceptions.
+@end itemize
 @end deffn
+
+Below are some examples valid in Guile:
+
+@lisp
+(test-error "expect old-style exception kind"
+ 'numerical-overflow
+ (/ 1 0))
+@end lisp
+
+@lisp
+(use-modules (ice-9 exceptions)) ;for standard exception types
+
+(test-error "expect a native exception type"
+ &warning
+ (raise-exception (make-warning)))
+
+(test-error "expect a native exception, using predicate"
+ warning?
+ (raise-exception (make-warning)))
+@end lisp
+
+@lisp
+(use-modules (srfi srfi-35))
+
+(test-error "expect a serious SRFI 35 condition type"
+ &serious
+ (raise-exception (condition (&serious))))
+
+(test-error "expect a serious SRFI 35 condition type, using predicate"
+ serious-condition?
+ (raise-exception (condition (&serious))))
+@end lisp
 
 @subsubheading Testing syntax
 
@@ -5620,7 +5698,7 @@ or specifying that some tests are @emph{expected} to fail.
 @subsubheading Test specifiers
 
 Sometimes we want to only run certain tests, or we know that certain
-tests are expected to fail.  A @dfn{test specifier} is one-argument
+tests are expected to fail.  A @dfn{test specifier} is a one-argument
 function that takes a test-runner and returns a boolean.  The specifier
 may be run before a test is performed, and the result may control
 whether the test is executed.  For convenience, a specifier may also be
