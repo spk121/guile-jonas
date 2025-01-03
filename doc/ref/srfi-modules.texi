@@ -3367,10 +3367,13 @@ The second syntax can be used to create anonymous recursive functions:
 
 @lisp
   guile> (define tmp (rec (display-n item n)
-                       (if (positive? n)
-                           (begin (display n) (display-n (- n 1))))))
+                       (when (positive? n)
+                         (display item) (newline)
+                         (display-n item (- n 1)))))
   guile> (tmp 42 3)
-  424242
+  42
+  42
+  42
   guile>
 @end lisp
 
