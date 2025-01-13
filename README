@@ -122,6 +122,7 @@ When building from a Git checkout, these additional packages are needed:
   - GNU Autoconf
   - GNU Automake
   - GNU Libtool
+  - GNU Autopoint
   - Flex
   - GNU Gettext
   - GNU Texinfo
