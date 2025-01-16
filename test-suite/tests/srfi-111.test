@@ -62,4 +62,8 @@
              (not (equal? box1 box2))
              ;; Guile extension, not guaranteed by SRFI-111.
              (begin (set-box! box2 (string #\f #\o #\o))
-                    (equal? box1 box2)))))))
+                    (equal? box1 box2))))))
+
+  (pass-if "box printer"
+    (integer? (string-contains (call-with-output-string (lambda (o) (display (box 1) o)))
+                               "value: 1"))))
