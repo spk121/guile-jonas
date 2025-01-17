@@ -71,6 +71,11 @@ every line in a file.
    tag for their type (e.g. ending up tagged as immediates SCM_IMP()).
 ** `readdir` and `ttyname` now release scm_i_misc_mutex during asyncs
    This avoids potential deadlocks.
+** Displaying a `port` won't fail when `ttyname` returns ENODEV
+   `ttyname` may return ENODEV even when the port `isatty()`, and
+   previously Guile would pass through the related exception.  Now it
+   prints the file descriptor instead (as it does when `ttyname` isn't
+   available or the port isn't a tty).
 
 
 Changes in 3.0.10 (since 3.0.9)

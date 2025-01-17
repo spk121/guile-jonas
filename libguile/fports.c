@@ -554,6 +554,7 @@ SCM_DEFINE (scm_adjust_port_revealed_x, "adjust-port-revealed!", 2, 0, 0,
 
 
 
+#define FUNC_NAME "fport_print"
 static int 
 fport_print (SCM exp, SCM port, scm_print_state *pstate SCM_UNUSED)
 {
@@ -570,12 +571,27 @@ fport_print (SCM exp, SCM port, scm_print_state *pstate SCM_UNUSED)
       scm_putc (' ', port);
       fdes = (SCM_FSTREAM (exp))->fdes;
 
-#if (defined HAVE_TTYNAME) && (defined HAVE_POSIX)
-      if (isatty (fdes))
-	scm_display (scm_ttyname (exp), port);
+#if (!defined HAVE_TTYNAME) || (!defined HAVE_POSIX)
+      scm_intprint (fdes, 10, port);
+#else
+      if (!isatty (fdes))
+        scm_intprint (fdes, 10, port);
       else
-#endif /* HAVE_TTYNAME */
-	scm_intprint (fdes, 10, port);
+        {
+          char *name = 0;
+          SCM_I_LOCKED_SYSCALL(&scm_i_misc_mutex,
+                               char *n = ttyname (fdes);
+                               if (n) name = strdup (n));
+          if (name)
+            scm_display (scm_take_locale_string (name), port);
+          else if (errno == ENODEV)
+            // In some situations ttyname may return ENODEV even though
+            // isatty is true.  See GNU/Linux ttyname(3) as an example.
+            scm_intprint (fdes, 10, port);
+          else
+            SCM_SYSERROR;
+        }
+#endif // (defined HAVE_TTYNAME) && (defined HAVE_POSIX)
     }
   else
     {
@@ -586,6 +602,7 @@ fport_print (SCM exp, SCM port, scm_print_state *pstate SCM_UNUSED)
   scm_putc ('>', port);
   return 1;
 }
+#undef FUNC_NAME
 
 /* fill a port's read-buffer with a single read.  returns the first
    char or EOF if end of file.  */
