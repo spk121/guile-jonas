@@ -2231,30 +2231,22 @@ SCM_DEFINE (scm_readdir, "readdir", 1, 0, 0,
 	    "end of file object is returned.")
 #define FUNC_NAME s_scm_readdir
 {
-  SCM ret;
-  scm_i_pthread_mutex_t *mutex;
-  struct dirent_or_dirent64 *rdent;
-
   SCM_VALIDATE_DIR (1, port);
   if (!SCM_DIR_OPEN_P (port))
     SCM_MISC_ERROR ("Directory ~S is not open.", scm_list_1 (port));
 
-  mutex = (scm_i_pthread_mutex_t *) SCM_SMOB_DATA_2 (port);
-
-  scm_dynwind_begin (0);
-  scm_i_dynwind_pthread_mutex_lock (mutex);
-
-  errno = 0;
-  SCM_SYSCALL (rdent = readdir_or_readdir64 ((DIR *) SCM_SMOB_DATA_1 (port)));
-  if (errno != 0)
-    SCM_SYSERROR;
-
-  ret = (rdent ? scm_from_locale_stringn (rdent->d_name, NAMLEN (rdent))
-         : SCM_EOF_VAL);
-
-  scm_dynwind_end ();
-
-  return ret;
+  scm_i_pthread_mutex_t *mutex = (scm_i_pthread_mutex_t *) SCM_SMOB_DATA_2 (port);
+  DIR *dir = (DIR *) SCM_SMOB_DATA_1 (port);
+  char *name = 0;
+  SCM_I_LOCKED_SYSCALL
+    (mutex,
+     struct dirent_or_dirent64 *rdent = readdir_or_readdir64 (dir);
+     if (rdent) name = strdup (rdent->d_name));
+  if (name)
+    return scm_take_locale_string (name);
+  if (!errno)
+    return SCM_EOF_VAL;
+  SCM_SYSERROR;
 }
 #undef FUNC_NAME
 

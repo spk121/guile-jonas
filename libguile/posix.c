@@ -1048,8 +1048,10 @@ SCM_DEFINE (scm_getsid, "getsid", 1, 0, 0,
    continuously calling ttyname will otherwise get an overwrite quite
    easily.
 
-   ttyname_r (when available) could be used instead of scm_i_misc_mutex, but
-   there's probably little to be gained in either speed or parallelism.  */
+   ttyname_r (when available) could be used instead of scm_i_misc_mutex
+   if it doesn't restrict the maximum name length the way readdir_r can,
+   but there's probably little to be gained in either speed or
+   parallelism.  */
 
 #ifdef HAVE_TTYNAME
 SCM_DEFINE (scm_ttyname, "ttyname", 1, 0, 0, 
@@ -1058,34 +1060,19 @@ SCM_DEFINE (scm_ttyname, "ttyname", 1, 0, 0,
 	    "underlying @var{port}.")
 #define FUNC_NAME s_scm_ttyname
 {
-  char *result;
-  int fd, err;
-  SCM ret = SCM_BOOL_F;
-
   port = SCM_COERCE_OUTPORT (port);
   SCM_VALIDATE_OPPORT (1, port);
   if (!SCM_FPORTP (port))
     return SCM_BOOL_F;
-  fd = SCM_FPORT_FDES (port);
 
-  scm_i_scm_pthread_mutex_lock (&scm_i_misc_mutex);
-
-  SCM_SYSCALL (result = ttyname (fd));
-  err = errno;
-  if (result != NULL)
-    result = strdup (result);
-
-  scm_i_pthread_mutex_unlock (&scm_i_misc_mutex);
-
-  if (!result)
-    {
-      errno = err;
-      SCM_SYSERROR;
-    }
-  else
-    ret = scm_take_locale_string (result);
-
-  return ret;
+  int fd = SCM_FPORT_FDES (port);
+  char *name = 0;
+  SCM_I_LOCKED_SYSCALL(&scm_i_misc_mutex,
+                       char *n = ttyname (fd);
+                       if (n) name = strdup (n));
+  if (name)
+    return scm_take_locale_string (name);
+  SCM_SYSERROR;
 }
 #undef FUNC_NAME
 #endif /* HAVE_TTYNAME */

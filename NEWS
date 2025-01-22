@@ -69,6 +69,8 @@ every line in a file.
 ** Immutable stringbufs are now 8-byte aligned on all systems
    Previously they could end up with an alignment that violated the type
    tag for their type (e.g. ending up tagged as immediates SCM_IMP()).
+** `readdir` and `ttyname` now release scm_i_misc_mutex during asyncs
+   This avoids potential deadlocks.
 
 
 Changes in 3.0.10 (since 3.0.9)

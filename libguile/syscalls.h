@@ -37,6 +37,24 @@
     }						\
   while (errno == EINTR)
 
+/* A SCM_SYSCALL for calls that need mutex serialization.  The body must
+   ensure to leave an appropriate errno. */
+#define SCM_I_LOCKED_SYSCALL(lock, body)                             \
+  while(1)                                                           \
+    {                                                                \
+      scm_i_pthread_mutex_t *lock___ = (lock);                       \
+      scm_i_pthread_mutex_lock (lock___);                            \
+      errno = 0;                                                     \
+      { body; }                                                      \
+      int err___ = errno;                                            \
+      scm_i_pthread_mutex_unlock (lock___);                          \
+      if (err___ != EINTR)                                           \
+        {                                                            \
+          errno = err___;                                            \
+          break;                                                     \
+        }                                                            \
+      scm_async_tick ();                                             \
+    }
 
 
 
