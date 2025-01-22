@@ -221,8 +221,10 @@ code to sort letrec* bindings by identifier value."
         ;; Rely on identifier ordering.
         (intset-fold (lambda (id out prev)
                        (values
-                        (intmap-add out id (intset-intersect complex prev))
-                        (intset-add prev id)))
+                        (intmap-add out id prev)
+                        (if (intset-ref complex id)
+                            (intset id)
+                            prev)))
                      node-ids empty-intmap empty-intset)
         empty-intmap))
   (define sccs
