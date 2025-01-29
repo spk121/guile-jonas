@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2020  Free Software Foundation, Inc.
+ * Copyright (C) 2012-2020, 2025  Free Software Foundation, Inc.
  *
  * This file is part of GNU lightning.
  *
@@ -622,6 +622,10 @@ jit_load_args_3(jit_state_t *_jit, jit_operand_t a, jit_operand_t b,
           M(_FF__, extr_f_d)		\
           M(_FF__, movr_f)		\
           M(_FF__, movr_d)		\
+          M(_GF__, movr_i_f)		\
+          M(_FG__, movr_f_i)		\
+  WHEN_64(M(_GF__, movr_l_d))		\
+  WHEN_64(M(_FG__, movr_d_l))		\
           M(_Ff__, movi_f)		\
           M(_Fd__, movi_d)		\
           M(_GF__, truncr_d_i)		\

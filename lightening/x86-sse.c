@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2017, 2019  Free Software Foundation, Inc.
+ * Copyright (C) 2012-2017, 2019, 2025  Free Software Foundation, Inc.
  *
  * This file is part of GNU lightning.
  *
@@ -128,12 +128,23 @@ movdlxr(jit_state_t *_jit, int32_t r0, int32_t r1)
 {
   ssexr(_jit, 0x66, X86_SSE_X2G, r0, r1);
 }
+static void
+movdlrx(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  ssexr(_jit, 0x66, X86_SSE_G2X, r0, r1);
+}
 
 static void movdqxr(jit_state_t *_jit, int32_t r0, int32_t r1) maybe_unused;
+static void movdqrx(jit_state_t *_jit, int32_t r0, int32_t r1) maybe_unused;
 static void
 movdqxr(jit_state_t *_jit, int32_t r0, int32_t r1)
 {
   sselxr(_jit, 0x66, X86_SSE_X2G, r0, r1);
+}
+static void
+movdqrx(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  sselxr(_jit, 0x66, X86_SSE_G2X, r0, r1);
 }
 
 static void
@@ -170,6 +181,29 @@ movr_d(jit_state_t *_jit, int32_t r0, int32_t r1)
   if (r0 != r1)
     ssexr(_jit, 0xf2, X86_SSE_MOV, r0, r1);
 }
+
+static void
+movr_i_f(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  movdlrx(_jit, r0, r1);
+}
+static void
+movr_f_i(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  movdlxr(_jit, r0, r1);
+}
+#if __X64
+static void
+movr_l_d(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  movdqrx(_jit, r0, r1);
+}
+static void
+movr_d_l(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  movdqxr(_jit, r0, r1);
+}
+#endif
 
 static void
 addssr(jit_state_t *_jit, int32_t r0, int32_t r1)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2019  Free Software Foundation, Inc.
+ * Copyright (C) 2013-2019, 2025  Free Software Foundation, Inc.
  *
  * This file is part of GNU lightning.
  *
@@ -638,6 +638,18 @@ movi_f(jit_state_t *_jit, int32_t r0, float i0)
   }
 }
 
+static void
+movr_f_i(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  FMOVSW(_jit, r0, r1);
+}
+
+static void
+movr_i_f(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  FMOVWS(_jit, r0, r1);
+}
+
 static jit_reloc_t
 buneqr_f(jit_state_t *_jit, int32_t r0, int32_t r1)
 {
@@ -757,6 +769,18 @@ movi_d(jit_state_t *_jit, int32_t r0, double i0)
     FMOVDX(_jit, r0, jit_gpr_regno(reg));
     unget_temp_gpr(_jit);
   }
+}
+
+static void
+movr_d_l(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  FMOVDX(_jit, r0, r1);
+}
+
+static void
+movr_l_d(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  FMOVXD(_jit, r0, r1);
 }
 
 static jit_reloc_t
