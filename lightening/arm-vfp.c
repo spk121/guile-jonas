@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2017, 2019  Free Software Foundation, Inc.
+ * Copyright (C) 2012-2017, 2019, 2025  Free Software Foundation, Inc.
  *
  * This file is part of GNU lightning.
  *
@@ -911,6 +911,18 @@ movi_d(jit_state_t *_jit, int32_t r0, jit_float64_t i0)
     unget_temp_gpr(_jit);
     unget_temp_gpr(_jit);
   }
+}
+
+static void
+movr_f_i(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  VMOV_S_A(_jit, r0, r1);
+}
+
+static void
+movr_i_f(jit_state_t *_jit, int32_t r0, int32_t r1)
+{
+  VMOV_A_S32(_jit, r0, r1);
 }
 
 static void
