@@ -40,7 +40,7 @@ jobs:
       run: make -j4 distcheck V=1
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
     - name: Archive Source Package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Source Package
         path: guile*tar ./*.log
