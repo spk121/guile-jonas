@@ -39,7 +39,8 @@ jobs:
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
     - name: Run Unit Tests
       run: |
-        git config --global --add safe.directory /cygdrive/d/a/guile/guile
+        # git config --global --add safe.directory /cygdrive/d/a/guile/guile
+        git config --global --add safe.directory /cygdrive/d/a/guile-jonas/guile-jonas
         make check V=1
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
     - name: Run More Unit Tests on Failure
