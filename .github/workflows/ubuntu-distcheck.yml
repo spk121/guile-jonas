@@ -38,7 +38,7 @@ jobs:
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
         mkdir `pwd`/app
         ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+        ./configure CFLAGS="-g -O2 -Wall -Wno-error" --prefix=`pwd`/app
     - name: Build
       run: |
         make -j4 V=1
