@@ -94,10 +94,10 @@ verify (FLT_RADIX == 2);
 /* Make sure that scm_t_inum fits within a SCM value.  */
 verify (sizeof (scm_t_inum) <= sizeof (scm_t_bits));
 
-/* Several functions below assume that fixnums fit within a long, and
+/* Several functions below assume that fixnums fit within an intptr_t, and
    furthermore that there is some headroom to spare for other operations
    without overflowing. */
-verify (SCM_I_FIXNUM_BIT <= SCM_LONG_BIT - 2);
+verify (SCM_I_FIXNUM_BIT <= SCM_INTPTR_T_BIT - 2);
 
 /* Some functions that use GMP's mpn functions assume that a
    non-negative fixnum will always fit in a 'mp_limb_t'.  */
@@ -294,16 +294,11 @@ scm_i_divide2double (SCM n, SCM d)
           else
             return 0.0 / 0.0;
         }
-
-      mpz_init_set_si (dd, SCM_I_INUM (d));
     }
-  else
-    scm_integer_init_set_mpz_z (scm_bignum (d), dd);
 
-  if (SCM_I_INUMP (n))
-    mpz_init_set_si (nn, SCM_I_INUM (n));
-  else
-    scm_integer_init_set_mpz_z (scm_bignum (n), nn);
+  mpz_inits (nn, dd, lo, hi, x, NULL);
+  scm_to_mpz (d, dd);
+  scm_to_mpz (n, nn);
 
   neg = (mpz_sgn (nn) < 0) ^ (mpz_sgn (dd) < 0);
   mpz_abs (nn, nn);
@@ -351,7 +346,6 @@ scm_i_divide2double (SCM n, SCM d)
 
   /* Compute the initial values of lo, x, and hi
      based on the initial guess of e */
-  mpz_inits (lo, hi, x, NULL);
   mpz_mul_2exp (x, nn, 2 + ((e < 0) ? -e : 0));
   mpz_mul (lo, dd, scm_i_divide2double_lo2b);
   if (e > 0)
@@ -6874,7 +6868,26 @@ void
 scm_to_mpz (SCM val, mpz_t rop)
 {
   if (SCM_I_INUMP (val))
-    mpz_set_si (rop, SCM_I_INUM (val));
+    {
+      scm_t_inum inum = SCM_I_INUM (val);
+#if SCM_LONG_BIT >= SCM_I_FIXNUM_BIT
+      // Cast to long and directly pass to GMP.
+      mpz_set_si (rop, (long)inum);
+#elif (2 * SCM_LONG_BIT) > SCM_I_FIXNUM_BIT
+      scm_t_inum inum_abs = inum;
+      if (inum < 0)
+        inum_abs *= -1;
+      long high = inum_abs >> (SCM_LONG_BIT - 1);
+      long low = (long)(inum_abs & ((((scm_t_inum)1) << (SCM_LONG_BIT - 1)) - 1));
+      mpz_set_si (rop, high);
+      mpz_mul_2exp (rop, rop, SCM_LONG_BIT - 1);
+      mpz_add_ui (rop, rop, low);
+      if (inum < 0)
+        mpz_neg (rop, rop);
+#else
+#error Unknown configuration
+#endif
+    }
   else if (SCM_BIGP (val))
     scm_integer_set_mpz_z (scm_bignum (val), rop);
   else
